@@ -45,8 +45,9 @@ correction / backoff vocabulary with its constants.
 - **Resuming.** `resumePrompt({ request, thread })` rebuilds a chain head from a stored `thread`, so a follow-up can run
   in a later process: send a message, store `executed.thread` under the message's id, and come back to it later. A
   follow-up's composition reads only the root request, the thread and the follow-up, so the resumed call sends the
-  same bytes and keeps the provider's prefix cache warm. Resuming an older message's thread branches there. The
-  thread rules are in [prompt](prompt.md).
+  same bytes and keeps the provider's prefix cache warm. Resuming an older message's thread branches there. What to
+  store, the thread's shape and a full save / resume example are in
+  [Saving and resuming a chain](prompt.md#saving-and-resuming-a-chain).
 - **Records and taps.** `recorder.recordCallStart` fires before the send, `recordCall` once per execution, and
   `recordDecodeFailure` once when any decode row exists. The recorder gets the full in-memory record and owns any
   capture gate: persist `toLlmCallLogPayload(record, { keepIo, keepPhases })` (the flat row every reader and the tape

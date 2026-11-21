@@ -71,13 +71,14 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   execution is cached too) and chain follow-ups onto the same thread. A recorded reply is capped at 8,000 characters
   (`threadTurnMaxChars`), and a reply the run marks `degenerate` is recorded as a placeholder
   (`degenerateThreadPlaceholder`), so no later follow-up replays — and re-bills — a garbage turn.
-- **Resuming.** A head's `thread` is plain data (`role`, `content`, optional `cacheSegments`), so a host stores it under
-  its own message id. The factory's `resume({ request, thread })` rebuilds an `LlmPromptThreadHead` from it in a later
-  process. Follow-ups chain onto that head exactly as onto the `ExecutedLlmPrompt` that recorded the thread, and send
-  the same bytes. Resuming an earlier message's thread branches the conversation there. The root request is supplied
-  again because follow-ups inherit its capability, model and host fields; its live context is never rendered. A thread
-  must alternate `user` / `assistant` from `user` and end on a reply (`isLlmPromptResumableThread`); `resume` throws
-  otherwise. A resumed thread replays as stored, untouched by the recording settings.
+- **Resuming.** The library stores nothing: the host saves a head's `thread` under its own message id, and the
+  factory's `resume({ request, thread })` (`LlmDispatcher.resumePrompt`) rebuilds an `LlmPromptThreadHead` from it in a
+  later process. Follow-ups chain onto that head exactly as onto the `ExecutedLlmPrompt` that recorded the thread, and
+  send the same bytes. Resuming an earlier message's thread branches the conversation there. The root request is
+  supplied again because follow-ups inherit its capability, model and host fields; its live context is never rendered.
+  A thread must alternate `user` / `assistant` from `user` and end on a reply (`isLlmPromptResumableThread`); `resume`
+  throws otherwise. A resumed thread replays as stored, untouched by the recording settings. See
+  [Saving and resuming a chain](#saving-and-resuming-a-chain).
 - **Chains.** `makeLlmPromptChain({ lead })` is one chained-follow-up instance. `chain.dispatch({ dispatcher, request,
   previous })` fires a root, or chains a follow-up onto `previous` whose message is the lead plus only the live blocks
   that changed since the thread last saw them (unchanged ones are named, not re-sent). The instance holds what each
@@ -224,3 +225,56 @@ const budgeted = budgetLlmLiveContextBlocks({
 const request = { capability: 'summarize', renderLiveContext: () => budgeted.blocks };
 budgeted.trimmed; // [{ priority: 1, action: 'shrunk', savedTokens: … }] when the history had to shrink
 ```
+
+## Saving and resuming a chain
+
+A chain lives on its in-memory handles. To send a message, stop, and follow up in a later process, store each
+message's `thread` and resume from it. What a message needs stored:
+
+- **The thread** — `executed.thread`, a `ReadonlyArray<LlmThreadTurn>`, oldest first:
+
+  ```ts
+  interface LlmThreadTurn {
+    readonly role: LlmThreadRole; // 'user' | 'assistant'
+    readonly content: string; // the exact text sent or received
+    readonly cacheSegments?: LlmPromptCacheSegments; // { cachePrefix: string; volatileSuffix: string }
+  }
+  ```
+
+  A `user` turn holds the final prompt that produced the accepted reply (a retry's correction included). An `assistant`
+  turn holds the reply, capped at `threadTurnMaxChars` (8,000 by default), or `degenerateThreadPlaceholder` when the
+  reply never decoded. It is strings throughout, so it stores in JSON or Firestore as-is. Each message's thread is the
+  whole conversation up to that message, so any stored message can be resumed.
+- **What rebuilds the root request** — its capability, any model or tier override, and the host fields. Follow-ups
+  inherit these, so the resumed request must route as the original did; a different model forfeits the warm cache. The
+  live context is never rendered on a resume (`() => []` is fine).
+
+`cacheSegments` sits on the root turn only, and never changes the text: `cachePrefix + volatileSuffix === content`.
+Only an `anthropic/` route over OpenRouter reads it, replaying the root turn in its original cache-breakpoint layout so
+the resumed call can hit the provider's cache: the conversation's own entry while it is still alive, and the
+capability's shared preamble whenever other calls keep it warm. Every other strategy drops it. Keeping it stores the
+root prompt twice; dropping it costs at most a cache miss on an Anthropic model's first resumed follow-up.
+
+```ts
+import { isLlmPromptResumableThread, type LlmDispatchRequest } from '@dereekb/llm';
+
+// The root request, built the same way in every process: same capability, same model, same host fields.
+const rootRequest = (subjectId: string): LlmDispatchRequest => ({ capability: 'summarize', renderLiveContext: () => renderSubject(subjectId) });
+
+// Process 1: send the first message, then store its thread under the host's own message id.
+const first = await dispatcher.preparePrompt(rootRequest(subjectId)).execute();
+await messages.set(firstMessageId, { subjectId, thread: first.thread });
+
+// Process 2, later: load a message, resume it, follow up, and store the reply as a new message.
+const stored = await messages.get(firstMessageId);
+
+if (isLlmPromptResumableThread(stored.thread)) {
+  const head = dispatcher.resumePrompt({ request: rootRequest(stored.subjectId), thread: stored.thread });
+  const next = await head.followUp({ content: 'Now shorten it to one line.' }).execute();
+  await messages.set(nextMessageId, { subjectId: stored.subjectId, thread: next.thread });
+}
+```
+
+`messages` stands for the host's store. Resuming `firstMessageId` again later branches a second conversation from the
+same point. A `makeLlmPromptChain` instance holds no blocks for a resumed head, so the first item after one sends its
+whole live context.
