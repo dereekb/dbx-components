@@ -1,6 +1,7 @@
-import { type Maybe, mapObjectMap } from '@dereekb/util';
+import { filterMaybeValues, isPlainObject, type Maybe, mapObjectMap } from '@dereekb/util';
 import { type LlmModelId, type LlmGenerationId, type LlmTokenCount } from '../model/llm.value';
 import { toLlmUsage, type LlmUsage, type LlmUsageFromOptions } from '../strategy/llm.usage';
+import { type LlmDecisionReplyBilling } from './llm.decision.answer';
 import { type LlmDecisionModelId } from './llm.decision.model';
 import { type LlmDecisionEntry, type LlmDecisionQuestion, type LlmDecisionQuestionId, type LlmDecisionState, llmDecisionChoiceOptionNames } from './llm.decision.question';
 import { type LlmDecisionRequest } from './llm.decision.strategy';
@@ -106,7 +107,9 @@ export function llmDecisionRequestBody(request: LlmDecisionRequest): LlmDecision
 
 /**
  * A decision reply's usage block, as the wire spells it (snake_case), every field optional — a gateway that reports
- * less is recorded as what it reported rather than refused.
+ * less is recorded as what it reported rather than refused. The camelCase twins are the same counts as an SDK spells
+ * them once it has parsed the wire (`@openrouter/sdk`'s `DecisionsResponse`); the snake_case field wins when both are
+ * present.
  */
 export interface LlmDecisionWireUsage {
   /**
@@ -117,6 +120,14 @@ export interface LlmDecisionWireUsage {
    * Output tokens (reported, not billed).
    */
   readonly output_tokens?: Maybe<LlmTokenCount>;
+  /**
+   * {@link input_tokens}, as an SDK spells it.
+   */
+  readonly inputTokens?: Maybe<LlmTokenCount>;
+  /**
+   * {@link output_tokens}, as an SDK spells it.
+   */
+  readonly outputTokens?: Maybe<LlmTokenCount>;
   /**
    * The gateway's synchronous cost in USD. A numeric string is tolerated, as {@link toLlmUsage} tolerates it.
    */
@@ -170,8 +181,8 @@ export interface LlmDecisionWireReply {
  * @__NO_SIDE_EFFECTS__
  */
 export function llmUsageFromDecisionUsage(usage: Maybe<LlmDecisionWireUsage>, options?: Maybe<LlmUsageFromOptions>): Maybe<LlmUsage> {
-  const inputTokens = usage?.input_tokens ?? undefined;
-  const outputTokens = usage?.output_tokens ?? undefined;
+  const inputTokens = usage?.input_tokens ?? usage?.inputTokens ?? undefined;
+  const outputTokens = usage?.output_tokens ?? usage?.outputTokens ?? undefined;
 
   return usage == null
     ? undefined
@@ -184,4 +195,51 @@ export function llmUsageFromDecisionUsage(usage: Maybe<LlmDecisionWireUsage>, op
         },
         options ?? undefined
       );
+}
+
+/**
+ * The options of {@link llmDecisionReplyBilling}.
+ */
+export interface LlmDecisionReplyBillingOptions extends LlmUsageFromOptions {
+  /**
+   * A generation id the transport read beside the body (a response header) — used only when the body carries no `id`.
+   */
+  readonly generationId?: Maybe<string>;
+}
+
+/**
+ * A reply field as a non-blank string, or `undefined`.
+ *
+ * @param value - The field as returned.
+ * @returns The string, or `undefined` when it is absent, blank or not a string.
+ */
+function nonBlankStringOf(value: unknown): Maybe<string> {
+  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+}
+
+/**
+ * **The one read of what a decision reply was billed** — its usage (through {@link llmUsageFromDecisionUsage}), the
+ * model that answered, the generation id (the body's `id`, else the transport's header read) and the provider, each
+ * omitted when the reply did not report it. Every decision transport reads it BEFORE the answers and hands it to
+ * `requireLlmDecisionAnswers`, so a reply that left its answer space throws a fault that still carries its bill.
+ *
+ * @param reply - The reply — the wire body, or an SDK's parsed copy of it.
+ * @param options - The gateway's cost basis and a generation id read beside the body.
+ * @returns The bill; empty when the reply reported none of it.
+ *
+ * @example
+ * ```ts
+ * llmDecisionReplyBilling({ id: 'gen-1', model: 'typesafe/jev-1.14', usage: { input_tokens: 350, cost: 0.0000147 } });
+ * // { model: 'typesafe/jev-1.14', usage: { promptTokens: 350, totalTokens: 350, cost: 0.0000147 }, generationId: 'gen-1' }
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function llmDecisionReplyBilling(reply: LlmDecisionWireReply, options?: Maybe<LlmDecisionReplyBillingOptions>): LlmDecisionReplyBilling {
+  const usage = llmUsageFromDecisionUsage(isPlainObject(reply.usage) ? reply.usage : undefined, options?.costBasis == null ? undefined : { costBasis: options.costBasis });
+  const generationId = nonBlankStringOf(reply.id) ?? nonBlankStringOf(options?.generationId);
+  const provider = nonBlankStringOf(reply.provider);
+  const model = nonBlankStringOf(reply.model);
+  // key order: model, then the success result's `usage` / `generationId` / `provider` order
+  return filterMaybeValues({ model, usage, generationId, provider });
 }

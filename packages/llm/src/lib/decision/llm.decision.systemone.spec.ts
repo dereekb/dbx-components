@@ -206,6 +206,23 @@ describe('makeLlmSystemOneDecisionStrategy()', () => {
       expect(nonObject.usage).toBeUndefined();
       expect('usage' in nonObject).toBe(false);
     });
+
+    it('reads the bill before the answers, so an answer fault carries the usage, model, provider and generation id of the billed send', async () => {
+      const faultedBody = { model: 'typesafe/jev-1.14-20260901', provider: 'TypeSafe', answers: { ...TYPED_ANSWERS, department: { type: 'choice', choice: 'sales' } }, usage: { input_tokens: 350, output_tokens: 34, cost: 0.0000147 } };
+      const thrown = await thrownBy(strategyAnswering({ body: faultedBody, headers: { 'x-gateway-id': 'gen-header' } }, { ...HEADER_HOOKS, costBasis: 'list' }).strategy.decide(REQUEST));
+
+      expect(thrown).toBeInstanceOf(LlmDecisionAnswerFaultError);
+      expect(thrown).toMatchObject({ model: 'typesafe/jev-1.14-20260901', provider: 'TypeSafe', generationId: 'gen-header', usage: { promptTokens: 350, completionTokens: 34, totalTokens: 384, cost: 0.0000147, costBasis: 'list' } });
+    });
+
+    it('stamps the requested model on a fault whose reply named none, and no usage when it reported none', async () => {
+      const thrown = await thrownBy(strategyAnswering({ body: { answers: {} } }).strategy.decide(REQUEST));
+
+      expect(thrown).toBeInstanceOf(LlmDecisionAnswerFaultError);
+      expect((thrown as LlmDecisionAnswerFaultError).model).toBe(MODEL);
+      expect('usage' in (thrown as object)).toBe(false);
+      expect('generationId' in (thrown as object)).toBe(false);
+    });
   });
 
   describe('failures', () => {

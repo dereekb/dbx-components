@@ -10,7 +10,7 @@
  * and never needs this file.
  */
 
-import { type LlmDecisionAnswers, LlmDecisionDeclarationError, type LlmDecisionQuestions, requireLlmDecisionAnswers } from '@dereekb/llm/decision';
+import { type LlmDecisionAnswers, LlmDecisionDeclarationError, type LlmDecisionQuestions, llmDecisionReplyBilling, requireLlmDecisionAnswers } from '@dereekb/llm/decision';
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterDecisionRequest, openRouterDecisionRequestBody, openRouterRunUsageFromDecisionsUsage, splitOpenRouterDecisionModelConfig, validateOpenRouterDecisionRequest } from './openrouter.decision';
 import { type DecisionsResponse, type OpenRouterCore, type RequestOptions, systemOneCreate } from './openrouter.sdk';
@@ -84,7 +84,8 @@ export interface OpenRouterDecisionParams<Q extends LlmDecisionQuestions = LlmDe
  * @param params - The client, request, and options.
  * @returns The normalized decision result.
  * @throws {LlmDecisionDeclarationError} When the request cannot be asked as declared.
- * @throws {LlmDecisionAnswerFaultError} When the reply did not answer the declared questions.
+ * @throws {LlmDecisionAnswerFaultError} When the reply did not answer the declared questions — carrying the reply's
+ *   usage, model, provider and generation id, since the send was still billed.
  */
 export async function openRouterDecision<Q extends LlmDecisionQuestions = LlmDecisionQuestions>(params: OpenRouterDecisionParams<Q>): Promise<OpenRouterDecisionResult<Q>> {
   const { client, request, options } = params;
@@ -103,7 +104,9 @@ export async function openRouterDecision<Q extends LlmDecisionQuestions = LlmDec
   }
 
   const response = result.value;
-  const answers = requireLlmDecisionAnswers({ questions: request.questions, raw: response.answers ?? {} });
+  // the bill is read BEFORE the answers, so a reply that left its answer space throws a fault that still carries it
+  const billing = llmDecisionReplyBilling(response);
+  const answers = requireLlmDecisionAnswers({ questions: request.questions, raw: response.answers ?? {}, billing });
 
   return { answers, model: response.model, provider: response.provider, generationIds: response.id ? [response.id] : [], usage: openRouterRunUsageFromDecisionsUsage(response.usage), response };
 }

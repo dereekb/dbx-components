@@ -182,6 +182,18 @@ describe('openRouterDecision()', () => {
     await expect(openRouterDecision({ client: fake.client, request })).rejects.toThrow(LlmDecisionAnswerFaultError);
   });
 
+  it("should carry the billed reply's usage, model, provider and generation id on the fault", async () => {
+    const fake = fakeOpenRouterDecisionClient({ id: 'gen_faulted', provider: 'typesafe', answers: { entry: { type: 'choice', choice: 'row-z' } }, inputTokens: 272, outputTokens: 34, cost: 0.000011424 });
+    const request = openRouterDecisionRequest({ state: 'x', questions: { entry: QUESTIONS.entry }, overrides: { model: JEV } });
+    const thrown = await openRouterDecision({ client: fake.client, request }).then(
+      () => undefined,
+      (error: unknown) => error
+    );
+
+    expect(thrown).toBeInstanceOf(LlmDecisionAnswerFaultError);
+    expect(thrown).toMatchObject({ model: JEV, provider: 'typesafe', generationId: 'gen_faulted', usage: { promptTokens: 272, completionTokens: 34, totalTokens: 306, cost: 0.000011424 } });
+  });
+
   it('should refuse a chat model before touching the wire', async () => {
     const fake = fakeOpenRouterDecisionClient({ answers: {} });
     const request = openRouterDecisionRequest({ state: 'x', questions: QUESTIONS, overrides: { model: 'openai/gpt-5.1' } });

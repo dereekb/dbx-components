@@ -19,8 +19,9 @@
  * 1. An answer that arrives WITHOUT a `type` is given the declared question's type first — only when the hooks set
  *    `laxAnswerTypes` (a gateway whose reply lists the value fields, not the discriminator). A PRESENT `type` is never
  *    overwritten.
- * 2. `usage` is read field by field ({@link llmUsageFromDecisionUsage}), so a reply that reports less is recorded as
+ * 2. `usage` is read field by field ({@link llmDecisionReplyBilling}), so a reply that reports less is recorded as
  *    what it reported rather than refused. A non-object `usage` reads as absent; a non-object `answers` as no answers.
+ *    The bill is read BEFORE the answers, so an answer fault carries the usage of the send it faulted.
  * 3. `id`, `model` and `provider` count only as non-blank strings; with no `model` echoed, the requested slug stands.
  *
  * **The error contract** — `decide` throws exactly one of:
@@ -39,7 +40,7 @@
  * the global after building the strategy.
  */
 
-import { readErrorMessage, filterMaybeValues, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
+import { readErrorMessage, isNotNullOrEmptyString, isPlainObject, makeTimeoutAbortSignal, type Maybe, type Milliseconds, removeTrailingSlashes, type WebsiteUrlWithPrefix, type WebsiteUrl } from '@dereekb/util';
 import { type LlmDecisionAdapterConfig } from '../adapter/llm.adapter';
 import { type LlmModelId, type LlmStrategyId } from '../model/llm.value';
 import { type ConfiguredFetch, type FetchJsonTextResult, isFetchAbortError, readFetchJsonText } from '@dereekb/util/fetch';
@@ -51,7 +52,7 @@ import { type LlmCostBasis } from '../strategy/llm.usage';
 import { requireLlmDecisionAnswers } from './llm.decision.answer';
 import { type LlmDecisionQuestions } from './llm.decision.question';
 import { DEFAULT_LLM_DECISION_TIMEOUT_MS, LlmDecisionTransportError, type LlmDecideOptions, type LlmDecisionRequest, type LlmDecisionResult, type LlmDecisionStrategy } from './llm.decision.strategy';
-import { llmDecisionRequestBody, llmUsageFromDecisionUsage, type LlmDecisionWireReply } from './llm.decision.wire';
+import { llmDecisionReplyBilling, llmDecisionRequestBody, type LlmDecisionWireReply } from './llm.decision.wire';
 
 /**
  * The route path under a gateway's base URL — spelt once, for every gateway.
@@ -189,16 +190,6 @@ function isLlmDecisionWireReplyObject(reply: Maybe<LlmDecisionWireReply>): reply
 }
 
 /**
- * A reply field as a non-blank string, or `undefined`.
- *
- * @param value - The field as returned.
- * @returns The string, or `undefined` when it is absent, blank or not a string.
- */
-function nonBlankStringOf(value: unknown): Maybe<string> {
-  return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
-}
-
-/**
  * Map one decision adapter config onto {@link LlmSystemOneDecisionStrategyConfig}: `id` / `apiKey` from the provider,
  * then `baseUrl`, `timeoutMs` and `probeFetch` (from `fetch`), each passed through (nullish when unset; the strategy
  * defaults with `??`). Every System One decision adapter starts from it; a gateway adds its own keys on top (ZenMux
@@ -273,16 +264,15 @@ export function makeLlmSystemOneDecisionStrategy(config: LlmSystemOneDecisionStr
       throw new LlmDecisionTransportError({ message: `the ${label} System One route ${url} answered HTTP ${status} with a body that is not a JSON object`, status, body: text });
     }
 
+    // The bill is read BEFORE the answers, so a reply that left its answer space still records what the send cost. A
+    // body `id` wins; the hooks' header is read only when the body carries none.
+    const { model: repliedModel, ...billed } = llmDecisionReplyBilling(reply, { costBasis: hooks.costBasis, generationId: generationIdHeader == null ? undefined : response.headers.get(generationIdHeader) });
+    const model: LlmModelId = repliedModel ?? request.model;
     // A reply that left its declared answer space THROWS rather than handing back half an answer set.
-    const answers = requireLlmDecisionAnswers({ questions: request.questions, raw: isPlainObject(reply.answers) ? reply.answers : {}, laxAnswerTypes: hooks.laxAnswerTypes });
-    const usage = llmUsageFromDecisionUsage(isPlainObject(reply.usage) ? reply.usage : undefined, { costBasis: hooks.costBasis });
-    // A body `id` wins; the hooks' header is read only when the body carries none.
-    const generationId = nonBlankStringOf(reply.id) ?? (generationIdHeader == null ? undefined : nonBlankStringOf(response.headers.get(generationIdHeader)));
-    const provider = nonBlankStringOf(reply.provider);
-    const model: LlmModelId = nonBlankStringOf(reply.model) ?? request.model;
+    const answers = requireLlmDecisionAnswers({ questions: request.questions, raw: isPlainObject(reply.answers) ? reply.answers : {}, laxAnswerTypes: hooks.laxAnswerTypes, billing: { model, ...billed } });
 
-    // `answers` is generic in Q, so only the concrete optional keys go through the filter; key order is kept.
-    return { model, answers, ...filterMaybeValues({ usage, generationId, provider }) };
+    // `answers` is generic in Q, so it sits beside the bill rather than inside it; key order is kept.
+    return { model, answers, ...billed };
   };
 
   return {

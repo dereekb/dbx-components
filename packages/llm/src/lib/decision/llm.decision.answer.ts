@@ -1,4 +1,6 @@
 import { type Maybe, type PercentDecimal } from '@dereekb/util';
+import { type LlmGenerationId, type LlmModelId } from '../model/llm.value';
+import { type LlmUsage } from '../strategy/llm.usage';
 import { type LlmDecisionAnswer, type LlmDecisionAnswers, type LlmDecisionChoiceAnswer, type LlmDecisionChoiceQuestion, type LlmDecisionQuestion, type LlmDecisionQuestionId, type LlmDecisionQuestions, llmDecisionChoiceOptionNames } from './llm.decision.question';
 
 /**
@@ -24,20 +26,70 @@ export interface LlmDecisionFault {
 }
 
 /**
+ * What a decision reply was billed — everything an answered reply reports beside its answers. A transport reads it
+ * BEFORE the answers, so a reply that left its answer space still hands its bill to the
+ * {@link LlmDecisionAnswerFaultError} it throws: the gateway charged for the send either way.
+ */
+export interface LlmDecisionReplyBilling {
+  /**
+   * The model that answered, when the reply named one.
+   */
+  readonly model?: LlmModelId;
+  /**
+   * What the call cost, when the gateway reported it.
+   */
+  readonly usage?: LlmUsage;
+  /**
+   * The gateway's own id for the call — the handle a cost reconciliation is looked up by.
+   */
+  readonly generationId?: LlmGenerationId;
+  /**
+   * The upstream endpoint that served it, when the gateway echoed one.
+   */
+  readonly provider?: string;
+}
+
+/**
  * Raised when a reply did not answer the questions that were declared.
  *
  * This is always a defect in the RESPONSE and never a judgement the model made. "None of these fits" is
  * not a fault — it is said through a Noul the caller declared for it, and arrives as an ANSWER. A caller
  * that catches this is handling a malformed reply, not a negative one.
  */
-export class LlmDecisionAnswerFaultError extends Error {
+export class LlmDecisionAnswerFaultError extends Error implements LlmDecisionReplyBilling {
   readonly faults: LlmDecisionFault[];
+  // `declare`d, so a bill the reply did not report leaves no key at all rather than an `undefined` one
+  declare readonly model?: LlmModelId;
+  declare readonly usage?: LlmUsage;
+  declare readonly generationId?: LlmGenerationId;
+  declare readonly provider?: string;
 
-  constructor(faults: LlmDecisionFault[]) {
+  /**
+   * @param faults - Everything wrong with the reply.
+   * @param billing - What the faulted reply was billed, when the transport read it before the answers — so the failed
+   *   call is recorded with the cost of a send the gateway still charged for.
+   */
+  constructor(faults: LlmDecisionFault[], billing?: Maybe<LlmDecisionReplyBilling>) {
     const described = faults.map((x) => x.question + ' (' + x.kind + '): ' + x.detail).join('; ');
     super(`The decision reply did not answer its declared questions: ${described}`);
     this.name = 'LlmDecisionAnswerFaultError';
     this.faults = faults;
+
+    if (billing?.model != null) {
+      this.model = billing.model;
+    }
+
+    if (billing?.usage != null) {
+      this.usage = billing.usage;
+    }
+
+    if (billing?.generationId != null) {
+      this.generationId = billing.generationId;
+    }
+
+    if (billing?.provider != null) {
+      this.provider = billing.provider;
+    }
   }
 }
 
@@ -185,6 +237,16 @@ export interface ReadLlmDecisionAnswersConfig<Q extends LlmDecisionQuestions> {
 }
 
 /**
+ * The inputs of {@link requireLlmDecisionAnswers} — the read's, plus the reply's bill for a fault to carry.
+ */
+export interface RequireLlmDecisionAnswersConfig<Q extends LlmDecisionQuestions> extends ReadLlmDecisionAnswersConfig<Q> {
+  /**
+   * What the reply was billed (`llmDecisionReplyBilling`), read before the answers — attached to the thrown fault.
+   */
+  readonly billing?: Maybe<LlmDecisionReplyBilling>;
+}
+
+/**
  * Either the answers, or everything wrong with them.
  */
 export type LlmDecisionAnswersRead<Q extends LlmDecisionQuestions> = { readonly answers: LlmDecisionAnswers<Q>; readonly faults?: undefined } | { readonly answers?: undefined; readonly faults: LlmDecisionFault[] };
@@ -222,7 +284,7 @@ export function readLlmDecisionAnswers<Q extends LlmDecisionQuestions>(config: R
  * answer set. What a decision transport (and a scripted backend) calls; a caller wanting a fallback expresses it as a
  * verdict of its own.
  *
- * @param config - The declared questions, the raw answers and the lax-type option.
+ * @param config - The declared questions, the raw answers, the lax-type option and the reply's bill for a fault.
  * @returns The membership-checked answers.
  * @throws {LlmDecisionAnswerFaultError} When any declared question was not answered inside its answer space.
  *
@@ -232,11 +294,11 @@ export function readLlmDecisionAnswers<Q extends LlmDecisionQuestions>(config: R
  * answers.urgent.noul; // 0.9
  * ```
  */
-export function requireLlmDecisionAnswers<Q extends LlmDecisionQuestions>(config: ReadLlmDecisionAnswersConfig<Q>): LlmDecisionAnswers<Q> {
+export function requireLlmDecisionAnswers<Q extends LlmDecisionQuestions>(config: RequireLlmDecisionAnswersConfig<Q>): LlmDecisionAnswers<Q> {
   const read = readLlmDecisionAnswers(config);
 
   if (read.faults != null) {
-    throw new LlmDecisionAnswerFaultError(read.faults);
+    throw new LlmDecisionAnswerFaultError(read.faults, config.billing);
   }
 
   return read.answers;

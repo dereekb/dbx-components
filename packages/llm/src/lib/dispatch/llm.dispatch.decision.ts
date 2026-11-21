@@ -13,10 +13,12 @@
  * A decision that FAILS is recorded before it rethrows, like a failed completion: its final send gets a failed-attempt
  * row (`timeout`, `transport` when a retryable error ran out of sends or was cancelled, else `unretryable`), the call
  * record carries every failed send and is stamped `dropped`, `onDispatchComplete` fires, and then the ORIGINAL error
- * is rethrown — its class unchanged, so a caller still catches `LlmDecisionAnswerFaultError` by class.
+ * is rethrown — its class unchanged, so a caller still catches `LlmDecisionAnswerFaultError` by class. An answer fault
+ * comes from a reply the gateway billed: the bill it carries (model, provider, usage, generation id) is folded into
+ * its row and the call's result, so the spend is recorded and reconcilable.
  */
 
-import { type Maybe, waitForMsUnlessAborted, type Milliseconds } from '@dereekb/util';
+import { filterMaybeValues, type Maybe, waitForMsUnlessAborted, type Milliseconds } from '@dereekb/util';
 import { type FetchErrorClassification, type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import { LlmDecisionAnswerFaultError } from '../decision/llm.decision.answer';
 import { type LlmDecision, type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
@@ -223,7 +225,9 @@ function llmDispatchDecisionFailedSendOf(request: LlmDecisionDispatchRequest, st
     failed = { cause: 'transport', result: makeLlmTransportResult(request, strategyId) };
   } else {
     const classification: FetchErrorClassification = error instanceof LlmDecisionAnswerFaultError || error instanceof LlmDecisionDeclarationError ? 'permanent' : classifyLlmError(subject);
-    failed = { cause: 'unretryable', result: makeLlmUnretryableResult(request, strategyId), errorClassification: classification === 'transient' ? 'unknown' : classification };
+    // an answer fault arrives on a BILLED reply: its bill rides the envelope, so the row and the call record its cost
+    const billing = error instanceof LlmDecisionAnswerFaultError ? filterMaybeValues({ model: error.model, provider: error.provider, usage: error.usage, generationId: error.generationId }) : undefined;
+    failed = { cause: 'unretryable', result: { ...makeLlmUnretryableResult(request, strategyId), ...billing }, errorClassification: classification === 'transient' ? 'unknown' : classification };
   }
 
   return failed;
@@ -386,7 +390,8 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
           result = {
             ...sent.result,
             strategyKind,
-            model,
+            // a faulted reply's own model wins, as an answer's does
+            model: sent.result.model ?? model,
             latencyMs,
             ...(attempts > 1 ? { attempts } : {}),
             decodeStatus: 'dropped',

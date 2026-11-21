@@ -25,6 +25,9 @@ import { type LlmDispatchCompleteTapEvent, type LlmDispatchStartTapEvent, makeLl
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
+import { type LlmCallBillReader } from '../strategy/llm.call.bill';
+import { reconcileLlmCallBills } from '../usage/llm.bill.reconcile';
+import { toLlmCallLogPayload } from '../record/llm.call.payload';
 import { type LlmDispatchTransportBackoffParams, llmTransportBackoffMs } from './llm.dispatch.control';
 import { LLM_DECIDE_STAMP_SWALLOW_SITE } from './llm.dispatch.decision';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
@@ -498,6 +501,42 @@ describe('makeLlmDispatcher() decision lane', () => {
       expect(calls).toHaveLength(1);
       expect(calls[0].failedAttempts?.[0]).toMatchObject({ cause: 'unretryable', errorClassification: 'permanent' });
       expect(calls[0].failedAttempts?.[0]?.error).toContain('NaN');
+    });
+
+    it('should record the bill a faulted reply carried on its row and its call, reconcilable by its generation id', async () => {
+      const usage = { promptTokens: 350, completionTokens: 34, totalTokens: 384, cost: 0.0000147 };
+      const fault = new LlmDecisionAnswerFaultError([{ question: 'row', kind: 'value-out-of-range', detail: "the distribution's `row-a` is NaN, outside 0..1" }], { model: 'typesafe/jev-1.14-20261101', usage, generationId: 'gen-faulted', provider: 'TypeSafe' });
+      const { dispatcher, calls } = setup({ backends: [flakyBackend(() => fault, [])] });
+
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(fault);
+
+      expect(calls).toHaveLength(1);
+      expect(calls[0].result).toMatchObject({ text: '', model: 'typesafe/jev-1.14-20261101', provider: 'TypeSafe', usage, generationId: 'gen-faulted', decodeStatus: 'dropped' });
+      expect(calls[0].failedAttempts?.[0]).toMatchObject({ cause: 'unretryable', model: 'typesafe/jev-1.14-20261101', usage, generationId: 'gen-faulted' });
+
+      const asked: string[] = [];
+      const reader: LlmCallBillReader = {
+        providerId: 'zenmux',
+        read: async (generationId) => {
+          asked.push(generationId);
+          return { status: 'billed', bill: { generationId, billed: 0.0000147 } };
+        }
+      };
+      const reconciliation = await reconcileLlmCallBills({ calls: [toLlmCallLogPayload(calls[0])], reader });
+
+      expect(asked).toEqual(['gen-faulted']);
+      expect(reconciliation.withoutGenerationId).toBe(0);
+      expect(reconciliation.total).toMatchObject({ calls: 1, billedCalls: 1, loggedMissing: 0 });
+    });
+
+    it('should record no bill for a fault that carried none', async () => {
+      const fault = new LlmDecisionAnswerFaultError([{ question: 'row', kind: 'answer-missing', detail: 'no answer' }]);
+      const { dispatcher, calls } = setup({ backends: [flakyBackend(() => fault, [])] });
+
+      await expect(dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'x' } })).rejects.toBe(fault);
+      expect(calls[0].result).toMatchObject({ model: DECISION_MODEL });
+      expect(calls[0].result.usage).toBeUndefined();
+      expect(calls[0].result.generationId).toBeUndefined();
     });
 
     it('should record the resent send of a decision cancelled during the backoff', async () => {
