@@ -21,7 +21,7 @@
  * there is one.
  */
 
-import { type HexString, type Maybe } from '@dereekb/util';
+import { type HexString, LimitedMap, type Maybe } from '@dereekb/util';
 import { type LlmCapabilityKey } from '../model/llm.value';
 import { llmPromptCacheHash } from './llm.prompt.hash';
 import { joinLlmPromptSegments, type LlmPromptSegment, type LlmPromptSegmentId } from './llm.prompt.segment';
@@ -205,9 +205,31 @@ function firstDifference(previous: ReadonlyArray<LlmPromptCacheSegmentDigest>, c
 }
 
 /**
- * Mint a {@link LlmPromptCachePrefixWatch} — an empty per-(capability, partition) baseline table.
+ * The most (capability, partition) baselines a {@link makeLlmPromptCachePrefixWatch} watch keeps by default.
+ */
+export const DEFAULT_LLM_PROMPT_CACHE_PREFIX_WATCH_MAX_PARTITIONS = 1000;
+
+/**
+ * Configuration for {@link makeLlmPromptCachePrefixWatch}.
+ */
+export interface LlmPromptCachePrefixWatchConfig {
+  /**
+   * The most (capability, partition) baselines the watch keeps. Past it the least-recently-observed baseline is
+   * dropped, so a host that partitions by user id holds a bounded table on a long-lived server. A dropped partition
+   * seen again is observed as its FIRST dispatch: no `previousHash` and never `changed` — its prefix hash is still
+   * computed, returned and recorded as the new baseline. Must be a positive integer. Defaults to
+   * {@link DEFAULT_LLM_PROMPT_CACHE_PREFIX_WATCH_MAX_PARTITIONS}.
+   */
+  readonly maxPartitions?: Maybe<number>;
+}
+
+/**
+ * Mint a {@link LlmPromptCachePrefixWatch} — an empty per-(capability, partition) baseline table, holding at most
+ * `maxPartitions` baselines (least-recently-observed dropped first).
  *
+ * @param config - The partition cap.
  * @returns The watch.
+ * @throws {RangeError} When `maxPartitions` is not a positive integer.
  *
  * @example
  * ```ts
@@ -218,8 +240,9 @@ function firstDifference(previous: ReadonlyArray<LlmPromptCacheSegmentDigest>, c
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function makeLlmPromptCachePrefixWatch(): LlmPromptCachePrefixWatch {
-  const baselines = new Map<string, { readonly hash: HexString; readonly digests: ReadonlyArray<LlmPromptCacheSegmentDigest> }>();
+export function makeLlmPromptCachePrefixWatch(config?: Maybe<LlmPromptCachePrefixWatchConfig>): LlmPromptCachePrefixWatch {
+  // 'recent': observe() re-sets the partition's baseline, so an active partition stays and an idle one is dropped first
+  const baselines = new LimitedMap<string, { readonly hash: HexString; readonly digests: ReadonlyArray<LlmPromptCacheSegmentDigest> }>({ limit: config?.maxPartitions ?? DEFAULT_LLM_PROMPT_CACHE_PREFIX_WATCH_MAX_PARTITIONS, order: 'recent' });
 
   return {
     observe(params: LlmPromptCachePrefixObserveParams): LlmPromptCachePrefixObservation {

@@ -411,7 +411,9 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
    */
   readonly replyEnvelope?: Maybe<LlmReplyEnvelopeKeys>;
   /**
-   * The cache-prefix watch. Defaults to one per dispatcher.
+   * The cache-prefix watch. Defaults to one per dispatcher, holding at most
+   * `DEFAULT_LLM_PROMPT_CACHE_PREFIX_WATCH_MAX_PARTITIONS` (capability, partition) baselines — pass
+   * `makeLlmPromptCachePrefixWatch({ maxPartitions })` to size it for a host's partition count.
    */
   readonly promptCacheWatch?: Maybe<LlmPromptCachePrefixWatch>;
   /**

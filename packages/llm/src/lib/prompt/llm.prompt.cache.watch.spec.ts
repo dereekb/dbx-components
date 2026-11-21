@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { llmPromptCachePrefixSegments, makeLlmPromptCachePrefixWatch } from './llm.prompt.cache.watch';
+import { DEFAULT_LLM_PROMPT_CACHE_PREFIX_WATCH_MAX_PARTITIONS, llmPromptCachePrefixSegments, makeLlmPromptCachePrefixWatch } from './llm.prompt.cache.watch';
 import { LLM_PROMPT_CACHE_HASH_LENGTH, llmPromptCacheHash } from './llm.prompt.hash';
 import { joinLlmPromptSegments, splitLlmPromptCacheSegments, type LlmPromptSegment, type LlmPromptSegmentId } from './llm.prompt.segment';
 
@@ -135,6 +135,66 @@ describe('makeLlmPromptCachePrefixWatch()', () => {
     const after = watch.observe({ ...partitioned, segments: [stable('A0', 'MOVED'), volatileSegment('D', 'D')] });
     expect(after.changed).toBe(false);
     expect(after.previousHash).toBeUndefined();
+  });
+});
+
+describe('makeLlmPromptCachePrefixWatch(); maxPartitions', () => {
+  const SEGMENTS = [stable('A0', 'A'), volatileSegment('D', 'D')];
+  const MOVED = [stable('A0', 'MOVED'), volatileSegment('D', 'D')];
+
+  it('defaults to DEFAULT_LLM_PROMPT_CACHE_PREFIX_WATCH_MAX_PARTITIONS baselines', () => {
+    const watch = makeLlmPromptCachePrefixWatch();
+
+    for (let partition = 0; partition <= DEFAULT_LLM_PROMPT_CACHE_PREFIX_WATCH_MAX_PARTITIONS; partition += 1) {
+      watch.observe({ capability: 'summarize', partition, segments: SEGMENTS });
+    }
+
+    // partition 0 was the least recently observed when partition 1000 took the table past its cap
+    expect(watch.observe({ capability: 'summarize', partition: 0, segments: MOVED }).previousHash).toBeUndefined();
+    expect(watch.observe({ capability: 'summarize', partition: DEFAULT_LLM_PROMPT_CACHE_PREFIX_WATCH_MAX_PARTITIONS, segments: MOVED }).changed).toBe(true);
+  });
+
+  it('observes an evicted partition seen again as a first dispatch, still hashing and recording it', () => {
+    const watch = makeLlmPromptCachePrefixWatch({ maxPartitions: 2 });
+    const first = watch.observe({ capability: 'summarize', partition: 'a', segments: SEGMENTS });
+    watch.observe({ capability: 'summarize', partition: 'b', segments: SEGMENTS });
+    watch.observe({ capability: 'summarize', partition: 'c', segments: SEGMENTS });
+
+    const again = watch.observe({ capability: 'summarize', partition: 'a', segments: MOVED });
+    expect(again.changed).toBe(false);
+    expect(again.previousHash).toBeUndefined();
+    expect(again.firstDifferingSegmentId).toBeUndefined();
+    expect(again.hash).toHaveLength(LLM_PROMPT_CACHE_HASH_LENGTH);
+    expect(again.hash).not.toBe(first.hash);
+
+    // recorded: the next dispatch of 'a' compares against it
+    const next = watch.observe({ capability: 'summarize', partition: 'a', segments: SEGMENTS });
+    expect(next.previousHash).toBe(again.hash);
+    expect(next.changed).toBe(true);
+  });
+
+  it('keeps the most recently observed partitions, dropping the least recently observed', () => {
+    const watch = makeLlmPromptCachePrefixWatch({ maxPartitions: 2 });
+    watch.observe({ capability: 'summarize', partition: 'a', segments: SEGMENTS });
+    watch.observe({ capability: 'summarize', partition: 'b', segments: SEGMENTS });
+    // 'a' is observed again, so 'b' is now the least recent
+    watch.observe({ capability: 'summarize', partition: 'a', segments: SEGMENTS });
+    watch.observe({ capability: 'summarize', partition: 'c', segments: SEGMENTS });
+
+    expect(watch.observe({ capability: 'summarize', partition: 'a', segments: MOVED }).changed).toBe(true);
+    expect(watch.observe({ capability: 'summarize', partition: 'b', segments: MOVED }).previousHash).toBeUndefined();
+  });
+
+  it('counts each (capability, partition) pair against the cap', () => {
+    const watch = makeLlmPromptCachePrefixWatch({ maxPartitions: 1 });
+    watch.observe({ capability: 'summarize', partition: 'a', segments: SEGMENTS });
+    watch.observe({ capability: 'extract', partition: 'a', segments: SEGMENTS });
+
+    expect(watch.observe({ capability: 'summarize', partition: 'a', segments: MOVED }).previousHash).toBeUndefined();
+  });
+
+  it('throws when maxPartitions is not a positive integer', () => {
+    expect(() => makeLlmPromptCachePrefixWatch({ maxPartitions: 0 })).toThrow(RangeError);
   });
 });
 
