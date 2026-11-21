@@ -55,7 +55,7 @@ export interface LlmOpenAiStrategyConfig extends LlmOpenAiCompatibleChatStrategy
   /**
    * Which request key carries the completion-length cap; defaults to `DEFAULT_LLM_TOKEN_LIMIT_PARAM` (`max_tokens`).
    */
-  readonly tokenLimitParam?: LlmTokenLimitParam;
+  readonly tokenLimitParam?: LlmTokenLimitParam | undefined;
   /**
    * How a reasoning-OFF call encodes the negative on the wire; defaults to `DEFAULT_LLM_REASONING_OFF_ENCODING`
    * (`reasoning_effort: 'none'`). Configurable for the same reason {@link tokenLimitParam} is: gateways vary, and a
@@ -63,7 +63,7 @@ export interface LlmOpenAiStrategyConfig extends LlmOpenAiCompatibleChatStrategy
    *
    * The GLOBAL rung — {@link reasoningOffByModel} overrides it for the slugs it names.
    */
-  readonly reasoningOffEncoding?: LlmReasoningOffEncoding;
+  readonly reasoningOffEncoding?: LlmReasoningOffEncoding | undefined;
   /**
    * PER-MODEL reasoning-OFF encodings, keyed by the exact slug sent on the wire — the narrowest rung: whether
    * `reasoning_effort: 'none'` is accepted is a property of the MODEL, not of the gateway. One gateway may serve a
@@ -80,7 +80,7 @@ export interface LlmOpenAiStrategyConfig extends LlmOpenAiCompatibleChatStrategy
    * it on only for a gateway known to proxy OpenRouter accounting semantics. The RESPONSE-side cost read is
    * unconditional and needs no opt-in.
    */
-  readonly usageAccounting?: boolean;
+  readonly usageAccounting?: boolean | undefined;
 }
 
 /**

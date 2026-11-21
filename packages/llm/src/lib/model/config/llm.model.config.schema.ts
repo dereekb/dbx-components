@@ -16,7 +16,7 @@
  */
 
 import { type ArktypeFieldRule, type ArktypeFieldRules } from '@dereekb/model';
-import { type Maybe, unique, type WebsiteUrl } from '@dereekb/util';
+import { type Maybe, type PartialWithUndefined, unique, type WebsiteUrl } from '@dereekb/util';
 import { type LlmProviderStatusProviderId } from '../../strategy/llm.provider.status';
 import { type LlmPartialModelTierMap } from '../llm.model.tier';
 import { LLM_REASONING_OFF_ENCODINGS, LLM_TOKEN_LIMIT_PARAMS } from '../llm.model.wire';
@@ -165,7 +165,7 @@ export type LlmExtensionProviderEntryMap<X extends LlmModelConfigTypes = LlmMode
 /**
  * The provider PATCHES, keyed by the name of the provider each extends.
  */
-export type LlmProviderPatchMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = Readonly<Record<LlmStrategyId, Partial<X['providerFields']>>>;
+export type LlmProviderPatchMap<X extends LlmModelConfigTypes = LlmModelConfigBaseTypes> = Readonly<Record<LlmStrategyId, PartialWithUndefined<X['providerFields']>>>;
 
 /**
  * The `models` block, keyed by model slug.

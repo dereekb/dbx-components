@@ -93,7 +93,7 @@ describe('LlmDispatcher', () => {
 
   it('should let a fast fixer build its own request from the subject request', async () => {
     const fixer: LlmReplyFastFixer<HostRequest, HostResult> = async (input) => {
-      const result = await input.dispatch({ capability: 'repair-json', workspaceId: input.request.workspaceId, meta: input.request.meta, subjectCapability: input.subjectCapability, responseSchemaHint: input.schemaHint, renderLiveContext: () => [] });
+      const result = await input.dispatch({ capability: 'repair-json', workspaceId: input.request.workspaceId, ...(input.request.meta == null ? {} : { meta: input.request.meta }), subjectCapability: input.subjectCapability, responseSchemaHint: input.schemaHint, renderLiveContext: () => [] });
       return { kind: 'fixed', value: { summary: 'fixed' }, text: result.text, meta: { callId: result.callId } };
     };
     const calls: HostRequest[] = [];

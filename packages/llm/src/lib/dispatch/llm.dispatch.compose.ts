@@ -4,7 +4,7 @@
  * estimate every call is recorded with.
  */
 
-import { type Maybe, type HexString } from '@dereekb/util';
+import { type Maybe, type PartialWithUndefined, type HexString } from '@dereekb/util';
 import { hardenLlmResponseSchemaHint } from '../capability/llm.capability.schema';
 import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { composeLlmCapabilityPrompt, type LlmPromptAssemblyTexts, type LlmPromptLiveContextSegmentOrigin } from '../prompt/llm.prompt.assembly';
@@ -37,7 +37,7 @@ export interface LlmDispatchComposeSetup<R extends LlmDispatchRequest = LlmDispa
   readonly templateResolver: LlmPromptTemplateResolver<R, D>;
   readonly layout: LlmPromptLayout;
   readonly contributors?: Maybe<ReadonlyArray<LlmPromptContributor<R, D>>>;
-  readonly texts?: Maybe<Partial<LlmPromptAssemblyTexts>>;
+  readonly texts?: Maybe<PartialWithUndefined<LlmPromptAssemblyTexts>>;
   readonly defaultReplyProtocol?: Maybe<LlmReplyProtocol>;
   /**
    * The segment id of a follow-up turn — the layout's `follow-up` slot id.
@@ -120,12 +120,12 @@ export interface LlmComposedDispatch {
   /**
    * The value validator of this call — the request's on the root, the follow-up's on a follow-up.
    */
-  readonly validate?: LlmValueValidator;
+  readonly validate?: LlmValueValidator | undefined;
   /**
    * The attempt budget of this call, as asked — the request's on the root, the follow-up's on a follow-up (clamped by
    * the attempt stage).
    */
-  readonly maxAttempts?: number;
+  readonly maxAttempts?: number | undefined;
 }
 
 /**

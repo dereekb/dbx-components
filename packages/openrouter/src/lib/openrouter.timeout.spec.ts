@@ -1,4 +1,5 @@
 import { llmNoulQuestion } from '@dereekb/llm/decision';
+import { type PartialWithUndefined } from '@dereekb/util';
 import { afterEach, describe, expect, it } from 'vitest';
 import { fakeOpenRouterDecisionClient, fakeOpenRouterHangUntilAborted } from '../test/openrouter.fake';
 import { callModelForOpenRouterRequest, sendOpenRouterResponsesRequest } from './openrouter.call';
@@ -53,7 +54,9 @@ describe('openRouterRequestOptions()', () => {
   });
 
   it('should default an explicit retries: undefined to none', () => {
-    expect(openRouterRequestOptions({ retries: undefined }).retries).toEqual({ strategy: 'none' });
+    // an untyped (or non-exactOptionalPropertyTypes) caller can still pass an explicit undefined
+    const options: PartialWithUndefined<RequestOptions> = { retries: undefined };
+    expect(openRouterRequestOptions(options as RequestOptions).retries).toEqual({ strategy: 'none' });
   });
 
   it('should pass the other keys through', () => {

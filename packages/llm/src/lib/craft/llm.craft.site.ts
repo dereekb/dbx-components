@@ -8,7 +8,7 @@
  * callback, for an authoring check — never on the dispatch path.
  */
 
-import { KeyValueTypleValueFilter, type Maybe, mergeObjects, type Count } from '@dereekb/util';
+import { KeyValueTypleValueFilter, type Maybe, type PartialWithUndefined, mergeObjects, type Count } from '@dereekb/util';
 import { DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS, type LlmCraftNote } from './llm.craft.note';
 import { type LlmPromptSiteKind } from '../prompt/llm.prompt.site';
 
@@ -71,7 +71,7 @@ export interface LlmCraftSiteDefinition {
   /**
    * Its own limits, per field over the registry's.
    */
-  readonly limits?: Maybe<Partial<LlmCraftSiteLimits>>;
+  readonly limits?: Maybe<PartialWithUndefined<LlmCraftSiteLimits>>;
 }
 
 /**
@@ -95,7 +95,7 @@ export interface LlmCraftSiteRegistryConfig {
   /**
    * The registry-wide limits over {@link DEFAULT_LLM_CRAFT_SITE_LIMITS}, per field.
    */
-  readonly limits?: Maybe<Partial<LlmCraftSiteLimits>>;
+  readonly limits?: Maybe<PartialWithUndefined<LlmCraftSiteLimits>>;
   /**
    * The largest note body a tier may load, in characters (UTF-16 code units). Defaults to
    * {@link DEFAULT_LLM_CRAFT_NOTE_MAX_CHARS}.
@@ -131,7 +131,7 @@ export interface LlmCraftSiteRegistry {
  * @param registry - The registry-wide limits.
  * @returns The resolved limits.
  */
-function resolveLlmCraftSiteLimits(site: Maybe<Partial<LlmCraftSiteLimits>>, registry: Maybe<Partial<LlmCraftSiteLimits>>): LlmCraftSiteLimits {
+function resolveLlmCraftSiteLimits(site: Maybe<PartialWithUndefined<LlmCraftSiteLimits>>, registry: Maybe<PartialWithUndefined<LlmCraftSiteLimits>>): LlmCraftSiteLimits {
   return mergeObjects<LlmCraftSiteLimits>([DEFAULT_LLM_CRAFT_SITE_LIMITS, registry, site], KeyValueTypleValueFilter.NULL);
 }
 

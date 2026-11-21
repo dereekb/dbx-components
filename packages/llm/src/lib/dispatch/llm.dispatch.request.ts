@@ -100,7 +100,7 @@ export interface LlmDispatchRequest extends LlmDispatchRequestBase {
    * reprompts (the error appended to the volatile suffix only, so the cache prefix stays byte-stable), capped at
    * {@link maxAttempts}. Unset ⇒ single-shot.
    */
-  readonly validate?: LlmValueValidator;
+  readonly validate?: LlmValueValidator | undefined;
   /**
    * OPT-IN SEMANTIC critic — the billed, ASYNC sibling of {@link validate}. It runs AFTER `validate` passes (a
    * malformed reply is never sent to a judge), on the SAME bounded-retry budget: a `{ error }` verdict reprompts with

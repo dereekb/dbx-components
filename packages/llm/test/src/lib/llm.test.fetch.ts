@@ -102,7 +102,7 @@ export function llmFetchFakeResponse(answer: LlmFetchFakeAnswer): Response {
     text = JSON.stringify(body);
   }
 
-  return new Response(text, { status: answer.status ?? 200, headers: answer.headers ?? undefined });
+  return new Response(text, { status: answer.status ?? 200, ...(answer.headers == null ? {} : { headers: answer.headers }) });
 }
 
 /**

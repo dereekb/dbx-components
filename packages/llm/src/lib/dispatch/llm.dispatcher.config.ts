@@ -4,7 +4,7 @@
  * cancellation) that replace a host's internals.
  */
 
-import { type Maybe, type Count } from '@dereekb/util';
+import { type Maybe, type PartialWithUndefined, type Count } from '@dereekb/util';
 import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
@@ -257,11 +257,11 @@ export interface LlmDispatchStrategySelectorParams<R extends LlmDispatchRequest 
   /**
    * The resolved tier, when the model came from one.
    */
-  readonly tier?: LlmModelTierKey;
+  readonly tier?: LlmModelTierKey | undefined;
   /**
    * The capability's route, when one is configured.
    */
-  readonly route?: LlmCapabilityRoute;
+  readonly route?: LlmCapabilityRoute | undefined;
 }
 
 /**
@@ -401,7 +401,7 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
   /**
    * Overrides of the library's prompt texts.
    */
-  readonly texts?: Maybe<Partial<LlmPromptAssemblyTexts>>;
+  readonly texts?: Maybe<PartialWithUndefined<LlmPromptAssemblyTexts>>;
   /**
    * The reply protocol of a call that names none and whose descriptor names none.
    */
@@ -499,7 +499,7 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
   /**
    * The fast-fix limits, merged over `DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`.
    */
-  readonly fastFixLimits?: Maybe<Partial<LlmReplyFastFixLimits>>;
+  readonly fastFixLimits?: Maybe<PartialWithUndefined<LlmReplyFastFixLimits>>;
   /**
    * The decision lane. Absent (or an empty registry) ⇒ no `decide`.
    */

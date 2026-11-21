@@ -265,7 +265,7 @@ export type LlmCallLogPayloadWrite = Pick<LlmCallRecordBase, 'capability' | 'tie
      * The accepted reply value ({@link LlmDispatchResult.valueJson}), under the row key existing logs already carry —
      * written under `keepIo`.
      */
-    readonly lever?: LlmDispatchResult['valueJson'];
+    readonly lever?: NonNullable<LlmDispatchResult['valueJson']>;
   };
 
 /**

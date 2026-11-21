@@ -174,7 +174,7 @@ export interface RecordLlmDispatchConfig<R extends LlmDispatchRequest = LlmDispa
   readonly request: R;
   readonly followUp: boolean;
   readonly callContext: LlmCallContext<A>;
-  readonly resolved: Pick<LlmResolvedDispatch, 'reasoning'> & { readonly tier?: LlmModelTierKey };
+  readonly resolved: Pick<LlmResolvedDispatch, 'reasoning'> & { readonly tier?: LlmModelTierKey | undefined };
   readonly composed: LlmComposedDispatch;
   readonly outcome: LlmDispatchOutcome;
   readonly fields: LlmDispatchRecordFields<H>;
@@ -194,7 +194,7 @@ export interface LlmDispatchRecorded<H extends LlmCallHostFields = LlmCallHostFi
   /**
    * The profile snapshot — set iff the call context times.
    */
-  readonly callProfile?: LlmCallProfile<A>;
+  readonly callProfile?: LlmCallProfile<A> | undefined;
 }
 
 /**

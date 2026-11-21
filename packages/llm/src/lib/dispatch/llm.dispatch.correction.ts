@@ -4,7 +4,7 @@
  * prompt unboundedly), and the text tables a host may override.
  */
 
-import { type Maybe, mergeObjects } from '@dereekb/util';
+import { type Maybe, type PartialWithUndefined, mergeObjects } from '@dereekb/util';
 import { joinLlmPromptSegments, splitLlmPromptCacheSegments, type LlmPromptSegment, type LlmPromptSegmentOrigin } from '../prompt/llm.prompt.segment';
 import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { type LlmDecodeFailureClass } from '../record/llm.decode.failure';
@@ -83,8 +83,8 @@ export const DEFAULT_LLM_DISPATCH_CORRECTION_TEXTS: LlmDispatchCorrectionTexts =
 /**
  * A host's partial override of {@link LlmDispatchCorrectionTexts} — any scalar field, and any `decode` class.
  */
-export type LlmDispatchCorrectionTextOverrides = Partial<Omit<LlmDispatchCorrectionTexts, 'decode'>> & {
-  readonly decode?: Maybe<Partial<Record<LlmDecodeFailureClass, string>>>;
+export type LlmDispatchCorrectionTextOverrides = PartialWithUndefined<Omit<LlmDispatchCorrectionTexts, 'decode'>> & {
+  readonly decode?: Maybe<PartialWithUndefined<Record<LlmDecodeFailureClass, string>>>;
 };
 
 /**

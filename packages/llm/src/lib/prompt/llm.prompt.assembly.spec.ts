@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { filterUndefinedValues } from '@dereekb/util';
 import { type AssembleLlmCapabilityPromptConfig, assembleLlmCapabilityPrompt, DEFAULT_LLM_LINE_REPLY_PROTOCOL, DEFAULT_LLM_MUST_RESOLVE_CLAUSE, type LlmAssembledPrompt, type LlmPromptAssemblyCapabilityRef } from './llm.prompt.assembly';
 import { DEFAULT_LLM_OUTPUT_CONTRACT_FOOTER, DEFAULT_LLM_OUTPUT_CONTRACT_INTRO, renderLlmOutputContract } from './llm.prompt.contract';
 import { type LlmPromptContribution } from './llm.prompt.contributor';
@@ -323,7 +324,7 @@ describe('assembleLlmCapabilityPrompt()', () => {
 
     it("should close pieces with the slot's own separators", () => {
       const layout = defineLlmPromptLayout([{ id: 'notes', role: 'frame', occupancy: 'many', separator: '\n---\n', lastSeparator: '\n\n' }, defaultSlot('reply-protocol'), { id: 'live', role: 'live', occupancy: 'many', separator: '\n', lastSeparator: '' }]);
-      const templates: LlmResolvedPromptTemplates = { roles: { 'reply-protocol': templatesFor('test').roles['reply-protocol'] }, byKey: () => undefined };
+      const templates: LlmResolvedPromptTemplates = { roles: filterUndefinedValues({ 'reply-protocol': templatesFor('test').roles['reply-protocol'] }), byKey: () => undefined };
       const assembled = assembleLlmCapabilityPrompt({
         capability: 'test',
         layout,

@@ -41,7 +41,7 @@ export interface LlmCritiqueParams {
    * The subject request's host data (its `meta`), when it carries any — what a critic reads to build its own judge
    * request for the same subject.
    */
-  readonly meta?: LlmCallMeta;
+  readonly meta?: LlmCallMeta | undefined;
   /**
    * The unwrapped value the subject reply produced — already past the subject's validator, so a critic may quote its
    * structured fields without re-checking their shape.

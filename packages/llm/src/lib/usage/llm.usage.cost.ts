@@ -64,12 +64,12 @@ export interface LlmUsageCostMarkers {
    * Prefixed when >=1 call reported no cost ({@link LlmUsageCostRead.partial}): the sum is a LOWER bound. Defaults to
    * `>=`.
    */
-  readonly lower?: string;
+  readonly lower?: string | undefined;
   /**
    * Prefixed when >=1 call's cost is a LIST price ({@link LlmUsageCostRead.listed}): the sum is an UPPER bound on the
    * bill. Defaults to `<=`.
    */
-  readonly upper?: string;
+  readonly upper?: string | undefined;
   /**
    * Prefixed when BOTH hold — some calls are missing and some are list-priced, so neither bound holds. Defaults to `~`.
    */

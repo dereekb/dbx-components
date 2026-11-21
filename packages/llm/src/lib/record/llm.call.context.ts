@@ -36,7 +36,7 @@
  * A dispatch reports its gaps through the dispatcher's typed `onGap`, not through the context.
  */
 
-import { filterUndefinedValues, type Milliseconds, type UnixDateTimeMillisecondsNumber } from '@dereekb/util';
+import { filterUndefinedValues, type Milliseconds, type PartialWithUndefined, type UnixDateTimeMillisecondsNumber } from '@dereekb/util';
 import { llmSwallowCauseText, type LlmSwallowSiteId } from './llm.swallow';
 
 /**
@@ -194,7 +194,7 @@ export interface LlmCallContextChildParams<A extends object = object> {
    * The attribution override, merged OVER the parent's. An `undefined` field inherits the parent's value; a `null`
    * overrides it.
    */
-  readonly attribution?: Partial<A>;
+  readonly attribution?: PartialWithUndefined<A> | undefined;
 }
 
 /**
@@ -354,19 +354,19 @@ interface LlmCallContextInternal<A extends object, D extends LlmCallDiagRecord> 
   /**
    * The ROOT context's start (absolute) — omitted on a root itself (it uses its own start).
    */
-  readonly rootStartMs?: UnixDateTimeMillisecondsNumber;
+  readonly rootStartMs?: UnixDateTimeMillisecondsNumber | undefined;
   /**
    * The shared root breadcrumb sink.
    */
-  readonly onDiag?: (record: D, attribution: A) => void;
+  readonly onDiag?: ((record: D, attribution: A) => void) | undefined;
   /**
    * The shared root swallow sink.
    */
-  readonly onSwallow?: (site: LlmSwallowSiteId, cause: unknown, attribution: A) => void;
+  readonly onSwallow?: ((site: LlmSwallowSiteId, cause: unknown, attribution: A) => void) | undefined;
   /**
    * The shared link projection.
    */
-  readonly linkAttributionOf?: (attribution: A) => Partial<A>;
+  readonly linkAttributionOf?: ((attribution: A) => Partial<A>) | undefined;
   /**
    * The resolved attribution of this context.
    */
@@ -374,7 +374,7 @@ interface LlmCallContextInternal<A extends object, D extends LlmCallDiagRecord> 
   /**
    * The CAUSAL links recorded on this node — non-empty only on a detached root.
    */
-  readonly links?: ReadonlyArray<LlmCallLink<A>>;
+  readonly links?: ReadonlyArray<LlmCallLink<A>> | undefined;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { filterUndefinedValues, type Maybe, mergeObjects } from '@dereekb/util';
+import { filterUndefinedValues, type Maybe, mergeObjects, type PartialWithUndefined } from '@dereekb/util';
 import { objectHasKey } from './object';
 import {
   filterFromPOJO,
@@ -157,7 +157,7 @@ describe('mergeObjects', () => {
     const defaults: TestLimits = { a: 1, b: 2 };
 
     it('should keep a default when an override is explicitly undefined', () => {
-      const override: Partial<TestLimits> = { a: undefined };
+      const override: PartialWithUndefined<TestLimits> = { a: undefined };
       const result: TestLimits = mergeObjects<TestLimits>([defaults, override]);
       expect(result).toEqual({ a: 1, b: 2 });
     });

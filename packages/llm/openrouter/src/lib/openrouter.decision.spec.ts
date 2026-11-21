@@ -146,7 +146,7 @@ describe('makeLlmOpenRouterDecisionStrategy()', () => {
     const strategy = makeLlmOpenRouterDecisionStrategy({
       apiKey: 'k',
       probeFetch: async (url) => {
-        urls.push(url);
+        urls.push(url instanceof Request ? url.url : url.toString());
         return new Response('{}', { status: 200 });
       }
     });

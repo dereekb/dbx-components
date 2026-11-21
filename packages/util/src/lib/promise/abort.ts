@@ -165,7 +165,7 @@ export interface AbortSignalRef {
   /**
    * An external cancellation signal.
    */
-  readonly signal?: AbortSignal;
+  readonly signal?: AbortSignal | undefined;
 }
 
 /**

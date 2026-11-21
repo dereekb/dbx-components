@@ -124,7 +124,7 @@ describe('parseLlmModelRoutingConfig()', () => {
       ]
     });
     expect(Object.keys(routing.rules?.[0] ?? {})).toEqual(['tags', 'tier', 'maxOutputTokens', 'reasoning']);
-    expect(compile({ rules: routing.rules }, { providers: ['local'] }).get('support-reply')).toEqual({ model: 'vendor/model-chat', tier: 'chat', maxOutputTokens: 900, reasoning: { enabled: false } });
+    expect(compile({ rules: routing.rules ?? [] }, { providers: ['local'] }).get('support-reply')).toEqual({ model: 'vendor/model-chat', tier: 'chat', maxOutputTokens: 900, reasoning: { enabled: false } });
   });
 
   it('FAILS LOUD on a rule field of the wrong shape, naming the rule and field', () => {

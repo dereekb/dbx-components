@@ -10,7 +10,7 @@
  */
 
 import { type ConfiguredFetch } from '@dereekb/util/fetch';
-import { isEnvFlagEnabled, type Maybe, mergeObjects, type Milliseconds, type WebsiteUrl } from '@dereekb/util';
+import { isEnvFlagEnabled, type Maybe, type PartialWithUndefined, mergeObjects, type Milliseconds, type WebsiteUrl } from '@dereekb/util';
 import {
   evaluateLlmQuotaGate,
   type LlmAdapterRegistry,
@@ -109,7 +109,7 @@ export interface LlmLiveLaneConfig<X extends LlmModelConfigTypes = LlmModelConfi
   /**
    * The lane's own switch and verdict names, merged over {@link DEFAULT_LLM_LIVE_LANE_ENV_NAMES}.
    */
-  readonly names?: Maybe<Partial<LlmLiveLaneEnvNames>>;
+  readonly names?: Maybe<PartialWithUndefined<LlmLiveLaneEnvNames>>;
   /**
    * The provider / model env names; defaults to `/node`'s `DEFAULT_LLM_ENV_NAMES`.
    */

@@ -42,8 +42,8 @@ function tableReader(table: Readonly<Record<string, LlmCallBillRead>>): { readon
  * @param cost - The logged cost.
  * @returns The payload.
  */
-function call(generationId: string | undefined, model: string, cost: number): LlmCallLogPayload {
-  return { capability: 'summarize', model, ...(generationId == null ? {} : { generationId }), usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15, cost, costBasis: 'list' } };
+function call(generationId: string | undefined, model: string | undefined, cost: number): LlmCallLogPayload {
+  return { capability: 'summarize', ...(model == null ? {} : { model }), ...(generationId == null ? {} : { generationId }), usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15, cost, costBasis: 'list' } };
 }
 
 /**
@@ -87,7 +87,7 @@ const DECISION_ROW: Partial<LlmCallLogPayload> = { decision: 'PickRow', strategy
  * @returns The payload.
  */
 function rowOf(generationId: Maybe<string>, model: string, usage: Maybe<LlmUsage>): LlmCallLogPayload {
-  return { capability: 'summarize', model, ...(generationId == null ? {} : { generationId }), ...(usage == null ? {} : { usage }) };
+  return { capability: 'summarize', ...(model == null ? {} : { model }), ...(generationId == null ? {} : { generationId }), ...(usage == null ? {} : { usage }) };
 }
 
 /**
@@ -145,7 +145,7 @@ describe('reconcileLlmCallBills', () => {
       u2: { status: 'billed', bill: { generationId: 'u2', billed: 0.1, listed: 0.1 } },
       k1: { status: 'billed', bill: { generationId: 'k1', billed: 0.2, listed: 0.2 } }
     });
-    const noModel = (generationId: string): LlmCallLogPayload => ({ ...call(generationId, 'unused', 0.1), model: undefined });
+    const noModel = (generationId: string): LlmCallLogPayload => call(generationId, undefined, 0.1);
     const reconciliation = await reconcileLlmCallBills({ calls: [call('k1', 'vendor-a/model', 0.2), noModel('u1'), noModel('u2')], reader });
 
     expect(reconciliation.byModel.map((entry) => entry.model)).toEqual([undefined, 'vendor-a/model']);

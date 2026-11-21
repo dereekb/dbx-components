@@ -42,7 +42,7 @@ export interface LlmPromptCacheSegmentDigest {
   /**
    * The segment's diffing key, when it has one.
    */
-  readonly key?: string;
+  readonly key?: string | undefined;
 }
 
 /**

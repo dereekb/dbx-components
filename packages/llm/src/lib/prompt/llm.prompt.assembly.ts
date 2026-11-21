@@ -9,7 +9,7 @@
  * live context, look the descriptor up, resolve the templates and the contributors, assemble).
  */
 
-import { KeyValueTypleValueFilter, type Maybe, mergeObjects, splitJoinRemainder } from '@dereekb/util';
+import { KeyValueTypleValueFilter, type Maybe, type PartialWithUndefined, mergeObjects, splitJoinRemainder } from '@dereekb/util';
 import { type LlmCapabilityDescriptor, type LlmCapabilityDescriptorReader } from '../capability/llm.capability.descriptor';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCapabilityKey, type LlmModelId } from '../model/llm.value';
@@ -75,7 +75,7 @@ export const DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS: LlmPromptAssemblyTexts = {
  * @param texts - The host's partial texts.
  * @returns The complete texts.
  */
-function llmPromptAssemblyTextsOf(texts: Maybe<Partial<LlmPromptAssemblyTexts>>): LlmPromptAssemblyTexts {
+function llmPromptAssemblyTextsOf(texts: Maybe<PartialWithUndefined<LlmPromptAssemblyTexts>>): LlmPromptAssemblyTexts {
   // The NULL filter keeps the `??` treatment: a `null` field also falls back to the default.
   return mergeObjects<LlmPromptAssemblyTexts>([DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS, texts], KeyValueTypleValueFilter.NULL);
 }
@@ -215,7 +215,7 @@ export interface AssembleLlmCapabilityPromptConfig {
   /**
    * The host's texts; each omitted field keeps its default.
    */
-  readonly texts?: Maybe<Partial<LlmPromptAssemblyTexts>>;
+  readonly texts?: Maybe<PartialWithUndefined<LlmPromptAssemblyTexts>>;
 }
 
 /**
@@ -606,7 +606,7 @@ export interface ComposeLlmCapabilityPromptConfig<R extends LlmDispatchRequest =
   /**
    * The host's texts; each omitted field keeps its default.
    */
-  readonly texts?: Maybe<Partial<LlmPromptAssemblyTexts>>;
+  readonly texts?: Maybe<PartialWithUndefined<LlmPromptAssemblyTexts>>;
   /**
    * THIS call's context — the `render`, `contribute` and `assemble` spans time into it. Nullish ⇒
    * `noopLlmCallContext()` (never the request's `callContext`, which is the parent a dispatcher nests a call under).

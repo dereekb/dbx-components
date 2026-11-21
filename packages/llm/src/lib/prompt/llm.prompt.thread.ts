@@ -40,11 +40,11 @@ export interface LlmPromptFollowUp {
    * OPT-IN bounded-retry validator for THIS turn's reply (the same contract as the request's `validate`). Unset ⇒
    * single-shot.
    */
-  readonly validate?: LlmValueValidator;
+  readonly validate?: LlmValueValidator | undefined;
   /**
    * Total attempts the {@link validate} loop may make for this turn (the request's `maxAttempts` contract).
    */
-  readonly maxAttempts?: Count;
+  readonly maxAttempts?: Count | undefined;
   /**
    * An advisory reply-shape hint for THIS turn. Unset ⇒ the root request's resolved hint is inherited (a JSON chain
    * keeps enforcing its schema on every turn).

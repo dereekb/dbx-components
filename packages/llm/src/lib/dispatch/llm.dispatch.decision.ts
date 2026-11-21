@@ -135,7 +135,7 @@ export interface LlmDispatchDecisionLaneConfig<R extends LlmDispatchRequest = Ll
  */
 interface LlmDispatchDecisionModel {
   readonly model: LlmModelId;
-  readonly tier?: LlmModelTierKey;
+  readonly tier?: LlmModelTierKey | undefined;
 }
 
 /**
@@ -262,7 +262,7 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
 
             lastError = error;
             const summary = formatLlmErrorSummary(error);
-            failedAttempts.push(toLlmCallFailedAttempt({ attempt, cause: 'transport', result: makeLlmTransportResult({ capability, meta: request.meta }, strategyId), error: summary }));
+            failedAttempts.push(toLlmCallFailedAttempt({ attempt, cause: 'transport', result: makeLlmTransportResult(request, strategyId), error: summary }));
             const delayMs = transportBackoff({ attempt, error });
             callContext.diag({ level: 'warn', code: 'transport-backoff', fields: { capability, decision, attempt, delayMs, error: summary }, message: 'a decision send failed before reaching the model; backing off before an identical resend' });
             await callContext.timeAsync('transport-backoff', () => waitForMsUnlessAborted(delayMs, signal));

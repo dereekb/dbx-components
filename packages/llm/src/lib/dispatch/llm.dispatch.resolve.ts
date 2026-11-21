@@ -102,7 +102,7 @@ export interface LlmResolvedDispatch<D extends LlmCapabilityDescriptor = LlmCapa
   /**
    * The resolved tier, when the model came from one.
    */
-  readonly tier?: LlmModelTierKey;
+  readonly tier?: LlmModelTierKey | undefined;
   /**
    * The resolved, concrete slug — the wire model every request of the dispatch names.
    */

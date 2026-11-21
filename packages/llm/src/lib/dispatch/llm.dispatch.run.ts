@@ -400,7 +400,7 @@ interface LlmDispatchLoopState {
   /**
    * The failure class of the LAST SENT attempt — reset before every send, so it never describes an earlier one.
    */
-  lastFailureClass?: LlmDecodeFailureClass;
+  lastFailureClass?: LlmDecodeFailureClass | undefined;
   critiqueFailure?: Maybe<string>;
   terminalFault?: Maybe<LlmDispatchTerminalFault>;
   accepted: boolean;

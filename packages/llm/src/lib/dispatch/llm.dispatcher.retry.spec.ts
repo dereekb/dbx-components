@@ -20,6 +20,7 @@ import { makeLlmDispatchTapRegistry, type LlmDecodeFailureTapEvent, type LlmDisp
 import { type LlmCritic } from '../reply/llm.reply.critique';
 import { formatLlmErrorSummary } from '../strategy/llm.error';
 import { type LlmDispatchResult, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
+import { type LlmUsage } from '../strategy/llm.usage';
 import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { type LlmDispatchGap, type LlmDispatcherConfig, type LlmDispatchRecorder } from './llm.dispatcher.config';
@@ -55,9 +56,14 @@ const INVALID = '{"answer":1}';
 const PROSE = 'just prose';
 
 /**
+ * The usage of a completion whose every completion token was spent reasoning.
+ */
+const CAP_USAGE: LlmUsage = { promptTokens: 10, completionTokens: 2048, totalTokens: 2058, reasoningTokens: 2048 };
+
+/**
  * A completion the cap ended, with no text and every completion token spent reasoning.
  */
-const CAP: LlmScriptedCompletion = { text: '', finishReason: 'length', usage: { promptTokens: 10, completionTokens: 2048, totalTokens: 2058, reasoningTokens: 2048 } };
+const CAP: LlmScriptedCompletion = { text: '', finishReason: 'length', usage: CAP_USAGE };
 
 const TRUNCATED: LlmScriptedCompletion = { text: '{"answer":"cut off mid', finishReason: 'length' };
 
@@ -348,7 +354,7 @@ describe('makeLlmDispatcher() retry', () => {
     });
 
     it('should retry a reasoning-only reply with reasoning off', async () => {
-      const { dispatcher, requests } = setup({ replies: [{ text: '', usage: CAP.usage }, OK], reasoningDefault: { enabled: true, effort: 'medium' } });
+      const { dispatcher, requests } = setup({ replies: [{ text: '', usage: CAP_USAGE }, OK], reasoningDefault: { enabled: true, effort: 'medium' } });
       await dispatcher.dispatch(request({ validate: VALID }));
 
       expect(requests[0].reasoning?.enabled).toBe(true);
@@ -357,7 +363,7 @@ describe('makeLlmDispatcher() retry', () => {
 
     it('should take no reasoning rung on a strategy that does not accept the reasoning parameter', async () => {
       const requests: LlmRequest[] = [];
-      const strategy: LlmStrategy = { ...makeLlmScriptedStrategy({ id: 's', replies: [{ text: '', usage: CAP.usage }, OK], requests }), supportsReasoningParam: false };
+      const strategy: LlmStrategy = { ...makeLlmScriptedStrategy({ id: 's', replies: [{ text: '', usage: CAP_USAGE }, OK], requests }), supportsReasoningParam: false };
       const { dispatcher } = setup({ strategy, reasoningDefault: { enabled: true, effort: 'medium' } });
       await dispatcher.dispatch(request({ validate: VALID }));
 
