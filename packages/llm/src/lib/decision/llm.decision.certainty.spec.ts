@@ -3,9 +3,9 @@
  * and the four unsure classes, over hand-built distributions.
  */
 
-import { describe, expect, it } from 'vitest';
-import { type LlmChoiceCertaintyFloors, readLlmChoiceCertainty } from './llm.decision.certainty';
-import type { LlmDecisionChoiceAnswer } from './llm.decision.question';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import { type LlmChoiceCertaintyFloors, type LlmChoiceContender, readLlmChoiceCertainty } from './llm.decision.certainty';
+import type { LlmDecisionChoiceAnswer, LlmDecisionChoiceRankingRow } from './llm.decision.question';
 
 const FLOORS: LlmChoiceCertaintyFloors = { sureConfidence: 0.5, sureMargin: 0.2, contenderMass: 0.6, contendersMax: 4 };
 
@@ -81,5 +81,11 @@ describe('readLlmChoiceCertainty', () => {
   it('is pure: the same answer reads the same', () => {
     const answer = choiceOf({ a: 0.36, b: 0.33, c: 0.31 }, 0.36);
     expect(readLlmChoiceCertainty(answer, { floors: FLOORS })).toEqual(readLlmChoiceCertainty(answer, { floors: FLOORS }));
+  });
+});
+
+describe('LlmChoiceContender', () => {
+  it('should be the ranking row, declared once', () => {
+    expectTypeOf<LlmChoiceContender<'a' | 'b'>>().toEqualTypeOf<LlmDecisionChoiceRankingRow<'a' | 'b'>>();
   });
 });

@@ -28,6 +28,7 @@ import { type } from 'arktype';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmCapabilityKey, type LlmModelTierKey, type LlmTokenCount } from '../model/llm.value';
 import { llmLiveContextBlock, type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
+import { LLM_CAPABILITY_CONTEXT_FENCE, LLM_CAPABILITY_REPLY_FENCE, llmFencedBlockLines } from './llm.capability.fence';
 import { type LlmPromptTemplate } from '../prompt/llm.prompt.template';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
@@ -97,12 +98,6 @@ export function parseLlmCritiqueOutcomeValue(value: unknown): Maybe<LlmCritiqueO
 }
 
 /**
- * The fence delimiters the two UNTRUSTED blocks are wrapped in, so the judge can see where each ends.
- */
-const CONTEXT_FENCE = 'CONTEXT';
-const REPLY_FENCE = 'REPLY';
-
-/**
  * The inputs {@link renderLlmCritiqueContext} renders the judge's live context from.
  */
 export interface RenderLlmCritiqueContextConfig {
@@ -150,7 +145,7 @@ export function renderLlmCritiqueContext(config: RenderLlmCritiqueContextConfig)
     }),
     llmLiveContextBlock({
       key: 'context-fence',
-      lines: [`<<<${CONTEXT_FENCE}`, liveContext, CONTEXT_FENCE]
+      lines: llmFencedBlockLines(LLM_CAPABILITY_CONTEXT_FENCE, liveContext)
     }),
     llmLiveContextBlock({
       key: 'under-review',
@@ -158,7 +153,7 @@ export function renderLlmCritiqueContext(config: RenderLlmCritiqueContextConfig)
     }),
     llmLiveContextBlock({
       key: 'fence',
-      lines: [`<<<${REPLY_FENCE}`, replyText, REPLY_FENCE]
+      lines: llmFencedBlockLines(LLM_CAPABILITY_REPLY_FENCE, replyText)
     })
   ]);
 }

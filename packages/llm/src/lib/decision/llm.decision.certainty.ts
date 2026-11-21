@@ -18,7 +18,7 @@
  */
 
 import type { Maybe, Count, PercentDecimal } from '@dereekb/util';
-import { toLlmDecisionConfidenceBand, llmDecisionChoiceRanking, type LlmDecisionChoiceAnswer, type LlmDecisionConfidenceBand } from './llm.decision.question';
+import { toLlmDecisionConfidenceBand, llmDecisionChoiceRanking, type LlmDecisionChoiceAnswer, type LlmDecisionChoiceRankingRow, type LlmDecisionConfidenceBand } from './llm.decision.question';
 
 /**
  * What a Choice's answer reads as — see the module doc.
@@ -48,12 +48,10 @@ export interface LlmChoiceCertaintyFloors {
 }
 
 /**
- * One contender — an option and its share, most probable first.
+ * One contender — an option and its share, most probable first: a row of the Choice's ranking
+ * ({@link LlmDecisionChoiceRankingRow}), which is the one declaration of that shape.
  */
-export interface LlmChoiceContender<O extends string = string> {
-  readonly option: O;
-  readonly probability: PercentDecimal;
-}
+export type LlmChoiceContender<O extends string = string> = LlmDecisionChoiceRankingRow<O>;
 
 /**
  * What {@link readLlmChoiceCertainty} read.
@@ -142,8 +140,10 @@ export function readLlmChoiceCertainty<O extends string>(answer: LlmDecisionChoi
   const { floors } = config;
   const ranking = llmDecisionChoiceRanking(answer);
   const head = ranking[0];
-  const winner: LlmChoiceContender<O> | undefined = head ?? (Number.isFinite(answer.confidence) ? { option: answer.choice, probability: answer.confidence as number } : undefined);
-  const confidence = Number.isFinite(answer.confidence) ? (answer.confidence as number) : head?.probability;
+  // the confidence the reply stated, read once: the winner falls back to it, and it wins over the head's share
+  const stated = Number.isFinite(answer.confidence) ? (answer.confidence as number) : undefined;
+  const winner: LlmChoiceContender<O> | undefined = head ?? (stated == null ? undefined : { option: answer.choice, probability: stated });
+  const confidence = stated ?? head?.probability;
   let read: LlmChoiceCertainty<O>;
 
   if (confidence == null || winner == null) {

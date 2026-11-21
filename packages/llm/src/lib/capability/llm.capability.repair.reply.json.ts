@@ -16,6 +16,7 @@ import { filterMaybeArrayValues, isPlainObject, type JsonRepairShape, type Maybe
 import { type } from 'arktype';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { llmLiveContextBlock, type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
+import { LLM_CAPABILITY_REPLY_FENCE, llmFencedBlockLines } from './llm.capability.fence';
 import { type LlmPromptTemplate } from '../prompt/llm.prompt.template';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
 import { readLlmDispatchResultReply } from '../reply/llm.reply.envelope';
@@ -41,11 +42,6 @@ export const LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE: LlmSwallowSiteId = 'llm/rep
  * invocation as the `responseSchemaHint`; this descriptor's own hint is never sent.
  */
 export const llmRepairReplyJsonSchema = /*#__PURE__*/ type('object');
-
-/**
- * The fence around the broken reply in the fixer's live context.
- */
-const REPLY_FENCE = 'REPLY';
 
 /**
  * Read the fixer's value — any object, not an array.
@@ -87,7 +83,7 @@ export interface RenderLlmRepairReplyJsonContextConfig {
  * @returns The live-context blocks, keyed `diagnosis` and `reply`.
  */
 export function renderLlmRepairReplyJsonContext(config: RenderLlmRepairReplyJsonContextConfig): ReadonlyArray<LlmLiveContextBlock> {
-  return filterMaybeArrayValues([llmLiveContextBlock({ key: 'diagnosis', lines: ['## Where parsing fails', llmReplyRepairDiagnosis(config.shape)] }), llmLiveContextBlock({ key: 'reply', lines: ['## The reply', `<<<${REPLY_FENCE}`, config.text, REPLY_FENCE] })]);
+  return filterMaybeArrayValues([llmLiveContextBlock({ key: 'diagnosis', lines: ['## Where parsing fails', llmReplyRepairDiagnosis(config.shape)] }), llmLiveContextBlock({ key: 'reply', lines: ['## The reply', ...llmFencedBlockLines(LLM_CAPABILITY_REPLY_FENCE, config.text)] })]);
 }
 
 /**
