@@ -34,4 +34,17 @@ describe('makeLlmDispatcherFake()', () => {
       { role: 'assistant', content: 'reply-2' }
     ]);
   });
+
+  it('should resume a stored thread and route its follow-up through the wrapped function', async () => {
+    const calls: LlmDispatchRequest[] = [];
+    const dispatcher = makeLlmDispatcherFake(async (r: LlmDispatchRequest) => (calls.push(r), { text: 'reply-2', strategyId: 'fake', capability: r.capability }));
+    const stored = [
+      { role: 'user', content: 'root' },
+      { role: 'assistant', content: 'reply-1' }
+    ] as const;
+    const followed = await dispatcher.resumePrompt({ request, thread: stored }).followUp({ content: 'next' }).execute();
+
+    expect(calls).toEqual([request]);
+    expect(followed.thread).toEqual([...stored, { role: 'user', content: 'next' }, { role: 'assistant', content: 'reply-2' }]);
+  });
 });

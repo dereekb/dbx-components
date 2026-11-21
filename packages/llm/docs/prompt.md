@@ -14,8 +14,9 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   `traits` — the host's own flags, which the library never reads.
 - **Dispatch.** `LlmDispatchRequest` is what a capability hands a dispatcher (the live-context renderer, overrides, a
   validator, a critic, a site, the parent call context, `meta`, an abort `signal`). `LlmDispatcher` dispatches it or
-  prepares an `LlmPrompt`, which executes once and chains follow-ups onto the same thread (`ExecutedLlmPrompt`). Hosts
-  extend the request and result types and pass them as `R` and `X`.
+  prepares an `LlmPrompt`, which executes once and chains follow-ups onto the same thread (`ExecutedLlmPrompt`), and
+  resumes a stored thread as an `LlmPromptThreadHead`. Hosts extend the request and result types and pass them as `R`
+  and `X`.
 - **Reply checks.** `LlmValueValidator` (sync: is it well-formed?), `LlmCritic` (async and billed: is it good? never
   throws) and `LlmReplyFastFixer` (one cheap call that repairs a mangled JSON reply from the scorer's `JsonRepairShape`,
   from `@dereekb/util`).
@@ -70,10 +71,18 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   execution is cached too) and chain follow-ups onto the same thread. A recorded reply is capped at 8,000 characters
   (`threadTurnMaxChars`), and a reply the run marks `degenerate` is recorded as a placeholder
   (`degenerateThreadPlaceholder`), so no later follow-up replays — and re-bills — a garbage turn.
+- **Resuming.** A head's `thread` is plain data (`role`, `content`, optional `cacheSegments`), so a host stores it under
+  its own message id. The factory's `resume({ request, thread })` rebuilds an `LlmPromptThreadHead` from it in a later
+  process. Follow-ups chain onto that head exactly as onto the `ExecutedLlmPrompt` that recorded the thread, and send
+  the same bytes. Resuming an earlier message's thread branches the conversation there. The root request is supplied
+  again because follow-ups inherit its capability, model and host fields; its live context is never rendered. A thread
+  must alternate `user` / `assistant` from `user` and end on a reply (`isLlmPromptResumableThread`); `resume` throws
+  otherwise. A resumed thread replays as stored, untouched by the recording settings.
 - **Chains.** `makeLlmPromptChain({ lead })` is one chained-follow-up instance. `chain.dispatch({ dispatcher, request,
   previous })` fires a root, or chains a follow-up onto `previous` whose message is the lead plus only the live blocks
   that changed since the thread last saw them (unchanged ones are named, not re-sent). The instance holds what each
-  handle sent, weakly; two instances never share it.
+  handle sent, weakly; two instances never share it. A resumed head has no held blocks, so the first item after it
+  sends its whole live context.
 - **Budget.** `estimateLlmTokens` is `ceil(length / 4)`; `estimateLlmRequestPromptTokens` estimates a whole request
   (prompt, replayed thread, response schema). `budgetLlmLiveContextBlocks` keeps a live context under a token budget
   (default 12,000, less `reservedPrefixTokens`) by shrinking, then dropping, the lowest-priority blocks — never a

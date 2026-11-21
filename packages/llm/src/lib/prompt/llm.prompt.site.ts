@@ -12,6 +12,7 @@ import { type Maybe, mergeObjects } from '@dereekb/util';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
+import { type LlmPromptResumeParams } from './llm.prompt.thread';
 
 /**
  * One typed site fact's value — a closed scalar, so a fact match is an equality test and never a parse.
@@ -127,10 +128,10 @@ export interface WithLlmPromptSiteConfig<R extends LlmDispatchRequest = LlmDispa
 
 /**
  * Derive a dispatcher whose every request carries `site` — the ONE scope wrapper over a whole run (a document
- * workflow's `{ supply: { glossary } }`). Both members are wrapped ({@link LlmDispatcher.dispatch} and
- * {@link LlmDispatcher.preparePrompt}, through which a chain root goes), so no call site is edited and every call of
- * the scope carries the site with no signature change. The other members (`decide`, `capabilityVision`) ride the spread
- * unchanged.
+ * workflow's `{ supply: { glossary } }`). The three request-taking members are wrapped ({@link LlmDispatcher.dispatch},
+ * {@link LlmDispatcher.preparePrompt}, through which a chain root goes, and {@link LlmDispatcher.resumePrompt}, whose
+ * root request follow-ups inherit), so no call site is edited and every call of the scope carries the site with no
+ * signature change. The other members (`decide`, `capabilityVision`) ride the spread unchanged.
  *
  * Wrappers compose: a dispatcher wrapped LATER is the narrower scope, so its keys win over an earlier wrapper's, and a
  * request's own site wins over both ({@link mergeLlmPromptSite}). It stamps the site and NEVER rewrites a byte; a
@@ -157,6 +158,7 @@ export function withLlmPromptSite<R extends LlmDispatchRequest = LlmDispatchRequ
   return {
     ...dispatcher,
     dispatch: (request: R) => dispatcher.dispatch(stamp(request)),
-    preparePrompt: (request: R) => dispatcher.preparePrompt(stamp(request))
+    preparePrompt: (request: R) => dispatcher.preparePrompt(stamp(request)),
+    resumePrompt: (params: LlmPromptResumeParams<R>) => dispatcher.resumePrompt({ ...params, request: stamp(params.request) })
   };
 }

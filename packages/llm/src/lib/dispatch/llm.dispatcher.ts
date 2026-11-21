@@ -12,7 +12,7 @@ import { type LlmDecisionQuestions } from '../decision/llm.decision.question';
 import { type LlmDecisionResult } from '../decision/llm.decision.strategy';
 import { type LlmCapabilityModelOverride, type LlmCapabilityVision } from '../model/llm.model.precedence';
 import { type LlmCapabilityKey } from '../model/llm.value';
-import { type LlmPrompt } from '../prompt/llm.prompt.thread';
+import { type LlmPrompt, type LlmPromptResumeParams, type LlmPromptThreadHead } from '../prompt/llm.prompt.thread';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 
@@ -43,6 +43,17 @@ export interface LlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest
    * @returns The prepared, not-yet-executed prompt.
    */
   preparePrompt(request: R): LlmPrompt<R, X>;
+  /**
+   * Rebuild a chain head from a stored thread — the cross-process half of {@link preparePrompt}. A host stores an
+   * executed prompt's `thread` under its own message id, then later resumes from it (or from any earlier message's
+   * thread, branching there) and chains follow-ups that run the same dispatch path. The root request is supplied again
+   * because follow-ups inherit its capability, model, strategy and host fields.
+   *
+   * @param params - The chain's root request and the stored thread.
+   * @returns The resumed head; nothing runs until a follow-up executes.
+   * @throws {Error} When the thread is not resumable (`isLlmPromptResumableThread`).
+   */
+  resumePrompt(params: LlmPromptResumeParams<R>): LlmPromptThreadHead<R, X>;
   /**
    * Run one DECISION — declared questions over a state, typed answers back, recorded in the same ledger as every
    * completion. The decision-lane sibling of {@link dispatch}: it shares the dispatcher's recorder, host hooks

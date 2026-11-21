@@ -68,6 +68,7 @@ function recordingDispatcherOf() {
   const dispatcher: LlmDispatcher<HostRequest> = {
     dispatch: async (request) => (await preparePrompt(request).execute()).result,
     preparePrompt,
+    resumePrompt: preparePrompt.resume,
     capabilityVision: () => ({ model: 'vision-model', vision: true, source: 'default-tier' })
   };
   return { dispatcher, seen };
@@ -84,6 +85,23 @@ describe('withLlmPromptSite()', () => {
     await scoped.preparePrompt(request()).execute();
 
     expect(seen.map((entry) => entry.site)).toEqual([{ supply: { glossary: 'G' } }, { supply: { glossary: 'G' } }]);
+  });
+
+  it("stamps the scope site on resumePrompt's root request, which its follow-ups carry", async () => {
+    const { dispatcher, seen } = recordingDispatcherOf();
+    const scoped = withLlmPromptSite({ dispatcher, site: { supply: { glossary: 'G' } } });
+
+    const resumed = scoped.resumePrompt({
+      request: request(),
+      thread: [
+        { role: 'user', content: 'sent' },
+        { role: 'assistant', content: 'ok' }
+      ]
+    });
+    await resumed.followUp({ content: 'next' }).execute();
+
+    expect(resumed.request.site).toEqual({ supply: { glossary: 'G' } });
+    expect(seen.map((entry) => entry.site)).toEqual([{ supply: { glossary: 'G' } }]);
   });
 
   it("lets a request's own site win key by key", async () => {

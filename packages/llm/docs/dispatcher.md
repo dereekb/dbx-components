@@ -42,6 +42,11 @@ correction / backoff vocabulary with its constants.
   chains onto the same thread; `dispatch(request)` equals `preparePrompt(request).execute()` unwrapped. A degenerate
   reply replays as `degenerateThreadPlaceholder`. `makeLlmPromptChain` works over it unchanged: the root renders its
   live context once, and each follow-up sends only the lead and the changed blocks.
+- **Resuming.** `resumePrompt({ request, thread })` rebuilds a chain head from a stored `thread`, so a follow-up can run
+  in a later process: send a message, store `executed.thread` under the message's id, and come back to it later. A
+  follow-up's composition reads only the root request, the thread and the follow-up, so the resumed call sends the
+  same bytes and keeps the provider's prefix cache warm. Resuming an older message's thread branches there. The
+  thread rules are in [prompt](prompt.md).
 - **Records and taps.** `recorder.recordCallStart` fires before the send, `recordCall` once per execution, and
   `recordDecodeFailure` once when any decode row exists. The recorder gets the full in-memory record and owns any
   capture gate: persist `toLlmCallLogPayload(record, { keepIo, keepPhases })` (the flat row every reader and the tape
@@ -88,6 +93,10 @@ const result = await dispatcher.dispatch({ capability: 'summarize', renderLiveCo
 
 const first = await dispatcher.preparePrompt({ capability: 'summarize', renderLiveContext }).execute();
 const next = await first.followUp({ content: 'Now the second item.' }).execute();
+
+// later, in another process: resume from the thread stored under that message's id
+const resumed = dispatcher.resumePrompt({ request: { capability: 'summarize', renderLiveContext }, thread: next.thread });
+const last = await resumed.followUp({ content: 'Now the third item.' }).execute();
 ```
 
 ## Retry and lanes

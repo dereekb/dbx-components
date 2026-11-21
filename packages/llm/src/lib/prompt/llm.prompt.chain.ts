@@ -9,7 +9,8 @@
  * the assembly and are never part of it, so they are never re-sent on a follow-up.
  *
  * ONE instance per host: a handle chained through a different instance has no base there and sends its whole live
- * context. The dispatcher is passed per call, so one instance spans differently scoped dispatchers
+ * context — as does a head resumed from a stored thread (`LlmDispatcher.resumePrompt`), whose sent blocks no instance
+ * holds. The dispatcher is passed per call, so one instance spans differently scoped dispatchers
  * (`withLlmPromptSite`).
  */
 
@@ -18,7 +19,7 @@ import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { droppedLlmLiveContextBlockKeys, llmChainedFollowUpBody, mergeLlmChainedFollowUpBase, type LlmLiveContextBlock } from './llm.prompt.live.context';
-import { type ExecutedLlmPrompt } from './llm.prompt.thread';
+import { type ExecutedLlmPrompt, type LlmPromptThreadHead } from './llm.prompt.thread';
 
 /**
  * The default continuation lead prepended to a chained follow-up's live-context delta. It invites cross-item coherence
@@ -56,9 +57,9 @@ export interface LlmPromptChainDispatchParams<R extends LlmDispatchRequest = Llm
    */
   readonly request: R;
   /**
-   * The executed parent to chain onto; absent ⇒ a fresh root.
+   * The head to chain onto — an executed parent or a resumed head; absent ⇒ a fresh root.
    */
-  readonly previous?: Maybe<ExecutedLlmPrompt<R, X>>;
+  readonly previous?: Maybe<LlmPromptThreadHead<R, X>>;
   /**
    * A per-call override of the instance's lead (a turn that is not "the next item" words its own).
    */
@@ -125,7 +126,7 @@ interface LlmPromptChainSentBlocks {
  */
 export function makeLlmPromptChain<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult>(config?: Maybe<LlmPromptChainConfig>): LlmPromptChain<R, X> {
   const defaultLead = config?.lead ?? DEFAULT_LLM_PROMPT_CHAIN_LEAD;
-  const sentBlocks = new WeakMap<ExecutedLlmPrompt<R, X>, LlmPromptChainSentBlocks>();
+  const sentBlocks = new WeakMap<LlmPromptThreadHead<R, X>, LlmPromptChainSentBlocks>();
 
   return {
     async dispatch(params: LlmPromptChainDispatchParams<R, X>): Promise<ExecutedLlmPrompt<R, X>> {

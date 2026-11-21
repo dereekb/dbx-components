@@ -19,6 +19,11 @@
  * {@link LlmPromptFactoryConfig.threadTurnMaxChars} (default {@link DEFAULT_LLM_THREAD_TURN_MAX_CHARS}) is capped with
  * {@link LLM_THREAD_TURN_TRUNCATION_MARKER} — so a later follow-up never replays, and the provider never re-bills, a
  * runaway garbage turn.
+ *
+ * A chain outlives its process through its thread: every {@link LlmPromptThreadHead.thread} is plain data, so a host
+ * stores it under its own message id and later rebuilds a head with {@link LlmPromptFactory.resume} — continuing from
+ * the newest message, or branching from any earlier one. A follow-up's composition reads only the root request, the
+ * thread and the follow-up, so a resumed follow-up sends exactly the bytes the original chain would have.
  */
 
 import { type CachedGetter, cachedGetter, cutStringFunction, type Maybe, type Count } from '@dereekb/util';
@@ -70,10 +75,10 @@ export interface LlmPrompt<R, X extends LlmDispatchResult = LlmDispatchResult> {
    */
   readonly followUp?: Maybe<LlmPromptFollowUp>;
   /**
-   * The executed parent this prompt chains from — its {@link ExecutedLlmPrompt.thread} is replayed ahead of this
-   * prompt's message. Nullish on the root.
+   * The head this prompt chains from — an executed parent or a resumed head; its {@link LlmPromptThreadHead.thread} is
+   * replayed ahead of this prompt's message. Nullish on the root.
    */
-  readonly previous?: Maybe<ExecutedLlmPrompt<R, X>>;
+  readonly previous?: Maybe<LlmPromptThreadHead<R, X>>;
   /**
    * Execute the prompt. If it has already executed, returns the same reference and does not fire the call again (a
    * rejected execution is also cached — prepare a fresh prompt to retry).
@@ -82,14 +87,45 @@ export interface LlmPrompt<R, X extends LlmDispatchResult = LlmDispatchResult> {
 }
 
 /**
- * An executed prompt — the chain node AFTER its transition fired (the `FetchNextPage` analog). Wraps the raw
- * {@link result}, back-references the {@link prompt} that produced it (whose cached `execute` returns this same
- * instance — the reuse handle), and chains the next message via {@link followUp}.
+ * The head of an exchanged thread — what a follow-up chains onto. Either an {@link ExecutedLlmPrompt} (a call this
+ * process made) or a resumed head ({@link LlmPromptFactory.resume} over a thread a host stored and loaded back); a
+ * follow-up from either sends the same bytes.
  *
  * @typeParam R - The request type the chain roots on.
  * @typeParam X - The dispatch result type an execution returns.
  */
-export interface ExecutedLlmPrompt<R, X extends LlmDispatchResult = LlmDispatchResult> {
+export interface LlmPromptThreadHead<R, X extends LlmDispatchResult = LlmDispatchResult> {
+  /**
+   * The ROOT request the chain was initialized from — every follow-up inherits its capability, model, strategy and
+   * host fields.
+   */
+  readonly request: R;
+  /**
+   * The full exchanged thread up to and including this head's assistant reply, oldest first — exactly what a chained
+   * follow-up replays (`user` turns carry the FINAL prompt variant that produced the accepted reply, so the replayed
+   * bytes match what the provider cached). Plain strings throughout, so a host stores it as-is to resume from this
+   * message later.
+   */
+  readonly thread: ReadonlyArray<LlmThreadTurn>;
+  /**
+   * Chain a follow-up prompt onto this head — a new not-yet-executed {@link LlmPrompt} whose execution replays
+   * {@link thread} ahead of the follow-up content. Chaining never re-fires any prior call.
+   *
+   * @param followUp - The follow-up message + its per-turn settings.
+   * @returns The chained, not-yet-executed prompt.
+   */
+  readonly followUp: (followUp: LlmPromptFollowUp) => LlmPrompt<R, X>;
+}
+
+/**
+ * An executed prompt — the chain node AFTER its transition fired (the `FetchNextPage` analog). Wraps the raw
+ * {@link result}, back-references the {@link prompt} that produced it (whose cached `execute` returns this same
+ * instance — the reuse handle), and chains the next message via {@link LlmPromptThreadHead.followUp}.
+ *
+ * @typeParam R - The request type the chain roots on.
+ * @typeParam X - The dispatch result type an execution returns.
+ */
+export interface ExecutedLlmPrompt<R, X extends LlmDispatchResult = LlmDispatchResult> extends LlmPromptThreadHead<R, X> {
   /**
    * The prompt that produced this result — its cached {@link LlmPrompt.execute} resolves to THIS instance, so holding
    * either side of the pair reuses the one underlying call.
@@ -99,20 +135,25 @@ export interface ExecutedLlmPrompt<R, X extends LlmDispatchResult = LlmDispatchR
    * The raw dispatch result this execution returned — the wrapped value a capability parses.
    */
   readonly result: X;
+}
+
+/**
+ * The inputs of {@link LlmPromptFactory.resume} — a stored thread and the root request to continue it under.
+ *
+ * @typeParam R - The request type the chain roots on.
+ */
+export interface LlmPromptResumeParams<R> {
   /**
-   * The full exchanged thread INCLUDING this execution's user turn + assistant reply, oldest first — exactly what a
-   * chained follow-up replays (`user` turns carry the FINAL prompt variant that produced the accepted reply, so the
-   * replayed bytes match what the provider cached).
+   * The chain's ROOT request, supplied again by the host. Follow-ups inherit its capability, model, strategy and host
+   * fields, so it must route as the original root did (same capability, same model) for the replayed prefix to stay
+   * warm in the provider's cache. Its live context is never rendered — a follow-up sends only its own content.
+   */
+  readonly request: R;
+  /**
+   * The stored thread to continue — a {@link LlmPromptThreadHead.thread} as it was saved, replayed verbatim. Must pass
+   * {@link isLlmPromptResumableThread}.
    */
   readonly thread: ReadonlyArray<LlmThreadTurn>;
-  /**
-   * Chain a follow-up prompt onto this exchange — a new not-yet-executed {@link LlmPrompt} whose execution replays
-   * {@link thread} ahead of the follow-up content. Chaining never re-fires this (or any prior) call.
-   *
-   * @param followUp - The follow-up message + its per-turn settings.
-   * @returns The chained, not-yet-executed prompt.
-   */
-  readonly followUp: (followUp: LlmPromptFollowUp) => LlmPrompt<R, X>;
 }
 
 /**
@@ -212,12 +253,51 @@ export const DEFAULT_LLM_THREAD_TURN_MAX_CHARS = 8_000;
 export const LLM_THREAD_TURN_TRUNCATION_MARKER = ' […truncated for replay]';
 
 /**
- * Creates a new root {@link LlmPrompt} instance from a request.
+ * Creates prompt handles over one run seam. Called with a request it prepares a new root {@link LlmPrompt}; its
+ * {@link LlmPromptFactory.resume} rebuilds a head from a stored thread, so a chain continues in a later process.
  *
  * @typeParam R - The request type the chain roots on.
  * @typeParam X - The dispatch result type.
  */
-export type LlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatchResult> = (request: R) => LlmPrompt<R, X>;
+export interface LlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatchResult> {
+  /**
+   * Prepare a new, not-yet-executed root prompt.
+   *
+   * @param request - The request the chain roots on.
+   * @returns The root prompt.
+   */
+  (request: R): LlmPrompt<R, X>;
+  /**
+   * Rebuild a head from a stored thread. Follow-ups chain onto it exactly as onto the {@link ExecutedLlmPrompt} that
+   * recorded the thread, and nothing runs until one executes. Resuming from an earlier message's thread branches the
+   * conversation there.
+   *
+   * @param params - The root request and the stored thread.
+   * @returns The resumed head.
+   * @throws {Error} When the thread fails {@link isLlmPromptResumableThread}.
+   */
+  readonly resume: (params: LlmPromptResumeParams<R>) => LlmPromptThreadHead<R, X>;
+}
+
+/**
+ * Whether a thread can be resumed: one or more `user` / `assistant` pairs, alternating from `user` and ending on an
+ * `assistant` reply. Every thread a factory records passes; a host checks a thread loaded from storage before resuming
+ * it ({@link LlmPromptFactory.resume} throws on one that fails).
+ *
+ * @param thread - The candidate thread.
+ * @returns Whether the thread is resumable.
+ *
+ * @example
+ * ```ts
+ * isLlmPromptResumableThread([{ role: 'user', content: 'Hi' }, { role: 'assistant', content: 'Hello' }]); // true
+ * isLlmPromptResumableThread([{ role: 'user', content: 'Hi' }]); // false — no reply to continue from
+ * ```
+ *
+ * @__NO_SIDE_EFFECTS__
+ */
+export function isLlmPromptResumableThread(thread: ReadonlyArray<LlmThreadTurn>): boolean {
+  return thread.length > 0 && thread.length % 2 === 0 && thread.every((turn, index) => turn.role === (index % 2 === 0 ? 'user' : 'assistant'));
+}
 
 /**
  * Build an {@link LlmPromptFactory} over a run seam — the generic execute-once / chain-follow-ups mechanics (see the
@@ -225,7 +305,8 @@ export type LlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatchResult>
  *
  * Each execution records the sent user turn and a replay-safe assistant turn: the placeholder for a degenerate reply,
  * else `result.text` capped at the turn limit (a dispatcher that repaired a reply reports the repaired text, which is
- * what a follow-up replays). A clean, in-bounds reply is recorded byte-identically.
+ * what a follow-up replays). A clean, in-bounds reply is recorded byte-identically. A resumed thread is replayed as
+ * stored; the recording settings apply only to the turns this factory records.
  *
  * @param config - The run seam and the recording settings.
  * @returns The factory.
@@ -238,6 +319,10 @@ export type LlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatchResult>
  * const preparePrompt = makeLlmPromptFactory({ runPromptRequest });
  * const executed = await preparePrompt(request).execute();
  * const next = await executed.followUp({ content: 'And the next one?' }).execute();
+ *
+ * // later, in another process, from the thread stored under that message's id:
+ * const resumed = preparePrompt.resume({ request, thread: next.thread });
+ * const last = await resumed.followUp({ content: 'And the last one?' }).execute();
  * ```
  *
  * @__NO_SIDE_EFFECTS__
@@ -260,7 +345,7 @@ export function makeLlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatc
     return content;
   }
 
-  function buildPrompt(request: R, previous: Maybe<ExecutedLlmPrompt<R, X>>, followUp: Maybe<LlmPromptFollowUp>): LlmPrompt<R, X> {
+  function buildPrompt(request: R, previous: Maybe<LlmPromptThreadHead<R, X>>, followUp: Maybe<LlmPromptFollowUp>): LlmPrompt<R, X> {
     const prompt: LlmPrompt<R, X> = {
       request,
       followUp,
@@ -273,6 +358,7 @@ export function makeLlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatc
         const thread: ReadonlyArray<LlmThreadTurn> = [...priorThread, ran.sentTurn, { role: 'assistant', content: assistantTurnContentOf(ran) }];
         const executed: ExecutedLlmPrompt<R, X> = {
           prompt,
+          request,
           result: ran.result,
           thread,
           followUp: (nextFollowUp: LlmPromptFollowUp) => buildPrompt(request, executed, nextFollowUp)
@@ -283,5 +369,20 @@ export function makeLlmPromptFactory<R, X extends LlmDispatchResult = LlmDispatc
     return prompt;
   }
 
-  return (request: R) => buildPrompt(request, undefined, undefined);
+  function resume(params: LlmPromptResumeParams<R>): LlmPromptThreadHead<R, X> {
+    const { request, thread } = params;
+
+    if (!isLlmPromptResumableThread(thread)) {
+      throw new Error(`llm prompt resume: a resumable thread alternates user / assistant turns from user and ends on an assistant reply (got ${thread.length} turn(s), the last ${thread.at(-1)?.role ?? 'none'})`);
+    }
+
+    const head: LlmPromptThreadHead<R, X> = {
+      request,
+      thread,
+      followUp: (followUp: LlmPromptFollowUp) => buildPrompt(request, head, followUp)
+    };
+    return head;
+  }
+
+  return Object.assign((request: R) => buildPrompt(request, undefined, undefined), { resume });
 }

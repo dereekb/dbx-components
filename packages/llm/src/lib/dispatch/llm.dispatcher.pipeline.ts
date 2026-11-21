@@ -231,6 +231,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
   return {
     dispatch,
     preparePrompt,
+    resumePrompt: preparePrompt.resume,
     capabilityVision: (capability, override) => resolveLlmCapabilityVision({ override, descriptor: descriptorOf(capability), route: capabilityRoutes?.get(capability), tiers: modelTiers, defaultTier, visionByModel }),
     ...decisionLane
   };

@@ -10,7 +10,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { makeLlmPromptFactory, DEFAULT_LLM_DEGENERATE_THREAD_PLACEHOLDER, DEFAULT_LLM_THREAD_TURN_MAX_CHARS, LLM_THREAD_TURN_TRUNCATION_MARKER, type LlmPromptRunParams, type LlmPromptRunResult } from './llm.prompt.thread';
+import { makeLlmPromptFactory, isLlmPromptResumableThread, DEFAULT_LLM_DEGENERATE_THREAD_PLACEHOLDER, DEFAULT_LLM_THREAD_TURN_MAX_CHARS, LLM_THREAD_TURN_TRUNCATION_MARKER, type LlmPromptRunParams, type LlmPromptRunResult } from './llm.prompt.thread';
+import { type LlmThreadTurn } from '../strategy/llm.strategy';
 
 /**
  * The minimal request the generic chain treats opaquely.
@@ -134,6 +135,107 @@ describe('makeLlmPromptFactory', () => {
     expect(runs[2]?.thread).toEqual(executed.thread);
     expect(branchA.thread.at(-1)?.content).toBe('reply-a');
     expect(branchB.thread.at(-1)?.content).toBe('reply-b');
+  });
+});
+
+describe('makeLlmPromptFactory; resume', () => {
+  it('a resumed head replays the stored thread on its follow-up exactly as the executed head that recorded it would', async () => {
+    const original = makeScriptedFactory(['reply-1', 'reply-2']);
+    const executed = await original.factory({ id: 'root' }).execute();
+    await executed.followUp({ content: 'and then?' }).execute();
+
+    // a later process: a fresh factory, and the thread as it came back from storage
+    const later = makeScriptedFactory(['reply-2']);
+    // eslint-disable-next-line unicorn/prefer-structured-clone -- a JSON round-trip IS the storage being simulated
+    const stored = JSON.parse(JSON.stringify(executed.thread)) as ReadonlyArray<LlmThreadTurn>;
+    const resumed = later.factory.resume({ request: { id: 'root' }, thread: stored });
+    const followUpPrompt = resumed.followUp({ content: 'and then?' });
+    const followedUp = await followUpPrompt.execute();
+
+    expect(resumed.request).toEqual({ id: 'root' });
+    expect(followUpPrompt.previous).toBe(resumed);
+    expect(later.runs).toHaveLength(1);
+    expect(later.runs[0]).toEqual(original.runs[1]);
+    expect(followedUp.thread.map((turn) => turn.content)).toEqual(['sent:root', 'reply-1', 'and then?', 'reply-2']);
+  });
+
+  it('runs nothing until a follow-up executes', () => {
+    const { factory, runs } = makeScriptedFactory(['reply-1']);
+    factory
+      .resume({
+        request: { id: 'root' },
+        thread: [
+          { role: 'user', content: 'sent:root' },
+          { role: 'assistant', content: 'reply-1' }
+        ]
+      })
+      .followUp({ content: 'next' });
+
+    expect(runs).toHaveLength(0);
+  });
+
+  it("resuming an earlier message's thread branches the conversation there", async () => {
+    const { factory, runs } = makeScriptedFactory(['reply-1', 'reply-2', 'reply-b']);
+    const first = await factory({ id: 'root' }).execute();
+    await first.followUp({ content: 'message B' }).execute();
+
+    const branched = await factory
+      .resume({ request: { id: 'root' }, thread: first.thread })
+      .followUp({ content: "message B'" })
+      .execute();
+
+    expect(runs[2]?.thread).toEqual(first.thread);
+    expect(branched.thread.map((turn) => turn.content)).toEqual(['sent:root', 'reply-1', "message B'", 'reply-b']);
+  });
+
+  it('chains on past the first resumed follow-up', async () => {
+    const { factory, runs } = makeScriptedFactory(['reply-2', 'reply-3']);
+    const resumed = factory.resume({
+      request: { id: 'root' },
+      thread: [
+        { role: 'user', content: 'sent:root' },
+        { role: 'assistant', content: 'reply-1' }
+      ]
+    });
+    const second = await resumed.followUp({ content: 'f1' }).execute();
+    const third = await second.followUp({ content: 'f2' }).execute();
+
+    expect(runs[1]?.thread).toEqual(second.thread);
+    expect(third.thread.map((turn) => turn.content)).toEqual(['sent:root', 'reply-1', 'f1', 'reply-2', 'f2', 'reply-3']);
+  });
+
+  it('throws on a thread that is not resumable', () => {
+    const { factory } = makeScriptedFactory(['reply-1']);
+
+    expect(() => factory.resume({ request: { id: 'root' }, thread: [] })).toThrow(/got 0 turn\(s\), the last none/);
+    expect(() => factory.resume({ request: { id: 'root' }, thread: [{ role: 'user', content: 'sent:root' }] })).toThrow(/got 1 turn\(s\), the last user/);
+  });
+});
+
+describe('isLlmPromptResumableThread()', () => {
+  const user = (content: string): LlmThreadTurn => ({ role: 'user', content });
+  const assistant = (content: string): LlmThreadTurn => ({ role: 'assistant', content });
+
+  it('accepts alternating pairs from user ending on an assistant reply', () => {
+    expect(isLlmPromptResumableThread([user('a'), assistant('b')])).toBe(true);
+    expect(isLlmPromptResumableThread([user('a'), assistant('b'), user('c'), assistant('d')])).toBe(true);
+  });
+
+  it('accepts every thread a factory records', async () => {
+    const { factory } = makeScriptedFactory(['reply-1', 'reply-2']);
+    const executed = await factory({ id: 'root' }).execute();
+    const followedUp = await executed.followUp({ content: 'next' }).execute();
+
+    expect(isLlmPromptResumableThread(executed.thread)).toBe(true);
+    expect(isLlmPromptResumableThread(followedUp.thread)).toBe(true);
+  });
+
+  it('rejects an empty thread, a thread ending on a user turn, and a thread that does not alternate from user', () => {
+    expect(isLlmPromptResumableThread([])).toBe(false);
+    expect(isLlmPromptResumableThread([user('a')])).toBe(false);
+    expect(isLlmPromptResumableThread([user('a'), assistant('b'), user('c')])).toBe(false);
+    expect(isLlmPromptResumableThread([assistant('a'), user('b')])).toBe(false);
+    expect(isLlmPromptResumableThread([user('a'), user('b')])).toBe(false);
   });
 });
 

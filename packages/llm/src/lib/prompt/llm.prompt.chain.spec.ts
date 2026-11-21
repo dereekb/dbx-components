@@ -26,7 +26,7 @@ function fakeDispatcherOf(reply: string) {
       return { result: { text: reply, strategyId: 'fake', capability: request.capability }, sentTurn: { role: 'user', content } };
     }
   });
-  const dispatcher: LlmDispatcher = { dispatch: async (request) => (await preparePrompt(request).execute()).result, preparePrompt };
+  const dispatcher: LlmDispatcher = { dispatch: async (request) => (await preparePrompt(request).execute()).result, preparePrompt, resumePrompt: preparePrompt.resume };
   return { dispatcher, dispatched, runs };
 }
 
@@ -70,6 +70,28 @@ describe('makeLlmPromptChain()', () => {
     // The base advances: the third item diffs against what the SECOND sent.
     const third = await chain.dispatch({ dispatcher, request: blocksRequest('extract', items('ROOM-2', 'ITEM-3')), previous: second });
     expect(third.thread[4]?.content).toBe(`${LEAD}\n\nITEM-3\n\n${UNCHANGED} members, room.`);
+  });
+
+  it('sends the whole live context on the first item after a resumed head (no instance holds its base), then diffs again', async () => {
+    const { dispatcher } = fakeDispatcherOf('reply');
+    const chain = makeLlmPromptChain();
+    const items = (item: string): ReadonlyArray<LlmLiveContextBlock> => [
+      { key: 'members', text: 'MEMBERS' },
+      { key: 'item', text: item }
+    ];
+    const resumed = dispatcher.resumePrompt({
+      request: blocksRequest('extract', []),
+      thread: [
+        { role: 'user', content: 'MEMBERS\n\nITEM-1' },
+        { role: 'assistant', content: 'reply' }
+      ]
+    });
+
+    const second = await chain.dispatch({ dispatcher, request: blocksRequest('extract', items('ITEM-2')), previous: resumed });
+    expect(second.thread[2]?.content).toBe(`${LEAD}\n\nMEMBERS\n\nITEM-2`);
+
+    const third = await chain.dispatch({ dispatcher, request: blocksRequest('extract', items('ITEM-3')), previous: second });
+    expect(third.thread[4]?.content).toBe(`${LEAD}\n\nITEM-3\n\n${UNCHANGED} members.`);
   });
 
   it('keeps the delta base CUMULATIVE across a disjoint block set, and takes a per-call lead', async () => {

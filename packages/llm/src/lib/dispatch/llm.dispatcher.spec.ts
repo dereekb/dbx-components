@@ -1,6 +1,6 @@
 import { cachedGetter } from '@dereekb/util';
 import { describe, expect, it } from 'vitest';
-import { type ExecutedLlmPrompt, type LlmPrompt, type LlmPromptFollowUp } from '../prompt/llm.prompt.thread';
+import { type ExecutedLlmPrompt, type LlmPrompt, type LlmPromptFollowUp, type LlmPromptThreadHead } from '../prompt/llm.prompt.thread';
 import { type LlmPromptSite } from '../prompt/llm.prompt.site';
 import { noopLlmCallContext } from '../record/llm.call.context';
 import { type LlmCritic, type LlmCritiqueParams } from '../reply/llm.reply.critique';
@@ -38,7 +38,7 @@ function hostResultOf(request: HostRequest, text: string): HostResult {
  * @returns The dispatcher.
  */
 function hostDispatcherOf(calls: HostRequest[]): LlmDispatcher<HostRequest, HostResult> {
-  const promptOf = (request: HostRequest, previous?: ExecutedLlmPrompt<HostRequest, HostResult>, followUp?: LlmPromptFollowUp): LlmPrompt<HostRequest, HostResult> => {
+  const promptOf = (request: HostRequest, previous?: LlmPromptThreadHead<HostRequest, HostResult>, followUp?: LlmPromptFollowUp): LlmPrompt<HostRequest, HostResult> => {
     const prompt: LlmPrompt<HostRequest, HostResult> = {
       request,
       previous,
@@ -48,6 +48,7 @@ function hostDispatcherOf(calls: HostRequest[]): LlmDispatcher<HostRequest, Host
         const result = hostResultOf(request, followUp?.content ?? 'root');
         const executed: ExecutedLlmPrompt<HostRequest, HostResult> = {
           prompt,
+          request,
           result,
           thread: [...(previous?.thread ?? []), { role: 'user', content: followUp?.content ?? 'root prompt' }, { role: 'assistant', content: result.text }],
           followUp: (next) => promptOf(request, executed, next)
@@ -60,7 +61,11 @@ function hostDispatcherOf(calls: HostRequest[]): LlmDispatcher<HostRequest, Host
 
   return {
     dispatch: async (request) => (await promptOf(request).execute()).result,
-    preparePrompt: (request) => promptOf(request)
+    preparePrompt: (request) => promptOf(request),
+    resumePrompt: ({ request, thread }) => {
+      const head: LlmPromptThreadHead<HostRequest, HostResult> = { request, thread, followUp: (next) => promptOf(request, head, next) };
+      return head;
+    }
   };
 }
 
@@ -89,6 +94,12 @@ describe('LlmDispatcher', () => {
     expect(followed.thread).toHaveLength(4);
     expect((await dispatcher.dispatch(REQUEST)).callId).toBe('call-w1');
     expect(dispatcher.decide).toBeUndefined();
+
+    const resumed = dispatcher.resumePrompt({ request: REQUEST, thread: followed.thread });
+    const resumedFollowUp = await resumed.followUp({ content: 'and shorter still' }).execute();
+    expect(resumedFollowUp.request.workspaceId).toBe('w1');
+    expect(resumedFollowUp.thread.slice(0, 4)).toEqual(followed.thread);
+    expect(resumedFollowUp.thread).toHaveLength(6);
   });
 
   it('should let a fast fixer build its own request from the subject request', async () => {

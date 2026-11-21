@@ -573,6 +573,28 @@ describe('makeLlmDispatcher()', () => {
       expect(calls[1].segments).toEqual([expect.objectContaining({ id: 'follow-up', promptSegment: 'next item', volatile: true })]);
     });
 
+    it('should send the same follow-up from a stored thread resumed on a fresh dispatcher as from the executed head', async () => {
+      const original = setup({ replies: ['{"answer":"one"}', '{"answer":"two"}'] });
+      const executed = await original.dispatcher.preparePrompt(request({ capability: 'StrongCap' })).execute();
+      await executed.followUp({ content: 'next item' }).execute();
+
+      // a later process: a fresh dispatcher, the root request supplied again, and the thread as it came back from storage
+      const { calls, recorder } = recording();
+      const later = setup({ replies: ['{"answer":"two"}'], recorder });
+      // eslint-disable-next-line unicorn/prefer-structured-clone -- a JSON round-trip IS the storage being simulated
+      const stored = JSON.parse(JSON.stringify(executed.thread)) as typeof executed.thread;
+      const followedUp = await later.dispatcher
+        .resumePrompt({ request: request({ capability: 'StrongCap' }), thread: stored })
+        .followUp({ content: 'next item' })
+        .execute();
+
+      expect(later.requests).toHaveLength(1);
+      expect(later.requests[0]).toEqual(original.requests[1]);
+      expect(followedUp.result.text).toBe('{"answer":"two"}');
+      expect(calls).toHaveLength(1);
+      expect(calls[0].segments).toEqual([expect.objectContaining({ id: 'follow-up', promptSegment: 'next item', volatile: true })]);
+    });
+
     it("should append the layout's follow-up separator after the follow-up content", async () => {
       const layout = DEFAULT_LLM_PROMPT_LAYOUT.map((slot) => (slot.role === 'follow-up' ? { ...slot, separator: '\n' } : slot));
       const { calls, recorder } = recording();
