@@ -6,11 +6,12 @@
  * probe. Everything else — the body, the HTTP call, the failure mapping, the reply read, the usage fold and the result
  * assembly — is spelt here once.
  *
- * **Why a raw `fetch`, not a gateway SDK.** An SDK decodes the reply through its own strict schema —
- * `usage.input_tokens` / `usage.output_tokens` required integers, a `type` literal on every answer — and its credential
- * probe is its own gateway's. A gateway that omits a single field the SDK requires would turn every decision into a
- * decode error the membership check never got to see. So this transport reads the reply LAX and leaves the one
- * judgement that matters — "is this an answer to the question that was asked?" — to {@link requireLlmDecisionAnswers},
+ * **Why a raw `fetch`, not a gateway SDK.** An SDK decodes the reply through its own schema, and its credential probe
+ * is its own gateway's. `@openrouter/sdk`, for one, hard-requires `model` and the `usage` token integers, so a gateway
+ * that omits either turns every decision into a decode error the membership check never gets to see. Its answers are
+ * softer: one whose `type` it does not recognise decodes to its `UNKNOWN` fallback, which then reads as
+ * `answer-mistyped` (pinned in `openrouter.decision.pin.spec.ts`). So this transport reads the reply LAX and leaves
+ * the one judgement that matters — "is this an answer to the question that was asked?" — to {@link requireLlmDecisionAnswers},
  * which also checks the value types an SDK decode used to guarantee (a `noul`, a `score` and each distribution entry
  * must be numbers).
  *

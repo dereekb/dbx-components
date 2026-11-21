@@ -324,6 +324,32 @@ export function caseInsensitiveString(input: Maybe<string>): Maybe<string> {
 }
 
 /**
+ * Converts a value to its `String()` form while keeping an absent value absent: `null` and `undefined` both become
+ * `undefined`. For reading a loosely typed field as an optional string: a CLI argument, a provider code that arrives as
+ * a number, or a persisted row key that is a number on one build and a string on another.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, convert, coerce, maybe, nullish, optional, stringify
+ * @dbxUtilRelated is-not-null-or-empty-string
+ *
+ * @param value - The value to convert.
+ * @returns `String(value)`, or `undefined` when the value is `null` or `undefined`.
+ *
+ * @example
+ * ```ts
+ * toMaybeString(429); // '429'
+ * toMaybeString(null); // undefined
+ * ```
+ */
+export function toMaybeString(value: MaybeNot): undefined;
+export function toMaybeString(value: NonNullable<unknown>): string;
+export function toMaybeString(value: unknown): string | undefined;
+export function toMaybeString(value: unknown): string | undefined {
+  return value == null ? undefined : String(value);
+}
+
+/**
  * Adds a plus prefix to the input value and converts it to a string. If the value is negative or 0, no prefix is added.
  *
  * Undefined is returned if a null/undefined value is input.

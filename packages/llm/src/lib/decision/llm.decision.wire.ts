@@ -89,8 +89,8 @@ export interface LlmDecisionRequestBody {
  * to that gateway's own body builder.
  *
  * Every gateway served by `makeLlmSystemOneDecisionStrategy` gets exactly these bytes (`JSON.stringify` of this
- * object). An SDK that re-serializes the body (`@dereekb/openrouter`'s `openRouterDecision`) sends the same JSON value
- * with its keys in the SDK's schema order.
+ * object). `@dereekb/openrouter`'s `openRouterDecision` sends this body PLUS the keys only OpenRouter's route takes
+ * (`provider`, `user`, `session_id` and `trace`, each only when set), re-serialized by its SDK in the SDK's schema order.
  *
  * @param request - The decision request.
  * @returns The request body.

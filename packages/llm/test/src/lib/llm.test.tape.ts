@@ -23,7 +23,7 @@
  * @see LlmStrategy (the contract this implements).
  */
 
-import { filterMaybeValues, type Maybe, sha256HexPrefix, type IndexNumber, type HexString } from '@dereekb/util';
+import { filterMaybeValues, type Maybe, sha256HexPrefix, type IndexNumber, type HexString, toMaybeString } from '@dereekb/util';
 import { isDecisionLlmCallRow, type LlmCapabilityKey, type LlmCompletion, type LlmModelId, type LlmRequest, type LlmStrategy, type LlmStrategyHealth, type LlmStrategyId, type LlmUsage, readLlmCallPrompt } from '@dereekb/llm';
 
 /**
@@ -360,16 +360,6 @@ export interface ReadLlmTapeTurnConfig {
 }
 
 /**
- * The string form of a logged field — a row may carry a key as a number on one build and a string on another.
- *
- * @param value - The raw field value.
- * @returns The string form, or `undefined` when the field was absent.
- */
-function stringOf(value: unknown): Maybe<string> {
-  return value == null ? undefined : String(value);
-}
-
-/**
  * Turn one PERSISTED `llm_call` payload into a {@link LlmTapeTurn} — the per-row half of a host's tape reader.
  *
  * A row becomes a turn only when it carries a prompt (`readLlmCallPrompt`, so a segments-only row answers too), a
@@ -398,11 +388,11 @@ export function readLlmTapeTurn(payload: unknown, config?: Maybe<ReadLlmTapeTurn
     const record = payload as Readonly<Record<string, unknown>>;
     const prompt = readLlmCallPrompt(payload);
     const text = record['text'];
-    const capability = stringOf(record['capability']);
+    const capability = toMaybeString(record['capability']);
 
     if (prompt != null && typeof text === 'string' && capability != null && !isDecisionLlmCallRow(payload, config?.decisionStrategyKinds)) {
-      const model = stringOf(record['model']);
-      const finishReason = stringOf(record['finishReason']);
+      const model = toMaybeString(record['model']);
+      const finishReason = toMaybeString(record['finishReason']);
       const hash = config?.hash ?? hashLlmTapePrompt;
       turn = filterMaybeValues({ capability, promptSha: hash(prompt), text, model, usage: record['usage'] as Maybe<LlmUsage>, finishReason });
     }

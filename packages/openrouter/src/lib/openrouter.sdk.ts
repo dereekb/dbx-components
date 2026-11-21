@@ -13,7 +13,8 @@
  * (`execute: false`) plus `ConversationState.pendingToolCalls` / `unsentToolResults` already provide that
  * mechanism. See `openrouter.tool.ts`.
  *
- * `systemOneCreate` is the System One (decisions) operation, and is the ONE place that route is reached.
+ * `systemOneCreate` is the System One (decisions) operation, and is the ONE place this package reaches that route.
+ * (`@dereekb/llm`'s `makeLlmSystemOneDecisionStrategy` reaches the same route too, over a raw `fetch`.)
  * Its path is resolved under the client root (`pathToFunc('/systemone')`), so the same `serverURL` that
  * governs `/responses` governs it — there is no second base-url concept to configure or get wrong. It
  * requires `@openrouter/sdk@^1.3.8`: the operation does not exist below that, and the alpha route it

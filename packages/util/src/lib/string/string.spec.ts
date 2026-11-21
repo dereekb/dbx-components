@@ -17,9 +17,32 @@ import {
   simplifyWhitespace,
   splitJoinNameString,
   splitJoinRemainder,
-  stringSplitJoinInstance
+  stringSplitJoinInstance,
+  toMaybeString
 } from './string';
 import { type Maybe } from '../value/maybe.type';
+
+describe('toMaybeString()', () => {
+  it('should return undefined for null and undefined', () => {
+    expect(toMaybeString(null)).toBeUndefined();
+    expect(toMaybeString(undefined)).toBeUndefined();
+  });
+
+  it('should return the String() form of a present value', () => {
+    expect(toMaybeString('abc')).toBe('abc');
+    expect(toMaybeString('')).toBe('');
+    expect(toMaybeString(429)).toBe('429');
+    expect(toMaybeString(0)).toBe('0');
+    expect(toMaybeString(false)).toBe('false');
+  });
+
+  it('should narrow by overload', () => {
+    const fromNumber: string = toMaybeString(1);
+    const fromNull: undefined = toMaybeString(null);
+    const fromUnknown: string | undefined = toMaybeString(JSON.parse('1') as unknown);
+    expect([fromNumber, fromNull, fromUnknown]).toEqual(['1', undefined, '1']);
+  });
+});
 
 describe('nameToInitials()', () => {
   it('should use the first letter of the first two words for a multi-word name', () => {

@@ -1,5 +1,5 @@
 import { isLlmDecisionModelId } from '@dereekb/llm/decision';
-import { type Maybe, filterUndefinedValues, parseJsonObjectOrUndefined } from '@dereekb/util';
+import { type Maybe, filterUndefinedValues, parseJsonObjectOrUndefined, toMaybeString } from '@dereekb/util';
 import { type CallModelInput, type OpenResponsesResult, type OpenRouterCore, type RequestOptions, type ResponsesRequest, type StateAccessor, type Tool, ModelResult, callModel, convertToolsToAPIFormat, responsesSend, stepCountIs } from './openrouter.sdk';
 import { type OpenRouterHostedToolConfig, type OpenRouterModelConfig } from './openrouter.config';
 import { type OpenRouterPromptRequest } from './openrouter.request';
@@ -452,7 +452,7 @@ export function openRouterRunUsageFromResponseUsage(usage: NonNullable<OpenRespo
  * {@link openRouterRunUsageFromResponseUsage} is: a library that exports `OpenRouterRunError` as a type
  * should let a caller holding a raw `OpenResponsesResult` produce one without transcribing its shape.
  *
- * `code` goes through `String()` because OpenRouter reports a NUMERIC code here (the HTTP status), while
+ * `code` goes through {@link toMaybeString} because OpenRouter reports a NUMERIC code here (the HTTP status), while
  * `OpenRouterRunError.code` is a string — the same field an SDK-thrown error fills with `ECONNRESET`.
  *
  * @param error - The error reported on the response.
@@ -462,7 +462,7 @@ export function openRouterRunUsageFromResponseUsage(usage: NonNullable<OpenRespo
  */
 export function openRouterRunErrorFromResponseError(error: NonNullable<OpenResponsesResult['error']>): OpenRouterRunError {
   const { code, message } = error;
-  return { code: code == null ? undefined : String(code), message };
+  return { code: toMaybeString(code), message };
 }
 
 /**
