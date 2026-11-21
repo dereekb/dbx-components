@@ -51,7 +51,7 @@ const COMPLETION: ReadonlyArray<LlmAdapter> = [makeLlmCompletionAdapterFake({ ki
  */
 function standardAdapters() {
   const zenmux = fakeDecisionAdapter({ kind: 'zenmux', strategyKind: 'zenmux-systemone' });
-  const openrouter = fakeDecisionAdapter({ kind: 'openrouter', strategyKind: 'openrouter-systemone', transports: ['openrouter'] });
+  const openrouter = fakeDecisionAdapter({ kind: 'openrouter', strategyKind: 'openrouter-decisions', transports: ['openrouter'] });
   const adapters = makeLlmAdapterRegistry([zenmux.adapter, openrouter.adapter, ...COMPLETION]);
   return { adapters, zenmux, openrouter };
 }
@@ -132,8 +132,8 @@ describe('makeLlmDecisionStrategies()', () => {
     expect(registry.values().map((strategy) => [strategy.id, strategy.kind])).toEqual([
       ['zenmux', 'zenmux-systemone'],
       ['zenmux-payg', 'zenmux-systemone'],
-      ['openrouter', 'openrouter-systemone'],
-      ['openrouter-lab', 'openrouter-systemone']
+      ['openrouter', 'openrouter-decisions'],
+      ['openrouter-lab', 'openrouter-decisions']
     ]);
   });
 
@@ -156,7 +156,7 @@ describe('makeLlmDecisionStrategies()', () => {
   });
 
   it('should fail loud on a declared route with no registered decision adapter', () => {
-    const adapters = makeLlmAdapterRegistry([fakeDecisionAdapter({ kind: 'openrouter', strategyKind: 'openrouter-systemone', transports: ['openrouter'] }).adapter, ...COMPLETION]);
+    const adapters = makeLlmAdapterRegistry([fakeDecisionAdapter({ kind: 'openrouter', strategyKind: 'openrouter-decisions', transports: ['openrouter'] }).adapter, ...COMPLETION]);
     expect(() => makeLlmDecisionStrategies({ providers: [ZENMUX], adapters })).toThrow("provider 'zenmux': no decision adapter is registered for 'zenmux' (registered: openrouter).");
   });
 
@@ -173,7 +173,7 @@ describe('readLlmDecisionStrategyKinds()', () => {
   it('should derive the decision strategy kinds from the registered decision adapters', () => {
     const { adapters } = standardAdapters();
 
-    expect([...readLlmDecisionStrategyKinds(adapters)]).toEqual(['zenmux-systemone', 'openrouter-systemone']);
+    expect([...readLlmDecisionStrategyKinds(adapters)]).toEqual(['zenmux-systemone', 'openrouter-decisions']);
     expect(readLlmDecisionStrategyKinds(makeLlmAdapterRegistry([])).size).toBe(0);
   });
 });

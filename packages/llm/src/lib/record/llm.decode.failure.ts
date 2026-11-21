@@ -12,10 +12,10 @@
  * and size stay visible.
  */
 
-import { cutString, isNotBlankString, sliceStringFunction, type Milliseconds, type HexString, type PercentDecimal, type Count } from '@dereekb/util';
+import { cutString, isNotBlankString, sliceStringFunction, type Maybe, type Milliseconds, type HexString, type PercentDecimal, type Count } from '@dereekb/util';
 import type { FetchErrorClassification } from '@dereekb/util/fetch';
 import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey, LlmTokenCount } from '../model/llm.value';
-import type { LlmCompletion, LlmReplyOutcomeClass, LlmReplyRepairTier } from '../strategy/llm.strategy';
+import type { LlmCallMeta, LlmCompletion, LlmReplyOutcomeClass, LlmReplyRepairTier } from '../strategy/llm.strategy';
 
 /**
  * The synthetic {@link LlmCompletion.finishReason} a dispatcher stamps on the envelope it fabricates for an ABORTED
@@ -46,6 +46,32 @@ export const LLM_TRANSPORT_FINISH_REASON = '__transport__';
  * The value is persisted as a record's `finishReason`, so it never changes.
  */
 export const LLM_UNRETRYABLE_FINISH_REASON = '__unretryable__';
+
+/**
+ * The three synthetic send-failure `finishReason`s — {@link LLM_TIMEOUT_FINISH_REASON},
+ * {@link LLM_TRANSPORT_FINISH_REASON} and {@link LLM_UNRETRYABLE_FINISH_REASON}.
+ *
+ * A dispatcher records every failed send, on either lane, as a call row carrying one of these. A ledger therefore
+ * counts send failures by these rows ({@link isLlmSendFailureFinishReason}), not by unpaired start records: a pairing
+ * count misses `__unretryable__`, which is filed as a call row.
+ */
+export const LLM_SEND_FAILURE_FINISH_REASONS = [LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, LLM_UNRETRYABLE_FINISH_REASON] as const;
+
+/**
+ * One of the {@link LLM_SEND_FAILURE_FINISH_REASONS}.
+ */
+export type LlmSendFailureFinishReason = (typeof LLM_SEND_FAILURE_FINISH_REASONS)[number];
+
+/**
+ * Whether a record's `finishReason` is one of the synthetic send-failure sentinels
+ * ({@link LLM_SEND_FAILURE_FINISH_REASONS}) — the row of a send that never brought a reply back.
+ *
+ * @param finishReason - The record's `finishReason`.
+ * @returns `true` for `__timeout__`, `__transport__` and `__unretryable__`.
+ */
+export function isLlmSendFailureFinishReason(finishReason: Maybe<string>): finishReason is LlmSendFailureFinishReason {
+  return finishReason != null && (LLM_SEND_FAILURE_FINISH_REASONS as ReadonlyArray<string>).includes(finishReason);
+}
 
 /**
  * The family of decode failure one attempt hit — `parse-error` (a `{…}` block that would not parse, or a reply with
@@ -190,6 +216,12 @@ export interface LlmDecodeFailureAttempt {
    * Why the fast fix missed (present with {@link fastFix}).
    */
   readonly fastFixMiss?: string;
+  /**
+   * The fast fixer's `meta` on a miss — host data of the fixer's own call (the fix call's id, say), so a host can link
+   * this row to the fix call it paid for. Present only with `fastFix: 'missed'`, and only when the fixer returned one.
+   * A fix's `meta` rides the call record's `repair.meta` instead.
+   */
+  readonly fastFixMeta?: LlmCallMeta;
   /**
    * A degeneration-safe TAIL excerpt ({@link llmDecodeFailureTailExcerpt}) of a `parse-error` / `length-truncation`
    * reply longer than the head {@link excerpt} — JSON slips concentrate at the END, and a head excerpt alone leaves
@@ -455,7 +487,7 @@ export function classifyLlmReplyOutcome(result: Pick<LlmCompletion, 'text' | 'fi
   const finishReason = result.finishReason ?? '';
   let outcome: LlmReplyOutcomeClass;
 
-  if (finishReason === LLM_TIMEOUT_FINISH_REASON || finishReason === LLM_TRANSPORT_FINISH_REASON || finishReason === LLM_UNRETRYABLE_FINISH_REASON || failureClass === 'timeout' || failureClass === 'transport' || failureClass === 'unretryable') {
+  if (isLlmSendFailureFinishReason(finishReason) || failureClass === 'timeout' || failureClass === 'transport' || failureClass === 'unretryable') {
     outcome = 'transport';
   } else if (isLlmLengthCappedFinish(result)) {
     outcome = 'length-capped';

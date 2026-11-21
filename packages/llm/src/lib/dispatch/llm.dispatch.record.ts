@@ -33,16 +33,17 @@ export type LlmDispatchRecordFields<H extends LlmCallHostFields = LlmCallHostFie
  * @typeParam R - The host's request type.
  * @typeParam H - The host's top-level record fields.
  * @typeParam A - The call-context attribution type.
+ * @typeParam E - The host's decision-request fields.
  */
-export interface LlmDispatchRecordFieldsConfig<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object> {
+export interface LlmDispatchRecordFieldsConfig<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object, E extends object = object> {
   /**
    * The host hook — absent ⇒ no host fields.
    */
-  readonly recordFieldsOf?: Maybe<(params: LlmDispatchRecordFieldsParams<R, A>) => H>;
+  readonly recordFieldsOf?: Maybe<(params: LlmDispatchRecordFieldsParams<R, A, E>) => H>;
   /**
    * The lane and its request, handed to the hook as-is.
    */
-  readonly call: LlmDispatchLaneRequest<R>;
+  readonly call: LlmDispatchLaneRequest<R, E>;
   readonly callContext: LlmCallContext<A>;
 }
 
@@ -53,7 +54,7 @@ export interface LlmDispatchRecordFieldsConfig<R extends LlmDispatchRequest = Ll
  * @param config - The hook, the lane and its request, and the call context.
  * @returns The reader.
  */
-export function makeLlmDispatchRecordFields<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object>(config: LlmDispatchRecordFieldsConfig<R, H, A>): LlmDispatchRecordFields<H> {
+export function makeLlmDispatchRecordFields<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object, E extends object = object>(config: LlmDispatchRecordFieldsConfig<R, H, A, E>): LlmDispatchRecordFields<H> {
   const { recordFieldsOf, call, callContext } = config;
   const read = new Map<LlmDispatchRecordKind, H>();
 
@@ -78,9 +79,10 @@ export function makeLlmDispatchRecordFields<R extends LlmDispatchRequest = LlmDi
  * @typeParam R - The host's request type.
  * @typeParam H - The host's top-level record fields.
  * @typeParam A - The call-context attribution type.
+ * @typeParam E - The host's decision-request fields.
  */
-export interface LlmDispatchRecordSinks<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object> {
-  readonly recorder?: Maybe<LlmDispatchRecorder<R, H, A>>;
+export interface LlmDispatchRecordSinks<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object, E extends object = object> {
+  readonly recorder?: Maybe<LlmDispatchRecorder<R, H, A, E>>;
   /**
    * The live taps — `size` is re-read at every seam, so a tap attached after construction is seen.
    */

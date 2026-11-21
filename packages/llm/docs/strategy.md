@@ -14,7 +14,9 @@ so several instances of one transport can be registered side by side. Those two,
   attempts, validation errors, decode status and the reply repair. Host data rides `meta`: the library never reads it
   and strategies echo it. `toLlmThreadChatMessages` maps a replayed thread onto plain chat messages and
   `@dereekb/util`'s `toBase64DataUrl` builds an attachment's `data:` URL. The stock transports default to
-  `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and a `DEFAULT_LLM_COMPLETION_TIMEOUT_MS` (60 s) timeout floor.
+  `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and a `DEFAULT_LLM_COMPLETION_TIMEOUT_MS` (60 s) timeout floor. A strategy
+  configured with a cap declares it as `LlmStrategy.defaultMaxOutputTokens`, which a dispatcher sends when no route,
+  descriptor or tier names one (ahead of the dispatcher's own `defaultMaxOutputTokens`).
 - **Registry.** `makeLlmStrategyRegistry(seed)` serves either lane (`LlmStrategyRegistry<S>`; a registry of decision
   strategies is an `LlmDecisionStrategyRegistry`) and answers `get(id)`. Every instance of a transport is
   `strategies.values().filter((s) => llmStrategyKind(s) === kind)`, in registry order, and its `.at(-1)` is the last
@@ -27,8 +29,11 @@ so several instances of one transport can be registered side by side. Those two,
   `credentialProbe` runs the one ladder, `runLlmCredentialProbeLadder`: a missing key (and no injected fake) is an
   error, a host probe source is delegated to, an injected fake is ready without a request, and otherwise the
   transport's own `LlmTransportCredentialProbe` runs.
-- **Quota gate.** `evaluateLlmQuotaGate({ report })` refuses only when a measured window is above the ceiling (90% by
-  default) and fails open whenever nothing is measured. A window's `unit` is an `LlmQuotaUnit`: one of the library's
+- **Quota gate.** `evaluateLlmQuotaGate({ report, maxUsedFraction })` refuses only when a measured window is above the
+  ceiling (`DEFAULT_LLM_QUOTA_GATE_MAX_USED_FRACTION`, 90%, by default) and fails open whenever nothing is measured.
+  `parseLlmQuotaMaxUsed(raw)` reads a host's raw ceiling value: only a `(0, 1]` fraction is accepted, anything else
+  (`90` meaning 90%, say) is `undefined` so the default applies. The root reads no environment; the host passes the
+  raw value. A window's `unit` is an `LlmQuotaUnit`: one of the library's
   own (`flow`, `request`, `token`, `usd`) or a host's own string for a provider it meters itself.
 - **Usage and bills.** `toLlmUsage(raw, { costBasis })` folds a provider usage block: token counts default to `0`,
   every other field is omitted when not reported (absent is not zero), and numeric-string costs are parsed with

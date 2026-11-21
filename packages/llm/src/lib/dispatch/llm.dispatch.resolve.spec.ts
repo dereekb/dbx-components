@@ -65,6 +65,34 @@ describe('resolveLlmDispatch()', () => {
     expect(resolveLlmDispatch({ setup: setupOf({ capabilityRoutes: routes }), request: request({ capability: 'Routed' }), callContext }).maxOutputTokens).toBe(4096);
   });
 
+  it('should send a strategy-declared defaultMaxOutputTokens when no route, descriptor or tier names a cap', () => {
+    const { callContext } = recordingContext();
+    const declared: LlmStrategy = { ...strategy('a'), defaultMaxOutputTokens: 4096 };
+    const strategies = makeLlmStrategyRegistry([declared, strategy('b')]);
+
+    expect(resolveLlmDispatch({ setup: setupOf({ strategies }), request: request(), callContext }).maxOutputTokens).toBe(4096);
+  });
+
+  it('should let a route, descriptor or tier cap beat a strategy-declared defaultMaxOutputTokens', () => {
+    const { callContext } = recordingContext();
+    const strategies = makeLlmStrategyRegistry([{ ...strategy('a'), defaultMaxOutputTokens: 4096 }, strategy('b')]);
+    const tiers = { fast: { model: 'x/fast', maxOutputTokens: 2048 }, strong: 'x/strong' };
+    const routes: LlmCompiledModelRouting = new Map([['Routed', { model: 'x/route', maxOutputTokens: 1500 }]]);
+    const capped: Readonly<Record<string, LlmCapabilityDescriptor>> = { ...DESCRIPTORS, Capped: defineLlmCapability({ capability: 'Capped', tier: 'strong', maxOutputTokens: 3000, responseSchema: type({ a: 'string' }), parseValue: (value) => value }) };
+
+    expect(resolveLlmDispatch({ setup: setupOf({ strategies, modelTiers: tiers }), request: request(), callContext }).maxOutputTokens).toBe(2048);
+    expect(resolveLlmDispatch({ setup: setupOf({ strategies, descriptorOf: (capability) => capped[capability] }), request: request({ capability: 'Capped' }), callContext }).maxOutputTokens).toBe(3000);
+    expect(resolveLlmDispatch({ setup: setupOf({ strategies, capabilityRoutes: routes }), request: request({ capability: 'Routed' }), callContext }).maxOutputTokens).toBe(1500);
+  });
+
+  it('should fall back to the setup defaultMaxOutputTokens when the strategy declares none', () => {
+    const { callContext } = recordingContext();
+    const resolved = resolveLlmDispatch({ setup: setupOf({ selectStrategy: resolveLlmDispatchStrategySelector({ defaultStrategyId: 'b' }) }), request: request(), callContext });
+
+    expect(resolved.strategy.defaultMaxOutputTokens).toBeUndefined();
+    expect(resolved.maxOutputTokens).toBe(1024);
+  });
+
   it('should pick the provider by route › per-slug binding › default', () => {
     const { callContext } = recordingContext();
     const routes: LlmCompiledModelRouting = new Map([['Routed', { model: 'x/route', provider: 'b' }]]);

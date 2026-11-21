@@ -14,9 +14,11 @@ a provider naming one you did not register fails loud, listing the ones you did.
   `findLlmAdapter`, `resolveLlmAdapter` (throws naming the registered kinds), `filterLlmAdaptersByFacet` and `readLlmAdapterKinds`.
   `readLlmModelConfigLists(adapters)` gives `makeLlmModelConfigSchema` its `transports`, `meterings` and
   `decisionRoutes`.
-- **Strategies.** `makeLlmProviderStrategies({ providers, adapters, defaultModel, maxOutputTokens, timeoutMs,
-  visionByModel, reasoningOffByModel })` builds one strategy per resolved provider (`resolveLlmProviderConfigs`),
-  registered under the provider's own name. Construction is inert. Both builders check each minted strategy with
+- **Strategies.** `makeLlmProviderStrategies({ providers, adapters, defaultModel, maxOutputTokens,
+  maxOutputTokensByProvider, timeoutMs, visionByModel, reasoningOffByModel })` builds one strategy per resolved
+  provider (`resolveLlmProviderConfigs`), registered under the provider's own name. A provider's cap is its
+  `maxOutputTokensByProvider[provider.id]` entry, else the shared `maxOutputTokens`; a stock strategy declares it as
+  `defaultMaxOutputTokens`, so it also applies behind a dispatcher. Construction is inert. Both builders check each minted strategy with
   `checkLlmAdapterStrategy` (the provider's own id; a decision strategy's declared `strategyKind`).
 - **Config contract.** An adapter config's unset field is absent or nullish (`undefined` / `null`). Read each with `??`,
   as the stock adapters do, and never spread a config over your own defaults: `mergeObjects` keeps a default against

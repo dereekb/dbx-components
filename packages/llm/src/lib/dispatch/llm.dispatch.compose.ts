@@ -40,6 +40,11 @@ export interface LlmDispatchComposeSetup<R extends LlmDispatchRequest = LlmDispa
   readonly texts?: Maybe<PartialWithUndefined<LlmPromptAssemblyTexts>>;
   readonly defaultReplyProtocol?: Maybe<LlmReplyProtocol>;
   /**
+   * Keep the `description` prose when a request-supplied (or follow-up-supplied) `responseSchemaHint` is hardened for
+   * `response_format`. Default `false`. A descriptor's own hints follow its define-time flag, never this.
+   */
+  readonly describeResponseSchemaHint?: Maybe<boolean>;
+  /**
    * The segment id of a follow-up turn — the layout's `follow-up` slot id.
    */
   readonly followUpSlotId: LlmPromptSlotId;
@@ -130,8 +135,9 @@ export interface LlmComposedDispatch {
 }
 
 /**
- * The schema hints of a root call — none on a `line` call; an explicit request hint is HARDENED (and projected with its
- * prose for the contract); else the descriptor's.
+ * The schema hints of a root call — none on a `line` call; an explicit request hint is HARDENED (its `description`
+ * prose stripped from the `response_format` hint unless the dispatcher's `describeResponseSchemaHint` is set, and kept
+ * for the contract); else the descriptor's.
  */
 interface LlmDispatchSchemaHints {
   readonly responseSchemaHint?: unknown;
@@ -139,14 +145,35 @@ interface LlmDispatchSchemaHints {
 }
 
 /**
+ * The inputs of {@link llmDispatchSchemaHintsOf}.
+ */
+interface LlmDispatchSchemaHintsConfig {
+  /**
+   * The request.
+   */
+  readonly request: LlmDispatchRequest;
+  /**
+   * The capability's descriptor.
+   */
+  readonly descriptor: Maybe<LlmCapabilityDescriptor>;
+  /**
+   * The call's reply protocol.
+   */
+  readonly protocol: LlmReplyProtocol;
+  /**
+   * Keep the prose in a hardened request hint (the dispatcher's `describeResponseSchemaHint`).
+   */
+  readonly describe: boolean;
+}
+
+/**
  * Resolve a root call's schema hints.
  *
- * @param request - The request.
- * @param descriptor - The capability's descriptor.
- * @param protocol - The call's reply protocol.
+ * @param config - The request, the descriptor, the reply protocol and the describe flag.
  * @returns The hints.
  */
-function llmDispatchSchemaHintsOf(request: LlmDispatchRequest, descriptor: Maybe<LlmCapabilityDescriptor>, protocol: LlmReplyProtocol): LlmDispatchSchemaHints {
+function llmDispatchSchemaHintsOf(config: LlmDispatchSchemaHintsConfig): LlmDispatchSchemaHints {
+  const { request, descriptor, protocol, describe } = config;
   let hints: LlmDispatchSchemaHints = {};
 
   if (protocol === 'line') {
@@ -154,7 +181,7 @@ function llmDispatchSchemaHintsOf(request: LlmDispatchRequest, descriptor: Maybe
   } else if (request.responseSchemaHint == null) {
     hints = { responseSchemaHint: descriptor?.responseSchemaHint(), contractSchemaHint: descriptor?.contractSchemaHint() };
   } else {
-    hints = { responseSchemaHint: hardenLlmResponseSchemaHint(request.responseSchemaHint), contractSchemaHint: hardenLlmResponseSchemaHint(request.responseSchemaHint, { describe: true }) };
+    hints = { responseSchemaHint: hardenLlmResponseSchemaHint(request.responseSchemaHint, { describe }), contractSchemaHint: hardenLlmResponseSchemaHint(request.responseSchemaHint, { describe: true }) };
   }
 
   return hints;
@@ -241,7 +268,7 @@ async function composeLlmRootDispatch<R extends LlmDispatchRequest, D extends Ll
   const { setup, request, resolved, callContext } = config;
   const { descriptor, resolvedModel } = resolved;
   const capability = request.capability;
-  const hints = llmDispatchSchemaHintsOf(request, descriptor, protocol);
+  const hints = llmDispatchSchemaHintsOf({ request, descriptor, protocol, describe: setup.describeResponseSchemaHint === true });
   const composed = await composeLlmCapabilityPrompt<R, D>({
     request,
     layout: setup.layout,
@@ -298,7 +325,8 @@ async function composeLlmRootDispatch<R extends LlmDispatchRequest, D extends Ll
 function composeLlmFollowUpDispatch<R extends LlmDispatchRequest, D extends LlmCapabilityDescriptor>(config: ComposeLlmDispatchConfig<R, D>, followUp: LlmPromptFollowUp, protocol: LlmReplyProtocol): LlmComposedDispatchBase {
   const { setup, request, resolved, thread } = config;
   const capability = request.capability;
-  const responseSchemaHint = followUp.responseSchemaHint == null ? llmDispatchSchemaHintsOf(request, resolved.descriptor, protocol).responseSchemaHint : hardenLlmResponseSchemaHint(followUp.responseSchemaHint);
+  const describe = setup.describeResponseSchemaHint === true;
+  const responseSchemaHint = followUp.responseSchemaHint == null ? llmDispatchSchemaHintsOf({ request, descriptor: resolved.descriptor, protocol, describe }).responseSchemaHint : hardenLlmResponseSchemaHint(followUp.responseSchemaHint, { describe });
   const origin = { kind: 'follow-up', capability };
   const content = followUp.content + setup.followUpSeparator;
   const segments: ReadonlyArray<LlmPromptSegment> = [{ id: setup.followUpSlotId, promptSegment: content, origin, reason: 'a chained follow-up turn over the already-exchanged thread', volatile: true }];

@@ -6,7 +6,9 @@ import {
   LLM_MODEL_CONFIG_FILE_KEYS,
   LLM_MODEL_SETTINGS_FIELD_RULES,
   LLM_MODEL_SETTINGS_KEYS,
+  LLM_PROVIDER_COMPLETION_ONLY_KEYS,
   LLM_PROVIDER_ENTRY_KEYS,
+  LLM_PROVIDER_IDENTITY_KEYS,
   type LlmCompletionProviderEntry,
   type LlmModelConfigFile,
   type LlmModelConfigFileKey,
@@ -121,5 +123,20 @@ describe('the key constants', () => {
     expectTypeOf<(typeof LLM_PROVIDER_ENTRY_KEYS)[number]>().toEqualTypeOf<keyof LlmCompletionProviderEntry>();
     expectTypeOf<(typeof LLM_MODEL_SETTINGS_KEYS)[number]>().toEqualTypeOf<keyof LlmModelSettings>();
     expectTypeOf<LlmProviderEntryBase>().toMatchTypeOf<{ readonly transport: string }>();
+  });
+});
+
+describe('LLM_PROVIDER_COMPLETION_ONLY_KEYS', () => {
+  it('is a subset of the provider entry keys, disjoint from the identity keys and from metering', () => {
+    const entryKeys: ReadonlyArray<string> = LLM_PROVIDER_ENTRY_KEYS;
+    const identityKeys: ReadonlyArray<string> = LLM_PROVIDER_IDENTITY_KEYS;
+
+    for (const key of LLM_PROVIDER_COMPLETION_ONLY_KEYS) {
+      expect(entryKeys).toContain(key);
+      expect(identityKeys).not.toContain(key);
+      expect(key).not.toBe('metering');
+    }
+
+    expect([...LLM_PROVIDER_COMPLETION_ONLY_KEYS]).toEqual(['reasoningOff', 'tokenLimitParam', 'usageAccounting', 'decision']);
   });
 });

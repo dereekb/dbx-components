@@ -91,7 +91,8 @@ export interface LlmOpenAiCompatibleChatStrategyConfig {
   /**
    * The completion-length cap (the runaway guard); defaults to `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192). Sent on every
    * completion. A per-call `LlmRequest.maxOutputTokens` overrides it. A model with a smaller output limit (an older
-   * OpenAI model, a small-context local model) needs it set.
+   * OpenAI model, a small-context local model) needs it set. When set, the strategy also declares it as
+   * `defaultMaxOutputTokens`, so a dispatcher sends it when nothing above names a cap.
    */
   readonly maxOutputTokens?: Maybe<LlmTokenCount>;
   /**
@@ -284,6 +285,7 @@ export function makeLlmOpenAiCompatibleChatStrategy(config: LlmOpenAiCompatibleC
     kind,
     describe: hooks.describe,
     caching: hooks.caching,
+    ...(config.maxOutputTokens == null ? {} : { defaultMaxOutputTokens: config.maxOutputTokens }),
     async complete(request: LlmRequest, options?: LlmCompleteOptions): Promise<LlmCompletion> {
       const client = await resolveClient();
       // NO built-in default model — fail loud when neither the strategy nor the request names one (a guessed slug

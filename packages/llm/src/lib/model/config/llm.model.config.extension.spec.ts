@@ -1,10 +1,10 @@
 import { assertObjectKeys, type ArktypeFieldRules, nonBlankStringType, parseArktypeFieldsWithMessages } from '@dereekb/model';
 import { type } from 'arktype';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { mergeLlmModelConfigFiles, overlayLlmModelConfigFile } from './llm.model.config.merge';
 import { parseLlmModelConfigFile } from './llm.model.config.parse';
-import { llmModelProviderBindings, llmModelPromptAddenda, llmModelReasoningOffEncodings, llmModelVisionCapabilities, resolveLlmProviderConfigs } from './llm.model.config.resolve';
-import { type LlmModelConfigExtensionParams, type LlmModelConfigFile, type LlmModelConfigTypes, makeLlmModelConfigSchema } from './llm.model.config.schema';
+import { llmModelProviderBindings, llmModelPromptAddenda, llmModelReasoningOffEncodings, llmModelVisionCapabilities, mapLlmModelSettings, resolveLlmProviderConfigs } from './llm.model.config.resolve';
+import { LLM_PROVIDER_COMPLETION_ONLY_KEYS, type LlmExtendedModelSettings, type LlmModelConfigExtensionParams, type LlmModelConfigFile, type LlmModelConfigTypes, makeLlmModelConfigSchema } from './llm.model.config.schema';
 
 /**
  * A media-like test extension: speech routes on any provider, a `none` transport for speech-only providers, speech
@@ -16,9 +16,9 @@ import { type LlmModelConfigExtensionParams, type LlmModelConfigFile, type LlmMo
 const testSpeechRouteType = type.enumerated('vendor-a', 'vendor-b', 'none');
 
 /**
- * The host's own list of the keys only a completion provider may carry (the library keeps none).
+ * The keys only a completion provider may carry — the library's list, which an extension's entry parser refuses.
  */
-const COMPLETION_ONLY_KEYS: ReadonlyArray<string> = ['reasoningOff', 'tokenLimitParam', 'usageAccounting', 'decision'];
+const COMPLETION_ONLY_KEYS: ReadonlyArray<string> = LLM_PROVIDER_COMPLETION_ONLY_KEYS;
 
 const testSpeechFieldsType = type({
   '+': 'delete',
@@ -127,6 +127,21 @@ const BASE: LlmModelConfigFile<TestMediaTypes> = parse({
     gateway: { transport: 'openai', baseUrl: 'https://gateway.example.com/v1', apiKeyEnv: 'GATEWAY_API_KEY' },
     speech: SPEECH_PROVIDER
   }
+});
+
+describe('mapLlmModelSettings() over an extension', () => {
+  it("projects an extension's per-slug field with no cast", () => {
+    const parsed = parse({ models: { 'x/voiced': { voice: true }, 'x/plain': { vision: true } } });
+    const voiced = mapLlmModelSettings({
+      file: parsed,
+      read: (settings) => {
+        expectTypeOf(settings).toEqualTypeOf<LlmExtendedModelSettings<TestMediaTypes>>();
+        return settings.voice === true ? true : undefined;
+      }
+    });
+
+    expect(voiced).toEqual({ 'x/voiced': true });
+  });
 });
 
 describe('the model config extension seam', () => {

@@ -32,6 +32,15 @@ describe('makeLlmScriptedDecisionStrategy()', () => {
     expect(result.usage).toEqual({ promptTokens: 0, completionTokens: 0, totalTokens: 0, cost: 0 });
   });
 
+  it('should read an async script through requireLlmDecisionAnswers', async () => {
+    const strategy = makeLlmScriptedDecisionStrategy({ script: async () => ({ pick: makeLlmDecisionChoiceAnswer({ options: ['alpha', 'beta'], choice: 'alpha' }), any: makeLlmDecisionNoulAnswer(0.4) }) });
+    const result = await strategy.decide({ state: 'x', questions: QUESTIONS, model: 'scripted' });
+
+    expect(result.answers.pick.choice).toBe('alpha');
+    expect(result.answers.any.noul).toBe(0.4);
+    await expect(makeLlmScriptedDecisionStrategy({ script: async () => ({ any: makeLlmDecisionNoulAnswer(0.4) }) }).decide({ state: 'x', questions: QUESTIONS, model: 'scripted' })).rejects.toBeInstanceOf(LlmDecisionAnswerFaultError);
+  });
+
   it('should refuse a script that under-answers, exactly as a live transport would', async () => {
     const strategy = makeLlmScriptedDecisionStrategy({ script: () => ({ pick: makeLlmDecisionChoiceAnswer({ options: ['alpha', 'beta'], choice: 'alpha' }) }) });
 

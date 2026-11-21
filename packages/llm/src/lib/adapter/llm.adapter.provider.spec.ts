@@ -199,6 +199,18 @@ describe('makeLlmProviderStrategy()', () => {
     }
   });
 
+  it('should hand a provider its maxOutputTokensByProvider cap over the shared one, an unlisted provider the shared one', () => {
+    const { adapters, openai } = standardAdapters();
+    const maxOutputTokensByProvider = { zenmux: 4096 };
+
+    makeLlmProviderStrategy({ provider: ZENMUX, adapters, maxOutputTokens: 8192, maxOutputTokensByProvider });
+    makeLlmProviderStrategy({ provider: LOCAL, adapters, maxOutputTokens: 8192, maxOutputTokensByProvider });
+    makeLlmProviderStrategy({ provider: LOCAL, adapters, maxOutputTokensByProvider });
+    makeLlmProviderStrategy({ provider: LOCAL, adapters });
+
+    expect(openai.received.map((input) => input.maxOutputTokens)).toEqual([4096, 8192, undefined, undefined]);
+  });
+
   it("should hand the provider's account facets to the completion adapter", () => {
     const { adapters, openai } = standardAdapters();
     makeLlmProviderStrategy({ provider: ZENMUX, adapters });

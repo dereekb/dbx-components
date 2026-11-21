@@ -22,7 +22,7 @@ function meteringAdapter(kind: string): LlmMeteringAdapter {
 const OPENAI = completionAdapter('openai');
 const OPENROUTER = completionAdapter('openrouter');
 const ZENMUX_DECISION = decisionAdapter('zenmux', 'zenmux-systemone');
-const OPENROUTER_DECISION = decisionAdapter('openrouter', 'openrouter-systemone');
+const OPENROUTER_DECISION = decisionAdapter('openrouter', 'openrouter-decisions');
 const ZENMUX_METERING = meteringAdapter('zenmux');
 
 describe('llmAdapterKey()', () => {

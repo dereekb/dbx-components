@@ -21,8 +21,9 @@ import { type LlmDispatchRequest } from './llm.dispatch.request';
  *
  * @typeParam R - The host's request type.
  * @typeParam X - The host's dispatch result type.
+ * @typeParam E - The host's decision-request fields that `decide` takes beside the library request.
  */
-export interface LlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult> {
+export interface LlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult, E extends object = object> {
   /**
    * Run one capability call: select a strategy, assemble the prompt, route, return the raw result. With an opt-in
    * request `validate` it runs the bounded, capability-agnostic validate-and-retry loop; without one it is
@@ -65,10 +66,11 @@ export interface LlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest
    * with a decision registry, and a consumer reads `dispatcher.decide != null` as "this run can serve a decision at
    * all" — the ONE check that keeps a run with no decision-capable provider on its text arm instead of throwing.
    *
-   * @param request - The consuming capability, the declared decision, its input and any per-call concerns.
+   * @param request - The consuming capability, the declared decision, its input, any per-call concerns and the host's
+   *   decision-request fields `E` (which the decision lane's hooks see typed).
    * @returns The typed answers and the usage.
    */
-  decide?<I, Q extends LlmDecisionQuestions>(request: LlmDecisionDispatchRequest<I, Q>): Promise<LlmDecisionResult<Q>>;
+  decide?<I, Q extends LlmDecisionQuestions>(request: LlmDecisionDispatchRequest<I, Q> & E): Promise<LlmDecisionResult<Q>>;
   /**
    * The slug this dispatcher would bill for `capability` and whether it can SEE — over the dispatcher's OWN routes /
    * tiers / default tier / vision map, so it names the slug the dispatch resolves. OPTIONAL: a hand-rolled double

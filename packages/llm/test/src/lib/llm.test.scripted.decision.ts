@@ -10,7 +10,7 @@
  * @see LlmDecisionStrategy (the seam these answers must satisfy).
  */
 
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type PromiseOrValue } from '@dereekb/util';
 import { type LlmDecisionQuestions, type LlmDecisionRequest, type LlmDecisionResult, type LlmDecisionStrategy, type LlmStrategyId, requireLlmDecisionAnswers } from '@dereekb/llm';
 
 /**
@@ -21,12 +21,13 @@ export const LLM_SCRIPTED_DECISION_STRATEGY_ID: LlmStrategyId = 'scripted-decisi
 
 /**
  * What a scripted backend answers one request with — the whole answer map, keyed the way the request declared its
- * questions.
+ * questions. It may answer asynchronously; a rejection rejects the decision.
  *
  * @param request - The decision request.
- * @returns The raw answers, read through `requireLlmDecisionAnswers` exactly as a live reply would be.
+ * @returns The raw answers (or a promise of them), read through `requireLlmDecisionAnswers` exactly as a live reply
+ *   would be.
  */
-export type LlmScriptedDecisionScript = <Q extends LlmDecisionQuestions>(request: LlmDecisionRequest<Q>) => Readonly<Record<string, unknown>>;
+export type LlmScriptedDecisionScript = <Q extends LlmDecisionQuestions>(request: LlmDecisionRequest<Q>) => PromiseOrValue<Readonly<Record<string, unknown>>>;
 
 /**
  * Config for {@link makeLlmScriptedDecisionStrategy}.
@@ -65,7 +66,7 @@ export function makeLlmScriptedDecisionStrategy(config: LlmScriptedDecisionStrat
     config.requests?.push(request as LlmDecisionRequest);
 
     // The one throwing read every live transport uses, so a script is refused exactly as a live reply would be.
-    const answers = requireLlmDecisionAnswers({ questions: request.questions, raw: config.script(request) });
+    const answers = requireLlmDecisionAnswers({ questions: request.questions, raw: await config.script(request) });
 
     // A ZERO usage rather than an absent one: a replayed decision genuinely cost nothing, and reporting that as a reading
     // (rather than as "unaccounted") keeps a scripted run's ledger honest.

@@ -73,9 +73,9 @@ import { type LlmDispatcherConfig, type LlmDispatchGap, type LlmDispatchLaneRequ
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult, H extends LlmCallHostFields = LlmCallHostFields, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor, A extends object = object>(
-  config: LlmDispatcherConfig<R, X, H, D, A>
-): LlmDispatcher<R, X> {
+export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult, H extends LlmCallHostFields = LlmCallHostFields, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor, A extends object = object, E extends object = object>(
+  config: LlmDispatcherConfig<R, X, H, D, A, E>
+): LlmDispatcher<R, X, E> {
   const { strategies, modelTiers, capabilityRoutes, descriptorOf, recorder, taps, pause, cancellationSignal, swallow, visionByModel } = config;
   const defaultTier = resolveLlmDefaultModelTierKey(config.defaultTier);
   // fail loud at construction when the default tier names no slug
@@ -99,6 +99,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     contributors: config.contributors,
     texts: config.texts,
     defaultReplyProtocol: config.defaultReplyProtocol,
+    describeResponseSchemaHint: config.describeResponseSchemaHint,
     followUpSlotId: followUpSlot?.id ?? 'follow-up',
     followUpSeparator: followUpSlot == null ? '' : readLlmPromptSlotSeparator(followUpSlot, true),
     modelAddendumSlotId: findLlmPromptSlotByRole(layout, 'model-addendum')?.id ?? 'model-addendum',
@@ -123,7 +124,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
    * @param call - The lane and its request.
    * @returns The call context.
    */
-  function callContextOf(call: LlmDispatchLaneRequest<R>): LlmCallContext<A> {
+  function callContextOf(call: LlmDispatchLaneRequest<R, E>): LlmCallContext<A> {
     const { request } = call;
     const label = request.capability;
     const attribution = config.callAttributionOf?.(call) ?? undefined;
@@ -137,7 +138,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
     return callContext;
   }
 
-  const decisionLane = makeLlmDispatchDecisionLane<R, H, A>({
+  const decisionLane = makeLlmDispatchDecisionLane<R, H, A, E>({
     decisions: config.decisions,
     modelTiers,
     defaultTier,
@@ -155,7 +156,7 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
   const runPromptRequest = async (params: LlmPromptRunParams<R>): Promise<LlmPromptRunResult<X>> => {
     const { request, thread, followUp } = params;
     const capability = request.capability;
-    const call: LlmDispatchLaneRequest<R> = { lane: 'completion', request };
+    const call: LlmDispatchLaneRequest<R, E> = { lane: 'completion', request };
     const callContext = callContextOf(call);
     const partition = config.cachePartitionOf?.(request) ?? undefined;
     const signal = mergeLlmDispatchSignals({ cancellationSignal, request });
@@ -167,8 +168,8 @@ export function makeLlmDispatcher<R extends LlmDispatchRequest = LlmDispatchRequ
 
     const resolved = resolveLlmDispatch<R, D>({ setup: resolveSetup, request, callContext });
     const composed = await composeLlmDispatch<R, D>({ setup: composeSetup, request, followUp, thread, resolved, callContext, partition, onRawJsonGap: onGap });
-    const fields = makeLlmDispatchRecordFields<R, H, A>({ recordFieldsOf: config.recordFieldsOf, call, callContext });
-    const sinks: LlmDispatchRecordSinks<R, H, A> = { recorder, taps, onGap };
+    const fields = makeLlmDispatchRecordFields<R, H, A, E>({ recordFieldsOf: config.recordFieldsOf, call, callContext });
+    const sinks: LlmDispatchRecordSinks<R, H, A, E> = { recorder, taps, onGap };
     const isFollowUp = followUp != null;
     const { tier } = resolved;
     recordLlmDispatchStart<R, H, A>({ sinks, capability, model: resolved.resolvedModel, tier, strategy: resolved.strategy, prompt: composed.baseRequest.prompt, estimatedPromptTokens: composed.estimatedPromptTokens, followUp: isFollowUp, fields });

@@ -18,11 +18,14 @@ import { DEFAULT_LLM_OPENROUTER_BASE_URL } from './openrouter.constants';
 import { probeLlmOpenRouterCredential } from './openrouter.credential.probe';
 
 /**
- * The strategy KIND (and default instance id) of the OpenRouter decision transport. Decision kinds follow
- * `<route>-systemone` (both decision transports speak System One; ZenMux's is `'zenmux-systemone'`), distinct from the
- * completion kind `'openrouter'`, so a ledger row can never confuse the two lanes.
+ * The strategy KIND (and default instance id) of the OpenRouter decision transport — a PERSISTED `strategyKind` that
+ * usage ledgers fold on, so it never changes after publish.
+ *
+ * It is kept from the first host's rows (`'openrouter-decisions'`), which is why it does not follow ZenMux's
+ * `<route>-systemone` form (`'zenmux-systemone'`). It stays distinct from the completion kind `'openrouter'`, so a
+ * ledger row can never confuse the two lanes.
  */
-export const LLM_OPENROUTER_DECISION_STRATEGY_KIND: LlmStrategyId = 'openrouter-systemone';
+export const LLM_OPENROUTER_DECISION_STRATEGY_KIND: LlmStrategyId = 'openrouter-decisions';
 
 /**
  * Config for {@link makeLlmOpenRouterDecisionStrategy} — the core System One config: the key, the endpoint root

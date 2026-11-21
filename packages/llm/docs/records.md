@@ -15,9 +15,11 @@ What a dispatcher records about each call, and the seams a host observes it thro
   `classifyFetchError`) live in `@dereekb/util/fetch`.
 - **Decode failures.** The seven `LlmDecodeFailureClass`es, `classifyLlmDecodeFailure` (the failure family) and
   `classifyLlmReplyOutcome` (what the reply looked like), the finish-reason predicates (`isLlmLengthCappedFinish`,
-  `isLlmCleanStopFinish`, `isLlmReasoningOnlyReply`), the two sentinels a dispatcher stamps on a synthesized reply
-  (`LLM_TIMEOUT_FINISH_REASON`, `LLM_TRANSPORT_FINISH_REASON`, `LLM_UNRETRYABLE_FINISH_REASON`) and the bounded
-  excerpt helpers. The decode-failure payload's `cachePrefixHash` is the same 16-hex `llmPromptCacheHash` the call
+  `isLlmCleanStopFinish`, `isLlmReasoningOnlyReply`), the three sentinels a dispatcher stamps on a synthesized reply
+  (`LLM_TIMEOUT_FINISH_REASON`, `LLM_TRANSPORT_FINISH_REASON`, `LLM_UNRETRYABLE_FINISH_REASON`, together
+  `LLM_SEND_FAILURE_FINISH_REASONS`) and the bounded excerpt helpers. Every failed send, on either lane, files a call
+  row carrying one of the three, so a ledger counts send failures with `isLlmSendFailureFinishReason(row.finishReason)`
+  — not by pairing start rows with call rows, which misses `__unretryable__`. The decode-failure payload's `cachePrefixHash` is the same 16-hex `llmPromptCacheHash` the call
   record carries, so the two join on one key: on a root dispatch it is the cache watch's hash of the stable prefix;
   a chained follow-up has no prefix, so it carries the hash of the whole prompt it sent.
 - **Retry lever.** `chooseLlmRetryLever` picks the ONE thing the next attempt changes (budget, model, reasoning off /

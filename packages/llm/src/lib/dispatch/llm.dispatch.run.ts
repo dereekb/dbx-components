@@ -19,7 +19,7 @@ import { type LlmReplyProtocol } from '../reply/llm.reply.protocol';
 import { scoreLlmReplyJson } from '../reply/llm.reply.repair';
 import { type LlmValueValidator } from '../reply/llm.reply.validator';
 import { formatLlmErrorSummary } from '../strategy/llm.error';
-import { type LlmDecodeStatus, type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
+import { type LlmCallMeta, type LlmDecodeStatus, type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, type LlmDispatchAttemptFault, type LlmDispatchAttemptSend, type LlmReplyRepairRefusal, readLlmDispatchReply, runLlmReplyRepairLane, type RunLlmReplyRepairLaneConfig, sendLlmDispatchAttempt, validateLlmDispatchValue } from './llm.dispatch.attempt';
 import { type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
 import { type LlmCorrectionKind, type LlmDispatchCorrectionTexts, renderLlmDispatchCorrectionText, withLlmDispatchCorrection } from './llm.dispatch.correction';
@@ -221,6 +221,10 @@ interface LlmDispatchRepairedReading {
    */
   readonly fastFixMiss?: Maybe<LlmReplyFastFixMissReason>;
   /**
+   * The fixer's `meta` on a miss, when it returned one.
+   */
+  readonly fastFixMissMeta?: Maybe<LlmCallMeta>;
+  /**
    * The lane's rounded reading of the SERVED reply — present iff the lane ran.
    */
   readonly shape?: Maybe<LlmDecodeRowShape>;
@@ -257,8 +261,8 @@ async function repairLlmDispatchReading(config: RepairLlmDispatchReadingConfig):
 
   if (isDegenerateLlmReplyReading(reading)) {
     const laneResult = await runLlmReplyRepairLane({ ...lane, served });
-    const { fastFixCalled, fastFixMiss, shape } = laneResult;
-    repaired = laneResult.repaired == null ? { ...repaired, fastFixCalled, fastFixMiss, shape } : { result: laneResult.repaired.result, reading: laneResult.repaired.reading, repair: laneResult.repaired.summary, fastFixCalled, fastFixMiss, shape };
+    const { fastFixCalled, fastFixMiss, fastFixMissMeta, shape } = laneResult;
+    repaired = laneResult.repaired == null ? { ...repaired, fastFixCalled, fastFixMiss, fastFixMissMeta, shape } : { result: laneResult.repaired.result, reading: laneResult.repaired.reading, repair: laneResult.repaired.summary, fastFixCalled, fastFixMiss, shape };
   }
 
   return repaired;
@@ -465,6 +469,10 @@ interface LlmDispatchAttemptFailedDecode {
    */
   readonly repaired?: Maybe<LlmReplyRepairSummary['tier']>;
   readonly fastFixMiss?: Maybe<LlmReplyFastFixMissReason>;
+  /**
+   * The fixer's `meta` on a miss — lands on the row as `fastFixMeta`.
+   */
+  readonly fastFixMissMeta?: Maybe<LlmCallMeta>;
 }
 
 /**
@@ -512,9 +520,9 @@ function fileLlmDispatchAttempt(config: Pick<LlmDispatchAttemptsConfig, 'onDecod
     if (decode.kind === 'repaired') {
       row = toLlmRepairedDecodeAttempt({ attempt, served, summary: decode.summary, maxOutputTokens, lever: retry });
     } else {
-      const { failureClass, shape, validatorError, transportError, errorClassification, repaired, fastFixMiss } = decode;
+      const { failureClass, shape, validatorError, transportError, errorClassification, repaired, fastFixMiss, fastFixMissMeta } = decode;
       const failed = toLlmDecodeFailureAttempt({ attempt, failureClass, result: decode.fromServed === true ? served : held, maxOutputTokens, shape, validatorError, lever: retry, transportError, errorClassification });
-      row = { ...failed, ...(repaired == null ? {} : { repaired }), ...(retry?.bonus === true ? { bonus: true } : {}), ...(fastFixMiss == null ? {} : { fastFix: 'missed' as const, fastFixMiss }) };
+      row = { ...failed, ...(repaired == null ? {} : { repaired }), ...(retry?.bonus === true ? { bonus: true } : {}), ...(fastFixMiss == null ? {} : { fastFix: 'missed' as const, fastFixMiss, ...(fastFixMissMeta == null ? {} : { fastFixMeta: fastFixMissMeta }) }) };
     }
 
     loop.ledger.decodeFailures.push(row);
@@ -598,6 +606,7 @@ interface LlmDispatchJudgedReading {
   readonly reading: LlmReplyReading;
   readonly repair?: Maybe<LlmReplyRepairSummary>;
   readonly fastFixMiss?: Maybe<LlmReplyFastFixMissReason>;
+  readonly fastFixMissMeta?: Maybe<LlmCallMeta>;
   /**
    * The repair lane's rounded reading of {@link served} — present iff the lane ran.
    */
@@ -686,6 +695,7 @@ async function readLlmDispatchLoopReply(config: LlmDispatchAttemptsConfig, loop:
   let reading = read(served.text);
   let repair: Maybe<LlmReplyRepairSummary>;
   let fastFixMiss: Maybe<LlmReplyFastFixMissReason>;
+  let fastFixMissMeta: Maybe<LlmCallMeta>;
   let shape: Maybe<LlmDecodeRowShape>;
 
   if (critique != null && protocol === 'line' && reading.kind === 'no-json') {
@@ -700,6 +710,7 @@ async function readLlmDispatchLoopReply(config: LlmDispatchAttemptsConfig, loop:
     const repaired = await repairLlmDispatchReading({ served, reading, lane: { attempt, attemptContext, read, envelope: config.readingEnvelope, unrepairedRefusal: config.fastFixUnavailable, fastFix, fastFixSpent: loop.fastFixCalls >= fastFixLimits.maxPerDispatch, fastFixLimits } });
     loop.fastFixCalls += repaired.fastFixCalled ? 1 : 0;
     fastFixMiss = repaired.fastFixMiss;
+    fastFixMissMeta = repaired.fastFixMissMeta;
     shape = repaired.shape;
 
     if (repaired.repair != null) {
@@ -711,7 +722,7 @@ async function readLlmDispatchLoopReply(config: LlmDispatchAttemptsConfig, loop:
     }
   }
 
-  return { served, reading, repair, fastFixMiss, shape };
+  return { served, reading, repair, fastFixMiss, fastFixMissMeta, shape };
 }
 
 /**
@@ -726,7 +737,7 @@ async function readLlmDispatchLoopReply(config: LlmDispatchAttemptsConfig, loop:
  */
 async function runLlmDispatchReplyStep(config: LlmDispatchAttemptsConfig, loop: LlmDispatchLoopState, step: LlmDispatchLoopStep): Promise<LlmDispatchAttemptVerdict> {
   const judged = await readLlmDispatchLoopReply(config, loop, step);
-  const { reading, repair, fastFixMiss } = judged;
+  const { reading, repair, fastFixMiss, fastFixMissMeta } = judged;
   const { attempt } = step;
   let verdict: LlmDispatchAttemptVerdict;
 
@@ -752,7 +763,7 @@ async function runLlmDispatchReplyStep(config: LlmDispatchAttemptsConfig, loop: 
 
     // the lane scored the served reply; only a host fast fix whose substituted text still reads degenerate is scored here
     const shape = repair == null ? judged.shape : toLlmDecodeRowShape(scoreLlmReplyJson(loop.result.text, { envelope: loop.readingEnvelope }));
-    verdict = { next: willRetry ? 'retry' : 'settle', rejection: { cause: failureClass }, decode: { kind: 'failure', failureClass, shape, fastFixMiss } };
+    verdict = { next: willRetry ? 'retry' : 'settle', rejection: { cause: failureClass }, decode: { kind: 'failure', failureClass, shape, fastFixMiss, fastFixMissMeta } };
   }
 
   return verdict;

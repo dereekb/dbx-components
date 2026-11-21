@@ -45,8 +45,9 @@ import type { LlmDecideOptions, LlmDecisionRequest, LlmDecisionResult, LlmDecisi
  * **One declared decision.** Everything a call site needs to state about the judgement it wants, over one typed
  * input.
  *
- * A host that declares more per decision (what its decisions consume, say) extends this interface; the descriptor
- * is handed back by identity on {@link LlmDecision.descriptor}, so the extension survives.
+ * A host that declares more per decision (what its decisions consume, say) extends this interface and names the
+ * extension as {@link defineLlmDecision}'s `D` through its own define wrapper, so each call site still infers `I` /
+ * `Q`. The descriptor comes back by identity on {@link LlmDecision.descriptor}, typed `D`.
  *
  * Its OPTIONAL `model` (a raw decision-model id, the one-off escape hatch that wins over `tier`) and `tier` (a tier key
  * whose slug is a decision model) are the descriptor rungs of the dispatcher's model precedence, below a per-call
@@ -116,12 +117,17 @@ export interface LlmDecisionDecideParams<I> extends LlmDecisionAsRequestParams<I
 
 /**
  * A declared decision, ready to run — the descriptor plus the two things a caller does with it.
+ *
+ * @typeParam I - The input the decision is projected from.
+ * @typeParam Q - The question set it asks.
+ * @typeParam D - The descriptor's type: the base {@link LlmDecisionDescriptor}, or a host's extension of it. A
+ * host-typed decision is still assignable to `LlmDecision<I, Q>`, so it dispatches unchanged.
  */
-export interface LlmDecision<I, Q extends LlmDecisionQuestions> {
+export interface LlmDecision<I, Q extends LlmDecisionQuestions, D extends LlmDecisionDescriptor<I, Q> = LlmDecisionDescriptor<I, Q>> {
   /**
    * The declaration this was built from, by identity.
    */
-  readonly descriptor: LlmDecisionDescriptor<I, Q>;
+  readonly descriptor: D;
   /**
    * Project one input into a transport request, WITHOUT running it — the seam every free spec reads, and what makes
    * a decision's whole billed surface assertable without a backend.
@@ -184,12 +190,26 @@ export interface LlmDecisionDispatchRequest<I = unknown, Q extends LlmDecisionQu
  * refused like any other malformed declaration (it asks nothing), so a consumer whose input can yield zero questions
  * short-circuits BEFORE `asRequest` rather than catching this.
  *
+ * `D` (the descriptor's type) is NEVER inferred from the literal: a bare call types its descriptor as the base
+ * {@link LlmDecisionDescriptor}, so it keeps the excess-property check and a typo in an optional field (`teir:`)
+ * fails to compile. A host whose descriptors carry more names its extension through its own define wrapper, whose
+ * call sites keep `I` / `Q` inference and their own excess checks.
+ *
  * @param descriptor - The declaration: the key, the state projection and the questions.
  * @returns The declared decision.
  *
+ * @example
+ * ```ts
+ * interface HostDecisionDescriptor<I, Q extends LlmDecisionQuestions> extends LlmDecisionDescriptor<I, Q> {
+ *   readonly aspects?: ReadonlyArray<'scale' | 'fit'>;
+ * }
+ *
+ * const defineHostDecision = <I, Q extends LlmDecisionQuestions>(descriptor: HostDecisionDescriptor<I, Q>) => defineLlmDecision<I, Q, HostDecisionDescriptor<I, Q>>(descriptor);
+ * ```
+ *
  * @__NO_SIDE_EFFECTS__
  */
-export function defineLlmDecision<I, Q extends LlmDecisionQuestions>(descriptor: LlmDecisionDescriptor<I, Q>): LlmDecision<I, Q> {
+export function defineLlmDecision<I, Q extends LlmDecisionQuestions, D extends LlmDecisionDescriptor<I, Q> = LlmDecisionDescriptor<I, Q>>(descriptor: NoInfer<D> & LlmDecisionDescriptor<I, Q>): LlmDecision<I, Q, D> {
   const asRequest = (params: LlmDecisionAsRequestParams<I>): LlmDecisionRequest<Q> => {
     const questions = descriptor.questions(params.input);
     const validation = validateLlmDecisionQuestions(questions);

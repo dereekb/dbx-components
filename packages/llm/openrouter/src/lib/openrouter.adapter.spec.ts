@@ -9,7 +9,7 @@ const ROUTER: LlmProviderConfig = { id: 'router-a', transport: 'openrouter', api
 describe('LLM_OPENROUTER_ADAPTERS', () => {
   it('declares the completion and decision adapters', () => {
     expect(LLM_OPENROUTER_COMPLETION_ADAPTER).toMatchObject({ facet: 'completion', kind: 'openrouter', defaultBaseUrl: 'https://openrouter.ai/api/v1' });
-    expect(LLM_OPENROUTER_DECISION_ADAPTER).toMatchObject({ facet: 'decision', kind: 'openrouter', strategyKind: 'openrouter-systemone', transports: ['openrouter'] });
+    expect(LLM_OPENROUTER_DECISION_ADAPTER).toMatchObject({ facet: 'decision', kind: 'openrouter', strategyKind: 'openrouter-decisions', transports: ['openrouter'] });
     expect(LLM_OPENROUTER_ADAPTERS).toEqual([LLM_OPENROUTER_COMPLETION_ADAPTER, LLM_OPENROUTER_DECISION_ADAPTER]);
   });
 
@@ -19,7 +19,7 @@ describe('LLM_OPENROUTER_ADAPTERS', () => {
 
     expect(lists.transports).toEqual(['openrouter']);
     expect(lists.decisionRoutes).toEqual(['openrouter']);
-    expect(readLlmDecisionStrategyKinds(adapters).has('openrouter-systemone')).toBe(true);
+    expect(readLlmDecisionStrategyKinds(adapters).has('openrouter-decisions')).toBe(true);
   });
 });
 
@@ -92,7 +92,7 @@ describe('the root resolution with LLM_OPENROUTER_ADAPTERS', () => {
 
     expect(strategies).toHaveLength(1);
     expect(strategies[0]?.id).toBe('router-a');
-    expect(strategies[0]?.kind).toBe('openrouter-systemone');
+    expect(strategies[0]?.kind).toBe('openrouter-decisions');
     expect(strategies[0]?.describe).toBe('OpenRouter System One at https://openrouter.ai/api/v1/systemone');
   });
 

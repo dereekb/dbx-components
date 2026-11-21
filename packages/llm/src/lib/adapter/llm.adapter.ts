@@ -69,7 +69,9 @@ export interface LlmCompletionAdapterConfig extends LlmAdapterConfig {
    */
   readonly defaultModel?: Maybe<LlmModelId>;
   /**
-   * The strategy's default completion-length cap.
+   * The provider's default completion-length cap (`maxOutputTokensByProvider[provider.id]`, else the shared
+   * `maxOutputTokens`). A stock transport declares it as its strategy's `defaultMaxOutputTokens`, so a dispatcher
+   * sends it when nothing above names a cap; a custom adapter's strategy should too.
    */
   readonly maxOutputTokens?: Maybe<LlmTokenCount>;
   /**

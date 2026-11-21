@@ -87,7 +87,8 @@ adapters: stand an inline adapter in for them (see the Node host example spec).
 - Generic field checks: `@dereekb/model` (`assertObjectKeys`, `parseArktypeFieldsWithMessages`).
 - `toBase64DataUrl`, `asFiniteNumber` and `joinKeyValuePairs`: `@dereekb/util`.
 - `@dereekb/openrouter/decision`'s names are deprecated aliases of `@dereekb/llm/decision`'s.
-- Decision strategy kinds: `openrouter-systemone` and `zenmux-systemone`.
+- Decision strategy kinds: `openrouter-decisions` and `zenmux-systemone`.
+- `parseLlmQuotaMaxUsed`: the root, beside `evaluateLlmQuotaGate` — not `/test`.
 - The default reply envelope key is `value`.
 - The craft judge rides the contributor: `makeLlmCraftPromptContributor({ …, judge: makeLlmCraftJudge(…) })`.
 

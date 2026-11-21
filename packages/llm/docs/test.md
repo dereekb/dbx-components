@@ -19,12 +19,17 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   the same `hash` the tape strategy uses), and answers `undefined` for a capture-off row, a decision row or a
   non-object. It reads a row written with `toLlmCallLogPayload(record, { keepIo: true })`; a row without I/O has no
   prompt or text and reads as `undefined`.
-- **Scripted completions.** `makeLlmScriptedStrategy` answers each call from `respond(request, call)`, else
+- **Scripted completions.** `makeLlmScriptedStrategy` answers each call from `respond(request, call)` (synchronous or
+  async; a resolved `undefined` falls through the same way, a rejection rejects the call), else
   `byCapability[capability]` (a reply or a list with its own counter), else `replies` (in order). A list repeats its
   last entry once spent; an empty list is no reply, and a call nothing answers throws, naming the id, capability and
   call. A reply is a text, a completion spec (`{ text, usage, finishReason, … }`) or an `Error` the call throws — how a
-  spec drives a transport failure. Pass `requests` to collect every request, including the ones that threw.
-- **Scripted decisions.** `makeLlmScriptedDecisionStrategy({ script })` reads the script's answers through
+  spec drives a transport failure. Pass `requests` to collect every request, including the ones that threw. The call
+  index and the `requests` sink are drawn in invocation order, before an async `respond` settles; an async `respond`
+  that falls through draws its `byCapability` / `replies` entry when it settles. Calls are never serialized, so a host's
+  async runner wraps directly: `respond: async (request) => run(request.prompt, request.model)`.
+- **Scripted decisions.** `makeLlmScriptedDecisionStrategy({ script })` (a synchronous or async script) reads the
+  script's answers through
   `requireLlmDecisionAnswers`, so an under-answered or malformed script is refused with `LlmDecisionAnswerFaultError`
   exactly as a live transport would; usage is a zero-cost reading. Build answers with this entry's
   `makeLlmDecisionChoiceAnswer` / `makeLlmDecisionScoreAnswer` / `makeLlmDecisionNoulAnswer`, which are well-formed by
@@ -83,8 +88,8 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   `isEnvFlagEnabled` from `@dereekb/util` (`1` / `true`, trimmed, any case). Every lane value — the switches, the
   stamped verdicts and details, and the quota ceiling — is read through `/node`'s `firstLlmEnvValue`: trimmed, and a
   blank variable is unset. In this repo `LLM_LIVE_SPECS` is an Nx test input (`liveSpecFlags` in `nx.json`), so toggling it never replays a cached run; a host repo declares its own. The verdict
-  codecs (`llmCredentialVerdictFromEnv`, `toLlmQuotaVerdictEnv`, …) and `parseLlmQuotaMaxUsed` are exported for hosts
-  that wire their own.
+  codecs (`llmCredentialVerdictFromEnv`, `toLlmQuotaVerdictEnv`, …) are exported for hosts that wire their own; the
+  ceiling parser `parseLlmQuotaMaxUsed` lives in the root (`@dereekb/llm`), beside `evaluateLlmQuotaGate`.
 - **A/B regression gate.** The gate lives in `@dereekb/util`: `abRegressionVerdict({ controlHits, controlTrials,
   treatmentHits, treatmentTrials })` runs a one-sided Fisher exact test (`fisherExactOneSidedUpperTail`) at
   `DEFAULT_AB_REGRESSION_ALPHA` (0.05), computed in log space so large arms do not overflow. A raw count comparison's

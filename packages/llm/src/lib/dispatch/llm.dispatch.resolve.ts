@@ -62,7 +62,8 @@ export interface LlmDispatchResolveSetup<R extends LlmDispatchRequest = LlmDispa
   readonly modelTiers: LlmModelTierMap;
   readonly defaultTier: LlmModelTierKey;
   /**
-   * The cap a dispatch sends when no route, descriptor or tier names one.
+   * The cap a dispatch sends when no route, descriptor or tier names one and the selected strategy declares no
+   * `defaultMaxOutputTokens`.
    */
   readonly defaultMaxOutputTokens: LlmTokenCount;
   readonly reasoningDefault: LlmReasoningConfig;
@@ -112,8 +113,9 @@ export interface LlmResolvedDispatch<D extends LlmCapabilityDescriptor = LlmCapa
    */
   readonly modelSource: LlmCapabilityModelSource;
   /**
-   * The completion cap every request of the dispatch sends — the route › descriptor › tier cap, else the setup's
-   * `defaultMaxOutputTokens`. The retry ladder raises from it.
+   * The completion cap every request of the dispatch sends — the route › descriptor › tier cap, else the selected
+   * strategy's declared `defaultMaxOutputTokens`, else the setup's `defaultMaxOutputTokens`. The retry ladder raises
+   * from it, so a truncation re-ask raises from the cap actually sent.
    */
   readonly maxOutputTokens: LlmTokenCount;
   /**
@@ -135,8 +137,8 @@ export interface LlmResolvedDispatch<D extends LlmCapabilityDescriptor = LlmCapa
 }
 
 /**
- * Resolve one dispatch: descriptor and route, model, output controls (the cap falls back to the setup's
- * `defaultMaxOutputTokens`), strategy. An unregistered strategy id throws, naming the registered ones. Files the `model-route`, `provider-route`
+ * Resolve one dispatch: descriptor and route, model, output controls (the cap falls back to the selected strategy's
+ * declared `defaultMaxOutputTokens`, then the setup's `defaultMaxOutputTokens`), strategy. An unregistered strategy id throws, naming the registered ones. Files the `model-route`, `provider-route`
  * and (when reasoning resolved off) `reasoning-floor` breadcrumbs, each once per its key.
  *
  * @param config - The setup, the request and the call context.
@@ -173,7 +175,7 @@ export function resolveLlmDispatch<R extends LlmDispatchRequest = LlmDispatchReq
     tier,
     resolvedModel,
     modelSource,
-    maxOutputTokens: namedMaxOutputTokens ?? defaultMaxOutputTokens,
+    maxOutputTokens: namedMaxOutputTokens ?? strategy.defaultMaxOutputTokens ?? defaultMaxOutputTokens,
     reasoning,
     reasoningSource,
     strategyId,

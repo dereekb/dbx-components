@@ -14,7 +14,10 @@ vLLM — over the optional `openai` peer.
   opt-in (`usageAccounting`); a volunteered `usage.cost` is read either way and stamped with `costBasis` when set.
 - Images ride only for slugs `visionByModel` marks; `attachmentsSent` on the result says what rode.
 - There is no built-in model: set `defaultModel` or pass `request.model`, else the call fails loud. Behind a dispatcher
-  every request names its model and cap, so `defaultModel` / `maxOutputTokens` only serve direct strategy calls.
+  every request names its model and cap, so `defaultModel` only serves direct strategy calls. A configured
+  `maxOutputTokens` is also declared as the strategy's `defaultMaxOutputTokens`, which a dispatcher sends when no
+  route, descriptor or tier names a cap; an unconfigured strategy declares none, so the dispatcher's
+  `defaultMaxOutputTokens` governs it.
 - Defaults: the cap of a direct call is `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and the abort window is a 60 s floor
   (`DEFAULT_LLM_COMPLETION_TIMEOUT_MS`) scaled up with the call's budget by core's `resolveLlmCompletionCallTimeoutMs({ timeoutMs, maxOutputTokens })`. An older or
   small-context model needs its `maxOutputTokens` set.

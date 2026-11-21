@@ -73,6 +73,13 @@ export const LLM_PROVIDER_IDENTITY_KEYS = ['transport', 'baseUrl', 'apiKeyEnv'] 
 export const LLM_PROVIDER_ROUTING_KEYS = ['transport', 'baseUrl'] as const satisfies ReadonlyArray<keyof LlmProviderEntryBase>;
 
 /**
+ * The keys that only mean something on a provider that serves completions — the ones an extension's entry parser
+ * refuses on a provider kind it owns (a speech-only `transport: 'none'` entry, say). `metering` is not one: an
+ * extension's provider may bill an account too.
+ */
+export const LLM_PROVIDER_COMPLETION_ONLY_KEYS = ['reasoningOff', 'tokenLimitParam', 'usageAccounting', 'decision'] as const satisfies ReadonlyArray<keyof LlmCompletionProviderEntry>;
+
+/**
  * The keys a per-slug `models` entry may carry, in canonical order; an extension appends its own
  * ({@link LlmModelConfigSchema.modelKeys}).
  */

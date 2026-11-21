@@ -82,14 +82,15 @@ export interface LlmCapabilityDescriptor<T = unknown, H extends object = object>
    */
   readonly parseValue: (value: unknown) => Maybe<T>;
   /**
-   * The memoized JSON-Schema projection of {@link responseSchema} (hardened with `additionalProperties: false`,
-   * `$schema` dropped) — computed on first call, then cached. What `response_format` carries. {@link defineLlmCapability}
+   * The memoized JSON-Schema projection of the SHOWN schema (`hintSchema` at definition, else {@link responseSchema}),
+   * hardened with `additionalProperties: false`, `$schema` dropped — computed on first call, then cached. What `response_format` carries. {@link defineLlmCapability}
    * builds it with `projectLlmResponseSchema`.
    */
   readonly responseSchemaHint: () => unknown;
   /**
    * The memoized JSON-Schema projection the prompt's output-contract PROSE renders from — the same hardening as
-   * {@link responseSchemaHint} over the same schema, but KEEPING each node's `description`. Shape-identical to
+   * {@link responseSchemaHint} over the same shown schema (`hintSchema` at definition, else `responseSchema`), but
+   * KEEPING each node's `description`. Shape-identical to
    * {@link responseSchemaHint} by construction, so the two never disagree about the STRUCTURE the model is shown vs
    * the structure enforced — they disagree only about whether the schema's authored sentences travel.
    *
@@ -121,19 +122,29 @@ export interface DefineLlmCapabilityConfig<T = unknown, H extends object = objec
    * an environment switch reads it itself and passes the value.
    */
   readonly describeResponseSchemaHint?: Maybe<boolean>;
+  /**
+   * The schema the model is SHOWN when that is not the one enforced: both hints project from it instead of
+   * `responseSchema`.
+   *
+   * For a capability that asks for a strict wire shape but accepts (and salvages) a looser one — `responseSchema`
+   * stays the tolerant schema every reply is validated against. Bound once, at definition; not carried on the
+   * descriptor.
+   */
+  readonly hintSchema?: Maybe<Type>;
 }
 
 /**
  * Define a capability descriptor, building its two schema hints from the schema: `responseSchemaHint()` (hardened,
  * descriptions stripped unless `describeResponseSchemaHint`) and `contractSchemaHint()` (hardened, described). Both
- * project from `responseSchema`, so the shape the model is shown cannot drift from the shape enforced. A `.narrow`ed or
- * morphed schema projects its JSON base.
+ * project from `hintSchema` when set, else `responseSchema`, so the two hints never disagree about the shape the model
+ * is shown, and without a `hintSchema` that shape cannot drift from the shape enforced. A `.narrow`ed or morphed schema
+ * projects its JSON base.
  *
  * Lazy and memoized: defining projects nothing; each hint projects on its first call and is cached. A projection that
  * throws (a type with no JSON form, such as `Date`) is not cached, so a later call throws again. Every other field
  * passes through unchanged.
  *
- * @param config - The descriptor fields, plus `describeResponseSchemaHint`.
+ * @param config - The descriptor fields, plus `describeResponseSchemaHint` and `hintSchema`.
  * @returns The capability descriptor.
  *
  * @example
@@ -148,12 +159,13 @@ export interface DefineLlmCapabilityConfig<T = unknown, H extends object = objec
  * @__NO_SIDE_EFFECTS__
  */
 export function defineLlmCapability<T = unknown, H extends object = object>(config: DefineLlmCapabilityConfig<T, H>): LlmCapabilityDescriptor<T, H> {
-  const { describeResponseSchemaHint, ...descriptor } = config;
+  const { describeResponseSchemaHint, hintSchema, ...descriptor } = config;
   const describe = describeResponseSchemaHint === true;
+  const shown = hintSchema ?? descriptor.responseSchema;
 
   return {
     ...descriptor,
-    responseSchemaHint: cachedGetter(() => projectLlmResponseSchema(descriptor.responseSchema, { describe })),
-    contractSchemaHint: cachedGetter(() => projectLlmContractSchema(descriptor.responseSchema))
+    responseSchemaHint: cachedGetter(() => projectLlmResponseSchema(shown, { describe })),
+    contractSchemaHint: cachedGetter(() => projectLlmContractSchema(shown))
   };
 }

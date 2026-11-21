@@ -15,6 +15,7 @@ import { type LlmCredentialProbe, type LlmStrategy } from '../strategy/llm.strat
 import { type LlmProviderStatusProviderId, type LlmProviderStatusSource } from '../strategy/llm.provider.status';
 import { type LlmCallBillReader } from '../strategy/llm.call.bill';
 import { type LlmCostBasis } from '../strategy/llm.usage';
+import { type LlmStrategyId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmAdapterConfig, type LlmCompletionAdapterConfig } from './llm.adapter';
 import { checkLlmAdapterStrategy, findLlmAdapter, filterLlmAdaptersByFacet, resolveLlmAdapter, type LlmAdapterRegistry } from './llm.adapter.registry';
 
@@ -143,9 +144,22 @@ export function resolveLlmProviderAccount(config: ResolveLlmProviderAccountConfi
 }
 
 /**
+ * Provider id → the default completion-length cap that provider's strategy is built with.
+ */
+export type LlmProviderMaxOutputTokensMap = Readonly<Record<LlmStrategyId, LlmTokenCount>>;
+
+/**
  * The options every provider's completion strategy shares. Each reaches the adapter as given (nullish when unset).
  */
-export interface LlmProviderStrategyOptions extends Pick<LlmProviderAdaptersConfig<unknown>, 'adapters'>, Pick<LlmCompletionAdapterConfig, 'defaultModel' | 'maxOutputTokens' | 'timeoutMs' | 'visionByModel' | 'reasoningOffByModel' | 'fetch'> {}
+export interface LlmProviderStrategyOptions extends Pick<LlmProviderAdaptersConfig<unknown>, 'adapters'>, Pick<LlmCompletionAdapterConfig, 'defaultModel' | 'maxOutputTokens' | 'timeoutMs' | 'visionByModel' | 'reasoningOffByModel' | 'fetch'> {
+  /**
+   * Provider id → the default cap that provider's strategy is built with. It wins over the shared `maxOutputTokens`;
+   * an unlisted provider gets the shared value. A stock strategy declares the cap it was built with as its
+   * `defaultMaxOutputTokens`, so it holds behind a dispatcher too (route › descriptor › tier › this › the
+   * dispatcher's `defaultMaxOutputTokens`).
+   */
+  readonly maxOutputTokensByProvider?: Maybe<LlmProviderMaxOutputTokensMap>;
+}
 
 /**
  * Config for {@link makeLlmProviderStrategy}.
@@ -175,6 +189,9 @@ export interface MakeLlmProviderStrategiesConfig extends LlmProviderStrategyOpti
  * The strategy must register under the provider's own id: a strategy minted under the transport name would make every
  * second instance of that transport silently replace the first.
  *
+ * The adapter's `maxOutputTokens` is the provider's entry in `maxOutputTokensByProvider`, else the shared
+ * `maxOutputTokens`.
+ *
  * @param config - The provider, the registry and the shared options.
  * @returns The strategy, `id` = the provider's id. Inert: no I/O.
  * @throws {Error} When the provider's transport has no completion adapter, its metering id has no metering adapter, or
@@ -183,7 +200,8 @@ export interface MakeLlmProviderStrategiesConfig extends LlmProviderStrategyOpti
  * @__NO_SIDE_EFFECTS__
  */
 export function makeLlmProviderStrategy(config: MakeLlmProviderStrategyConfig): LlmStrategy {
-  const { provider, adapters, defaultModel, maxOutputTokens, timeoutMs, visionByModel, reasoningOffByModel, fetch } = config;
+  const { provider, adapters, defaultModel, maxOutputTokens: sharedMaxOutputTokens, maxOutputTokensByProvider, timeoutMs, visionByModel, reasoningOffByModel, fetch } = config;
+  const maxOutputTokens = maxOutputTokensByProvider?.[provider.id] ?? sharedMaxOutputTokens;
   const label = `provider '${provider.id}'`;
   // The transport first: an unregistered transport is the more fundamental error.
   const adapter = resolveLlmAdapter({ adapters, facet: 'completion', kind: provider.transport, label });

@@ -13,7 +13,7 @@
 import { describe, it, expect } from 'vitest';
 import { makeLlmQuotaWindow, type LlmProviderStatus } from './llm.provider.status';
 import { type LlmStrategy } from './llm.strategy';
-import { evaluateLlmQuotaGate, readLlmProviderStatus, type LlmProviderStatusReport } from './llm.strategy.readiness';
+import { evaluateLlmQuotaGate, parseLlmQuotaMaxUsed, readLlmProviderStatus, type LlmProviderStatusReport } from './llm.strategy.readiness';
 import { makeLlmStrategyRegistry } from './llm.strategy.registry';
 
 /**
@@ -208,5 +208,23 @@ describe('evaluateLlmQuotaGate', () => {
     const verdict = evaluateLlmQuotaGate({ report });
     expect(verdict.allowed).toBe(false);
     expect(verdict.usedFraction).toBe(0.97);
+  });
+});
+
+describe('parseLlmQuotaMaxUsed()', () => {
+  it('should accept a 0–1 fraction', () => {
+    expect(parseLlmQuotaMaxUsed('0.75')).toBe(0.75);
+    expect(parseLlmQuotaMaxUsed('1')).toBe(1);
+  });
+
+  it('should REJECT a percent-shaped value, which would silently disable the gate it was meant to tighten', () => {
+    expect(parseLlmQuotaMaxUsed('90')).toBeUndefined();
+  });
+
+  it('should reject a non-number, a negative, a zero, and an absent value', () => {
+    expect(parseLlmQuotaMaxUsed('tight')).toBeUndefined();
+    expect(parseLlmQuotaMaxUsed('-0.5')).toBeUndefined();
+    expect(parseLlmQuotaMaxUsed('0')).toBeUndefined();
+    expect(parseLlmQuotaMaxUsed(undefined)).toBeUndefined();
   });
 });

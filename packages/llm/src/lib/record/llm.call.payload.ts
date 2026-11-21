@@ -57,7 +57,7 @@ export interface LlmCallLogPayloadBase {
    */
   readonly strategyId?: LlmStrategyId;
   /**
-   * The transport LANE the call rode (`LlmStrategy.kind ?? id`, e.g. `'openrouter-systemone'`) — the A/B axis a
+   * The transport LANE the call rode (`LlmStrategy.kind ?? id`, e.g. `'openrouter-decisions'`) — the A/B axis a
    * per-strategy fold keys on. A row without it folds by {@link strategyId}; a row with it separates the lane from the
    * account that served it.
    */

@@ -8,7 +8,7 @@
  * call and the host consumers that read the decision arm are out of scope.
  */
 
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { makeLlmDecisionChoiceAnswer, makeLlmDecisionNoulAnswer, makeLlmScriptedDecisionStrategy, makeLlmScriptedStrategy, type LlmScriptedDecisionScript } from '@dereekb/llm/test';
 import { LlmDecisionAnswerFaultError } from '../decision/llm.decision.answer';
 import { defineLlmDecision } from '../decision/llm.decision.descriptor';
@@ -31,8 +31,9 @@ import { toLlmCallLogPayload } from '../record/llm.call.payload';
 import { type LlmDispatchTransportBackoffParams, llmTransportBackoffMs } from './llm.dispatch.control';
 import { LLM_DECIDE_STAMP_SWALLOW_SITE } from './llm.dispatch.decision';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
-import { type LlmDispatcherConfig, type LlmDispatcherDecisionConfig, type LlmDispatchLane, type LlmDispatchRecorder } from './llm.dispatcher.config';
+import { type LlmDispatcherConfig, type LlmDispatcherDecisionConfig, type LlmDispatchLane, type LlmDispatchLaneRequest, type LlmDispatchRecorder } from './llm.dispatcher.config';
 import { makeLlmDispatcher } from './llm.dispatcher.pipeline';
+import { type LlmCapabilityDescriptor } from '../capability/llm.capability.descriptor';
 
 // MARK: Fixtures
 const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
@@ -741,5 +742,54 @@ describe('makeLlmDispatcher() decision lane', () => {
       cancellation.abort();
       expect(signals[1].aborted).toBe(true);
     });
+  });
+});
+
+describe('makeLlmDispatcher() host decision-request fields', () => {
+  interface SceneFields {
+    readonly sceneId?: string;
+    readonly tick?: number;
+  }
+
+  interface SceneHostFields {
+    readonly scene?: string | undefined;
+    readonly sceneTick?: number | undefined;
+  }
+
+  it('should type the decision branch of a lane request with the host fields', () => {
+    expectTypeOf<Extract<LlmDispatchLaneRequest<LlmDispatchRequest, SceneFields>, { lane: 'decision' }>['request']['sceneId']>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<Extract<LlmDispatchLaneRequest<LlmDispatchRequest, SceneFields>, { lane: 'decision' }>['request']['tick']>().toEqualTypeOf<number | undefined>();
+  });
+
+  it('should hand the host decision fields to recordFieldsOf and callAttributionOf with no cast', async () => {
+    const starts: LlmCallStartRecord<SceneHostFields>[] = [];
+    const calls: LlmCallRecord<SceneHostFields>[] = [];
+    const attributed: Array<string | undefined> = [];
+    const config: LlmDispatcherConfig<LlmDispatchRequest, LlmDispatchResult, SceneHostFields, LlmCapabilityDescriptor, object, SceneFields> = {
+      strategies: makeLlmStrategyRegistry([makeLlmScriptedStrategy({ id: 'cap', replies: [] })]),
+      defaultStrategyId: 'cap',
+      defaultMaxOutputTokens: 1024,
+      modelTiers: TIERS,
+      descriptorOf: () => undefined,
+      templateResolver: RESOLVER,
+      transportBackoff: () => 0,
+      recorder: { recordCallStart: (record) => starts.push(record), recordCall: (record) => calls.push(record) },
+      decisions: { strategies: makeLlmStrategyRegistry([makeLlmScriptedDecisionStrategy({ id: 'account-a', script: SCRIPT })]), defaultModel: DECISION_MODEL },
+      callAttributionOf: (params) => {
+        if (params.lane === 'decision') {
+          attributed.push(params.request.sceneId);
+        }
+
+        return undefined;
+      },
+      recordFieldsOf: (params) => (params.lane === 'decision' ? { scene: params.request.sceneId, sceneTick: params.request.tick } : {})
+    };
+    const dispatcher = makeLlmDispatcher(config);
+
+    await dispatcher.decide?.({ capability: 'PickCap', decision: PICK_ROW, input: { phrase: 'on the pile' }, sceneId: 's1', tick: 3 });
+
+    expect(attributed).toEqual(['s1']);
+    expect(starts[0]).toMatchObject({ scene: 's1', sceneTick: 3 });
+    expect(calls[0]).toMatchObject({ scene: 's1', sceneTick: 3 });
   });
 });

@@ -32,8 +32,9 @@ OpenRouter's hook set over `makeLlmSystemOneDecisionStrategy`, with no SDK.
 
 `LLM_OPENROUTER_ADAPTERS` registers the completion transport `openrouter` (default `https://openrouter.ai/api/v1`; `/node`'s env default reads
 `OPENROUTER_SERVER_URL`, then `OPENROUTER_BASE_URL`, first) and
-the decision route `openrouter` (`strategyKind: 'openrouter-systemone'`, derived for every `openrouter`-transport
-provider). The completion mapping is `/openai`'s shared `toLlmOpenAiCompatibleChatStrategyConfig`, which ignores the provider's `reasoningOff`,
+the decision route `openrouter` (`strategyKind: 'openrouter-decisions'`, derived for every `openrouter`-transport
+provider). The kind is a persisted `strategyKind` that ledgers fold on: it keeps the value existing ledgers already
+carry, which is why it does not follow ZenMux's `<route>-systemone` form (`'zenmux-systemone'`). The completion mapping is `/openai`'s shared `toLlmOpenAiCompatibleChatStrategyConfig`, which ignores the provider's `reasoningOff`,
 `tokenLimitParam` and `usageAccounting` — this wire has one spelling for each. The entry's swallow sites are
 `LLM_OPENROUTER_SWALLOW_SITES`; register them beside the root's the same way.
 

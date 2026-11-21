@@ -48,11 +48,14 @@ how a spec stays hermetic.
   returns the env's tier map, default tier and decode-retry tier. Precedence is env over profile over the host's
   base tiers: layer them in that order when calling `resolveLlmModelTiers`.
 - **Providers.** `resolveLlmProvidersFromEnv({ file, schema, adapters })` — or `makeLlmStrategiesFromEnv`, which also
-  builds each strategy — returns the keyed providers, the `gaps`, and the default. An env default is minted only when
+  builds each strategy and takes `makeLlmProviderStrategies`' options (`defaultModel`, `maxOutputTokens`,
+  `maxOutputTokensByProvider`, `timeoutMs`, `visionByModel`, `reasoningOffByModel`, `fetch`) — returns the keyed
+  providers, the `gaps`, and the default. An env default is minted only when
   its transport has a registered completion adapter. A declared provider is keyed by its own `apiKeyEnv`, and it
   replaces an env default of the same id even when unkeyed — it is never silently re-pointed at another key. The
   default is the explicit selection, else the first keyed non-fallback provider, else the fallback, keyed or not, so a
-  missing key fails loud at the call. An explicit selection (`LLM_PROVIDER`) that names neither an env default with a
+  missing key fails loud at the call. That rule is `resolveLlmDefaultProviderId({ explicitProviderId, providers,
+  fallbackProviderIds })`, pure, for a host that re-applies it to providers it resolved itself. An explicit selection (`LLM_PROVIDER`) that names neither an env default with a
   registered adapter (case-insensitively) nor a declared completion provider (exactly) throws, naming the variable and
   the selectable ids — a typo never silently routes to the inferred default. `gaps` lists every declared provider without a key; scope it to the slugs a run
   can reach with `filterLlmReachableProviderGaps`.

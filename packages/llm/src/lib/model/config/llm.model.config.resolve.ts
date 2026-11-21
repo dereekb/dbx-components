@@ -143,23 +143,29 @@ export type LlmModelPromptAddendumMap = LlmModelSlugMap<string>;
 
 /**
  * What the projections read: any object with a `models` block (a parsed or merged file).
+ *
+ * @typeParam S - The per-slug settings type — the base {@link LlmModelSettings}, or an extension's
+ *   (`LlmExtendedModelSettings<X>`).
  */
-export interface LlmModelSettingsSource {
-  readonly models?: Maybe<LlmModelSlugMap<LlmModelSettings>>;
+export interface LlmModelSettingsSource<S extends LlmModelSettings = LlmModelSettings> {
+  readonly models?: Maybe<LlmModelSlugMap<S>>;
 }
 
 /**
  * Config for {@link mapLlmModelSettings}.
+ *
+ * @typeParam V - The projected per-slug value.
+ * @typeParam S - The per-slug settings type, inferred from the file — an extension's per-slug fields read with no cast.
  */
-export interface MapLlmModelSettingsConfig<V> {
+export interface MapLlmModelSettingsConfig<V, S extends LlmModelSettings = LlmModelSettings> {
   /**
    * The file (absent ⇒ none).
    */
-  readonly file: Maybe<LlmModelSettingsSource>;
+  readonly file: Maybe<LlmModelSettingsSource<S>>;
   /**
    * Reads one slug's value; `null` / `undefined` ⇒ the slug is left out.
    */
-  readonly read: (settings: LlmModelSettings) => Maybe<V>;
+  readonly read: (settings: S) => Maybe<V>;
 }
 
 /**
@@ -167,10 +173,13 @@ export interface MapLlmModelSettingsConfig<V> {
  * transports and dispatcher. Only the slugs `read` returns a value for are kept, in declaration order, and the result
  * is `undefined` (never `{}`) when none does, so a host's spread of it stays absent.
  *
+ * Generic over the settings type `S`, so a host's extension field (a per-slug `image` or `voice` fact) projects
+ * through the same reader with no cast.
+ *
  * @param config - The file and the per-slug reader.
  * @returns The slug → value map, or `undefined`.
  */
-export function mapLlmModelSettings<V>(config: MapLlmModelSettingsConfig<V>): Maybe<LlmModelSlugMap<V>> {
+export function mapLlmModelSettings<V, S extends LlmModelSettings = LlmModelSettings>(config: MapLlmModelSettingsConfig<V, S>): Maybe<LlmModelSlugMap<V>> {
   const { file, read } = config;
   const entries: [LlmModelId, V][] = [];
 

@@ -91,6 +91,36 @@ describe('defineLlmCapability()', () => {
     expect(descriptor.responseSchemaHint()).toEqual(descriptor.contractSchemaHint());
   });
 
+  describe('hintSchema', () => {
+    const STRICT = type({ kind: type("'scene'|'beat'").describe('what the reply builds'), title: 'string' });
+    const TOLERANT = type({ 'kind?': "'scene'|'beat'", title: 'string' });
+    const parseTolerant = (value: unknown) => {
+      const parsed = TOLERANT(value);
+      return parsed instanceof type.errors ? undefined : parsed;
+    };
+
+    it('projects both hints from the strict hintSchema while the tolerant responseSchema is enforced', () => {
+      const descriptor = defineLlmCapability({ capability: 'build-scene', responseSchema: TOLERANT, hintSchema: STRICT, parseValue: parseTolerant });
+      const response = descriptor.responseSchemaHint() as { readonly required?: ReadonlyArray<string> };
+      const contract = descriptor.contractSchemaHint() as { readonly required?: ReadonlyArray<string> };
+
+      expect(response.required).toContain('kind');
+      expect(contract.required).toContain('kind');
+      expect(JSON.stringify(response)).not.toContain('what the reply builds');
+      expect(JSON.stringify(contract)).toContain('what the reply builds');
+      expect(descriptor.responseSchema).toBe(TOLERANT);
+      expect(descriptor.parseValue({ title: 'no kind' })).toEqual({ title: 'no kind' });
+      expect('hintSchema' in descriptor).toBe(false);
+    });
+
+    it("keeps the hint schema's descriptions in responseSchemaHint when describeResponseSchemaHint is set", () => {
+      const descriptor = defineLlmCapability({ capability: 'build-scene', responseSchema: TOLERANT, hintSchema: STRICT, parseValue: parseTolerant, describeResponseSchemaHint: true });
+
+      expect(JSON.stringify(descriptor.responseSchemaHint())).toContain('what the reply builds');
+      expect(descriptor.responseSchemaHint()).toEqual(descriptor.contractSchemaHint());
+    });
+  });
+
   describe('narrowed schemas', () => {
     const base = type({ pass: 'boolean', 'feedback?': 'string' });
     const narrowed = base.narrow((value) => value.pass || value.feedback != null);

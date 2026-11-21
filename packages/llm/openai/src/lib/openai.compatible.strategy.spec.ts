@@ -42,6 +42,14 @@ describe('makeLlmOpenAiCompatibleChatStrategy()', () => {
       expect(acme({ id: 'acme-b' }).id).toBe('acme-b');
     });
 
+    it('declares defaultMaxOutputTokens only when maxOutputTokens was configured', () => {
+      const unconfigured = acme();
+
+      expect(acme({ maxOutputTokens: 4096 }).defaultMaxOutputTokens).toBe(4096);
+      expect(unconfigured.defaultMaxOutputTokens).toBeUndefined();
+      expect('defaultMaxOutputTokens' in unconfigured).toBe(false);
+    });
+
     it('defaults the base URL to the hooks (the generic probe URL proves it)', async () => {
       const urls: string[] = [];
       const probeFetch: ConfiguredFetch = async (input) => {

@@ -411,6 +411,23 @@ export async function readLlmProviderStatus(config: ReadLlmProviderStatusConfig)
 export const DEFAULT_LLM_QUOTA_GATE_MAX_USED_FRACTION: PercentDecimal = 0.9;
 
 /**
+ * Parse a quota ceiling. Accepts a `0`–`1` fraction; anything else — a non-number, zero or less, a value above 1 — reads
+ * as ABSENT so the caller's default applies. Rejecting `> 1` matters: someone will write `90` meaning 90%, and honoring
+ * it literally would produce a ceiling no window can exceed, silently disabling the gate they meant to tighten. No
+ * clamping, no throw.
+ *
+ * Feed the result to `evaluateLlmQuotaGate({ report, maxUsedFraction })`; absent ⇒
+ * {@link DEFAULT_LLM_QUOTA_GATE_MAX_USED_FRACTION}. The root reads no environment: the host passes the raw value.
+ *
+ * @param raw - The raw value (an environment value, say).
+ * @returns The ceiling, or `undefined` when unset or unusable.
+ */
+export function parseLlmQuotaMaxUsed(raw: Maybe<string>): Maybe<PercentDecimal> {
+  const value = Number((raw ?? '').trim());
+  return Number.isFinite(value) && value > 0 && value <= 1 ? value : undefined;
+}
+
+/**
  * Config for {@link evaluateLlmQuotaGate}.
  */
 export interface EvaluateLlmQuotaGateConfig {

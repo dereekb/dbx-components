@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { evaluateLlmQuotaGate, type LlmProviderStatus, type LlmProviderStatusReport, makeLlmQuotaWindow } from '@dereekb/llm';
 import { DEFAULT_LLM_LIVE_LANE_ENV_NAMES, type LlmLiveLaneEnvNames } from './llm.test.env';
-import { type LlmCredentialVerdictResult, llmCredentialVerdictFromEnv, llmCredentialVerdictFromReport, llmQuotaVerdictFromEnv, llmQuotaVerdictFromGate, parseLlmQuotaMaxUsed, toLlmCredentialVerdictEnv, toLlmQuotaVerdictEnv } from './llm.test.verdict';
+import { type LlmCredentialVerdictResult, llmCredentialVerdictFromEnv, llmCredentialVerdictFromReport, llmQuotaVerdictFromEnv, llmQuotaVerdictFromGate, toLlmCredentialVerdictEnv, toLlmQuotaVerdictEnv } from './llm.test.verdict';
 
 function reportOf(status: LlmProviderStatus): LlmProviderStatusReport {
   return { checked: [{ id: 'alpha', metered: true, status }] };
@@ -46,24 +46,6 @@ describe('the credential verdict codec', () => {
     expect(llmCredentialVerdictFromEnv({ env: { LLM_CREDENTIAL_VERDICT: ' Dead\n', LLM_CREDENTIAL_DETAIL: ' alpha: HTTP 401 \n' } })).toEqual({ verdict: 'dead', detail: 'alpha: HTTP 401' });
     expect(llmCredentialVerdictFromEnv({ env: { LLM_CREDENTIAL_VERDICT: 'dead', LLM_CREDENTIAL_DETAIL: '  ' } })).toEqual({ verdict: 'dead' });
     expect(llmCredentialVerdictFromEnv({ env: { LLM_CREDENTIAL_VERDICT: '   ' } })).toEqual({ verdict: 'unchecked' });
-  });
-});
-
-describe('parseLlmQuotaMaxUsed()', () => {
-  it('should accept a 0–1 fraction', () => {
-    expect(parseLlmQuotaMaxUsed('0.75')).toBe(0.75);
-    expect(parseLlmQuotaMaxUsed('1')).toBe(1);
-  });
-
-  it('should REJECT a percent-shaped value, which would silently disable the gate it was meant to tighten', () => {
-    expect(parseLlmQuotaMaxUsed('90')).toBeUndefined();
-  });
-
-  it('should reject a non-number, a negative, a zero, and an absent value', () => {
-    expect(parseLlmQuotaMaxUsed('tight')).toBeUndefined();
-    expect(parseLlmQuotaMaxUsed('-0.5')).toBeUndefined();
-    expect(parseLlmQuotaMaxUsed('0')).toBeUndefined();
-    expect(parseLlmQuotaMaxUsed(undefined)).toBeUndefined();
   });
 });
 

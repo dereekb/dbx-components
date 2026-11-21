@@ -9,8 +9,8 @@
  * byte-identically to before structure existed (the no-regression pin).
  */
 
-import { describe, expect, it } from 'vitest';
-import { defineLlmDecision } from './llm.decision.descriptor';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import { defineLlmDecision, type LlmDecision, type LlmDecisionDescriptor } from './llm.decision.descriptor';
 import { LLM_DECISION_CHOICE_OPTIONS_MAX, LLM_DECISION_SCORE_LEVELS_MAX, LlmDecisionDeclarationError, llmChoiceQuestion, type LlmDecisionAnswers, type LlmDecisionQuestions, type LlmDecisionScoreLevels, llmNoulQuestion, llmScoreQuestion } from './llm.decision.question';
 
 /**
@@ -195,5 +195,80 @@ describe('defineLlmDecision', () => {
 
     expect(seen).toEqual(['{"phrase":"on the pile"}']);
     expect(result.answers.row.choice).toBe('row-1');
+  });
+});
+
+/**
+ * A host's descriptor extension — the shape a host names through its own define wrapper.
+ */
+interface HostDecisionDescriptor<I, Q extends LlmDecisionQuestions> extends LlmDecisionDescriptor<I, Q> {
+  readonly aspects?: ReadonlyArray<'scale' | 'fit'>;
+}
+
+const defineHostDecision = <I, Q extends LlmDecisionQuestions>(descriptor: HostDecisionDescriptor<I, Q>) => defineLlmDecision<I, Q, HostDecisionDescriptor<I, Q>>(descriptor);
+
+interface HolderInput {
+  readonly holder: string;
+  readonly size: number;
+}
+
+describe('defineLlmDecision() types', () => {
+  const hostDescriptor: HostDecisionDescriptor<HolderInput, { readonly fits: ReturnType<typeof llmNoulQuestion> }> = {
+    decision: 'holder-fit',
+    describe: 'does the item fit the holder',
+    aspects: ['scale', 'fit'],
+    state: (input: HolderInput) => ({ holder: input.holder }),
+    questions: (input) => ({ fits: llmNoulQuestion(`the item fits a ${input.size.toFixed(0)}cm holder.`) })
+  };
+
+  it('keeps a host descriptor extension on the decision, by identity', () => {
+    const decision = defineHostDecision(hostDescriptor);
+
+    expectTypeOf(decision.descriptor.aspects).toEqualTypeOf<ReadonlyArray<'scale' | 'fit'> | undefined>();
+    expectTypeOf(decision).toExtend<LlmDecision<HolderInput, { readonly fits: ReturnType<typeof llmNoulQuestion> }>>();
+    expect(decision.descriptor).toBe(hostDescriptor);
+    expect(decision.descriptor.aspects).toEqual(['scale', 'fit']);
+  });
+
+  it('infers the input and the questions through a host wrapper call site with an unannotated questions param', () => {
+    const decision = defineHostDecision({
+      decision: 'holder-fit',
+      describe: 'does the item fit the holder',
+      aspects: ['fit'],
+      state: (input: HolderInput) => ({ holder: input.holder }),
+      questions: (input) => ({ fits: llmNoulQuestion(`the item fits a ${input.size.toFixed(0)}cm holder.`) })
+    });
+
+    expectTypeOf<Parameters<typeof decision.asRequest>[0]['input']>().toEqualTypeOf<HolderInput>();
+    expectTypeOf(decision.descriptor.aspects).toEqualTypeOf<ReadonlyArray<'scale' | 'fit'> | undefined>();
+    expect(decision.asRequest({ input: { holder: 'cup', size: 4 }, model: 'm' }).questions.fits.type).toBe('noul');
+  });
+
+  it('infers the input and a Choice literal option union on a bare call', () => {
+    const decision = defineLlmDecision({
+      decision: 'route-ticket',
+      describe: 'route a support ticket',
+      state: (input: { readonly ticket: string }) => ({ ticket: input.ticket }),
+      questions: () => ({ team: llmChoiceQuestion('which team owns it?', { billing: 'billing', technical: 'technical' }) })
+    });
+
+    type Questions = ReturnType<typeof decision.asRequest>['questions'];
+
+    expectTypeOf<Parameters<typeof decision.asRequest>[0]['input']>().toEqualTypeOf<{ readonly ticket: string }>();
+    expectTypeOf<LlmDecisionAnswers<Questions>['team']['choice']>().toEqualTypeOf<'billing' | 'technical'>();
+    expectTypeOf(decision.descriptor).toEqualTypeOf<LlmDecisionDescriptor<{ readonly ticket: string }, Questions>>();
+  });
+
+  it('keeps the excess-property check on a bare call', () => {
+    const decision = defineLlmDecision({
+      decision: 'holder-fit',
+      describe: 'does the item fit the holder',
+      // @ts-expect-error a bare call's descriptor is the base type, so a host field is an excess property
+      aspects: ['scale'],
+      state: (input: HolderInput) => ({ holder: input.holder }),
+      questions: () => ({ fits: llmNoulQuestion('the item fits the holder.') })
+    });
+
+    expect(decision.descriptor.decision).toBe('holder-fit');
   });
 });

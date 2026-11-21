@@ -25,6 +25,7 @@ import { makeLlmStrategyRegistry } from '../strategy/llm.strategy.registry';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { type LlmDispatchGap, type LlmDispatcherConfig, type LlmDispatchRecorder } from './llm.dispatcher.config';
 import { makeLlmDispatcher } from './llm.dispatcher.pipeline';
+import { LLM_RETRY_BUDGET_RAISE_FACTOR, LLM_RETRY_OUTPUT_BUDGET_CEILING } from './llm.retry.lever';
 
 // MARK: Fixtures
 const TEMPLATES: ReadonlyArray<LlmPromptTemplate> = [
@@ -351,6 +352,19 @@ describe('makeLlmDispatcher() retry', () => {
       // the library's 1024 default × 4 (the host ran 2048 × 2)
       expect(requests[1].maxOutputTokens).toBe(4096);
       expect(result).toMatchObject({ decodeStatus: 'retried', lengthCapped: true, decodeOutcome: 'ok' });
+    });
+
+    it("should send the strategy's declared defaultMaxOutputTokens and raise the truncation re-ask from it", async () => {
+      const requests: LlmRequest[] = [];
+      const declared: LlmStrategy = { ...makeLlmScriptedStrategy({ id: 's', replies: [TRUNCATED, OK], requests }), defaultMaxOutputTokens: 4096 };
+      const { dispatcher } = setup({ strategy: declared, defaultMaxOutputTokens: 8192 });
+      const result = await dispatcher.dispatch(request({ validate: VALID }));
+
+      expect(requests[0].maxOutputTokens).toBe(4096);
+      // the budget rung raises the cap actually sent (4096 × LLM_RETRY_BUDGET_RAISE_FACTOR, under the 32,768 ceiling)
+      expect(requests[1].maxOutputTokens).toBe(Math.min(LLM_RETRY_OUTPUT_BUDGET_CEILING, 4096 * LLM_RETRY_BUDGET_RAISE_FACTOR));
+      expect(requests[1].maxOutputTokens).toBe(16_384);
+      expect(result).toMatchObject({ decodeStatus: 'retried', decodeOutcome: 'ok' });
     });
 
     it('should retry a reasoning-only reply with reasoning off', async () => {

@@ -25,7 +25,7 @@ export interface LlmCallTelemetry {
    */
   readonly strategyId: LlmStrategyId;
   /**
-   * The transport LANE that served the call (`LlmStrategy.kind ?? id`) — e.g. `'openrouter-systemone'`. The A/B axis
+   * The transport LANE that served the call (`LlmStrategy.kind ?? id`) — e.g. `'openrouter-decisions'`. The A/B axis
    * a usage ledger folds by strategy on. Absent ⇒ the fold uses
    * {@link strategyId}.
    */

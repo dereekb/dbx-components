@@ -42,7 +42,10 @@ environment variable and no file: `/node` does that, and a browser host passes t
   (`llmCompletionProviderEntryType`, `llmModelSettingsType`, … in `llm.model.config.type.ts`), and an extension's
   fields are typed `Partial<…>` on every entry, patch and resolved config — a provider that leaves them out is still
   well-typed, so the extension seam needs no cast. Declare an extension's fields the same way: an arktype type with
-  `'+': 'delete'`, read through `@dereekb/model`'s `parseArktypeFieldsWithMessages`.
+  `'+': 'delete'`, read through `@dereekb/model`'s `parseArktypeFieldsWithMessages`. `LLM_PROVIDER_COMPLETION_ONLY_KEYS`
+  (`reasoningOff`, `tokenLimitParam`, `usageAccounting`, `decision`) lists the keys that only mean something on a
+  provider that serves completions — the ones an extension's entry parser refuses on a provider kind it owns.
+  `metering` is not one: an extension's provider may bill an account too.
 - **Overlay.** `overlayLlmModelConfigFile({ base, file, source, schema })` lays a host's file over its built-ins. A
   provider, profile or per-slug entry the file names replaces the built-in whole — a half-replaced provider would bill
   one account at another's endpoint — and every `models[slug].provider` is then checked against the merged providers.
@@ -52,7 +55,8 @@ environment variable and no file: `/node` does that, and a browser host passes t
   and a name the file lacks throws. `llmModelReasoningOffEncodings`,
   `llmModelVisionCapabilities`, `llmModelPromptAddenda` and `llmModelProviderBindings` project the per-slug facts,
   each a one-line `mapLlmModelSettings({ file, read })` — the generic projector a host uses for its own per-slug
-  fields (only the slugs `read` answers for are kept; `undefined` when none is).
+  fields (only the slugs `read` answers for are kept; `undefined` when none is). It is generic over the settings type
+  `S`, inferred from the file, so `read` sees an extension's per-slug fields with no cast.
   `resolveLlmProviderConfigs({ providers, apiKeyOf })` turns the declared completion providers into
   `LlmProviderConfig`s that carry the key value, and lists the declared providers whose key is missing.
 - **Wire vocabulary.** `LLM_REASONING_OFF_ENCODINGS` (how an OpenAI-compatible wire says "reasoning off":

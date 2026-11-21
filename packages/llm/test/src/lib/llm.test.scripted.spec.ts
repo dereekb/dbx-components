@@ -46,6 +46,36 @@ describe('makeLlmScriptedStrategy()', () => {
     expect(calls).toEqual([0, 1, 2]);
   });
 
+  it('should answer from an async respond', async () => {
+    const strategy = makeLlmScriptedStrategy({ respond: async (request) => `ran:${request.prompt}`, replies: ['unused'] });
+
+    expect((await strategy.complete(requestOf('summarize', 'hello'))).text).toBe('ran:hello');
+  });
+
+  it('should fall through an async respond that resolves undefined to byCapability, then replies', async () => {
+    const strategy = makeLlmScriptedStrategy({ respond: async () => undefined, byCapability: { classify: 'by-cap' }, replies: ['fallback'] });
+
+    expect((await strategy.complete(requestOf('classify'))).text).toBe('by-cap');
+    expect((await strategy.complete(requestOf('summarize'))).text).toBe('fallback');
+  });
+
+  it('should sink the request before an async respond settles', async () => {
+    const requests: LlmRequest[] = [];
+    let settle: (reply: string) => void = () => undefined;
+    const strategy = makeLlmScriptedStrategy({ respond: () => new Promise<string>((resolve) => (settle = resolve)), requests });
+    const pending = strategy.complete(requestOf('summarize', 'first'));
+
+    expect(requests.map((request) => request.prompt)).toEqual(['first']);
+    settle('done');
+    expect((await pending).text).toBe('done');
+  });
+
+  it('should reject the call when an async respond rejects', async () => {
+    const strategy = makeLlmScriptedStrategy({ respond: () => Promise.reject(new Error('runner down')), replies: ['unused'] });
+
+    await expect(strategy.complete(requestOf('summarize'))).rejects.toThrow('runner down');
+  });
+
   it('should let a completion spec override the defaults', async () => {
     const usage = { promptTokens: 3, completionTokens: 2, totalTokens: 5, cost: 0 };
     const strategy = makeLlmScriptedStrategy({ replies: [{ text: 'done', strategyId: 'other', finishReason: 'length', usage }] });

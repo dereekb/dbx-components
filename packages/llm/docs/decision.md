@@ -64,8 +64,10 @@ could need in one map.
   `model`, `answers`, `usage`, `provider`, `generationId`). It throws rather than returning partial answers. Its
   `healthCheck` / `credentialProbe` are the base's, reporting `LlmStrategyHealth`. `LlmDecideOptions` extends
   `LlmCompleteOptions` (`signal`) with `timeoutMs`.
-- Decision strategy kinds follow `<route>-systemone` (`'openrouter-systemone'`, `'zenmux-systemone'`): both stock
-  transports speak System One, and the kind stays distinct from the route's completion kind (`'openrouter'`).
+- Decision strategy kinds are `'openrouter-decisions'` (OpenRouter) and `'zenmux-systemone'` (ZenMux), each distinct
+  from its route's completion kind (`'openrouter'`), so a ledger row never confuses the two lanes. A kind is a
+  persisted `strategyKind`: OpenRouter's keeps the value existing ledgers already fold on, which is why it does not
+  follow ZenMux's `<route>-systemone` form.
 - A decision registry is `makeLlmStrategyRegistry(seed)` over decision strategies (an `LlmDecisionStrategyRegistry`);
   a kind's instances are `values().filter((s) => llmStrategyKind(s) === kind)` (`.at(-1)` the LAST registered),
   `values()[0]` the first.
@@ -95,10 +97,17 @@ could need in one map.
 - `defineLlmDecision(descriptor)` declares a decision over one typed input: `state(input)` and `questions(input)`.
   Validation is lazy — `asRequest({ input, model })` validates and throws `LlmDecisionDeclarationError` naming the
   decision — and `decide({ strategy, input, model, options })` runs it.
+  - Its third type parameter `D` is the descriptor's type, returned on `LlmDecision.descriptor` by identity. `D` is
+    never inferred: a bare call types the descriptor as `LlmDecisionDescriptor<I, Q>`, so an unknown field fails to
+    compile. A host whose descriptors carry more extends `LlmDecisionDescriptor` and names it through its own define
+    wrapper, `(descriptor) => defineLlmDecision<I, Q, HostDecisionDescriptor<I, Q>>(descriptor)`; each call site still
+    infers `I` / `Q`, and the decision still dispatches as an `LlmDecision<I, Q>`.
 - `LlmDecisionDispatchRequest` is what `makeLlmDispatcher`'s decision lane (its `decisions` block) takes. It shares
   `LlmDispatchRequestBase` with a completion request — the consuming `capability`, host `meta`, model / tier
   overrides, the parent `callContext` and the `signal` — and adds the declared `decision`, its `input` and an optional
-  `stamp`. A descriptor's own `model` / `tier` are `Pick<LlmCapabilityModelRef, 'tier' | 'model'>`.
+  `stamp`. A descriptor's own `model` / `tier` are `Pick<LlmCapabilityModelRef, 'tier' | 'model'>`. A host whose
+  decision requests carry more (a scene, a tick) names those fields as the dispatcher's `E`: `decide` then takes
+  `LlmDecisionDispatchRequest<I, Q> & E`, and the decision lane's hooks read them with no cast.
 
 ```ts
 import { llmChoiceQuestion, llmDecisionRequestBody, llmNoulQuestion, readLlmDecisionAnswers } from '@dereekb/llm/decision';

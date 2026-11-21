@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { type LlmCompletionAdapter, type LlmCompletionAdapterConfig, type LlmModelConfigFile, type LlmModelConfigTypes, type LlmProviderEntryBase, makeLlmAdapterRegistry, makeLlmModelConfigSchema } from '@dereekb/llm';
 import { DEFAULT_LLM_ENV_NAMES, type LlmEnvNames } from './llm.node.env';
-import { readLlmReachableModels, filterLlmReachableProviderGaps, makeLlmStrategiesFromEnv, resolveLlmProvidersFromEnv } from './llm.node.provider';
+import { readLlmReachableModels, filterLlmReachableProviderGaps, makeLlmStrategiesFromEnv, resolveLlmDefaultProviderId, resolveLlmProvidersFromEnv } from './llm.node.provider';
 
 const OPENAI_URL = 'https://api.openai.example/v1';
 const OPENROUTER_URL = 'https://openrouter.example/api/v1';
@@ -274,6 +274,28 @@ describe('resolveLlmProvidersFromEnv()', () => {
       { id: 'openrouter', transport: 'openrouter', apiKey: 'or', apiKeyEnv: 'OPENROUTER_API_KEY' }
     ]);
     expect(result.defaultProviderId).toBe('openrouter');
+  });
+});
+
+describe('resolveLlmDefaultProviderId()', () => {
+  it('should let an explicit id win, even one that is not keyed', () => {
+    expect(resolveLlmDefaultProviderId({ explicitProviderId: 'unkeyed', providers: [{ id: 'openai' }], fallbackProviderIds: ['openrouter'] })).toBe('unkeyed');
+  });
+
+  it('should choose the first keyed provider that is not a fallback', () => {
+    expect(resolveLlmDefaultProviderId({ providers: [{ id: 'openrouter' }, { id: 'zenmux' }, { id: 'openai' }], fallbackProviderIds: ['openrouter'] })).toBe('zenmux');
+  });
+
+  it('should choose the first keyed fallback when only fallbacks are keyed', () => {
+    expect(resolveLlmDefaultProviderId({ providers: [{ id: 'openrouter' }, { id: 'local' }], fallbackProviderIds: ['local', 'openrouter'] })).toBe('openrouter');
+  });
+
+  it('should choose the first fallback id when nothing is keyed', () => {
+    expect(resolveLlmDefaultProviderId({ providers: [], fallbackProviderIds: ['openrouter', 'local'] })).toBe('openrouter');
+  });
+
+  it('should be undefined when there is nothing at all', () => {
+    expect(resolveLlmDefaultProviderId({ providers: [] })).toBeUndefined();
   });
 });
 

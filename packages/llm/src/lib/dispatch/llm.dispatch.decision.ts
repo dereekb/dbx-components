@@ -69,15 +69,17 @@ export interface LlmPromptDecisionSegmentOrigin extends LlmPromptSegmentOrigin {
 
 /**
  * The decision lane a dispatcher exposes.
+ *
+ * @typeParam E - The host's decision-request fields.
  */
-export interface LlmDispatchDecisionLane {
+export interface LlmDispatchDecisionLane<E extends object = object> {
   /**
    * Make one decision.
    *
-   * @param request - The decision request.
+   * @param request - The decision request, with the host's decision-request fields.
    * @returns The answers.
    */
-  decide<I, Q extends LlmDecisionQuestions>(request: LlmDecisionDispatchRequest<I, Q>): Promise<LlmDecisionResult<Q>>;
+  decide<I, Q extends LlmDecisionQuestions>(request: LlmDecisionDispatchRequest<I, Q> & E): Promise<LlmDecisionResult<Q>>;
 }
 
 /**
@@ -87,8 +89,9 @@ export interface LlmDispatchDecisionLane {
  * @typeParam R - The host's request type.
  * @typeParam H - The host's top-level record fields.
  * @typeParam A - The call-context attribution type.
+ * @typeParam E - The host's decision-request fields, which the hooks see typed.
  */
-export interface LlmDispatchDecisionLaneConfig<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object> {
+export interface LlmDispatchDecisionLaneConfig<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object, E extends object = object> {
   /**
    * The dispatcher's decision block — absent ⇒ no lane.
    */
@@ -108,16 +111,16 @@ export interface LlmDispatchDecisionLaneConfig<R extends LlmDispatchRequest = Ll
   /**
    * The dispatcher's recorder and taps.
    */
-  readonly sinks: Pick<LlmDispatchRecordSinks<R, H, A>, 'recorder' | 'taps'>;
+  readonly sinks: Pick<LlmDispatchRecordSinks<R, H, A, E>, 'recorder' | 'taps'>;
   /**
    * The dispatcher's host-field hook (handed `lane: 'decision'`).
    */
-  readonly recordFieldsOf?: Maybe<(params: LlmDispatchRecordFieldsParams<R, A>) => H>;
+  readonly recordFieldsOf?: Maybe<(params: LlmDispatchRecordFieldsParams<R, A, E>) => H>;
   /**
    * The dispatcher's context minting — nested under the request's `callContext`, else the recorder's root, else a
    * context that does not time.
    */
-  readonly callContextOf: (request: LlmDecisionDispatchRequest) => LlmCallContext<A>;
+  readonly callContextOf: (request: LlmDecisionDispatchRequest & E) => LlmCallContext<A>;
   /**
    * The host pause gate.
    */
@@ -256,9 +259,9 @@ interface LlmDispatchDecisionSendParams<Q extends LlmDecisionQuestions, A extend
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object>(config: LlmDispatchDecisionLaneConfig<R, H, A>): Maybe<LlmDispatchDecisionLane> {
+export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object, E extends object = object>(config: LlmDispatchDecisionLaneConfig<R, H, A, E>): Maybe<LlmDispatchDecisionLane<E>> {
   const { decisions, modelTiers, defaultTier, capabilityRoutes, sinks, recordFieldsOf, callContextOf, pause, cancellationSignal, transportBackoff, isRetryableUnknownError, liveSlotId } = config;
-  let lane: Maybe<LlmDispatchDecisionLane>;
+  let lane: Maybe<LlmDispatchDecisionLane<E>>;
 
   if (decisions != null) {
     const issue = llmDecisionModelIssue(decisions.defaultModel);
@@ -363,9 +366,9 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
         return outcome;
       };
 
-      const decide = async <I, Q extends LlmDecisionQuestions>(request: LlmDecisionDispatchRequest<I, Q>): Promise<LlmDecisionResult<Q>> => {
-        // the hooks see the library request: `stamp` is contravariant in `Q`, so the widening needs one cast
-        const widened = request as unknown as LlmDecisionDispatchRequest;
+      const decide = async <I, Q extends LlmDecisionQuestions>(request: LlmDecisionDispatchRequest<I, Q> & E): Promise<LlmDecisionResult<Q>> => {
+        // the hooks see the library request plus the host's fields: `stamp` is contravariant in `Q`, so the widening needs one cast
+        const widened = request as unknown as LlmDecisionDispatchRequest & E;
         const { capability } = request;
         // throws before anything is minted, parked, recorded or sent
         const { model, tier } = decisionModelOf(widened);
@@ -373,7 +376,7 @@ export function makeLlmDispatchDecisionLane<R extends LlmDispatchRequest = LlmDi
         const key = decision.descriptor.decision;
         const decisionRequest = decision.asRequest({ input: request.input, model });
         const callContext = callContextOf(widened);
-        const fields = makeLlmDispatchRecordFields<R, H, A>({ recordFieldsOf, call: { lane: 'decision', request: widened }, callContext });
+        const fields = makeLlmDispatchRecordFields<R, H, A, E>({ recordFieldsOf, call: { lane: 'decision', request: widened }, callContext });
         const signal = mergeLlmDispatchSignals({ cancellationSignal, request });
         await parkLlmDispatchWhilePaused({ pause, signal, callContext });
         const segments = segmentsOf(key, decisionRequest.state, decisionRequest.questions);

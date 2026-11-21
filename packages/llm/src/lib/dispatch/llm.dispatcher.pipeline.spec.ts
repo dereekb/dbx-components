@@ -250,6 +250,22 @@ describe('makeLlmDispatcher()', () => {
       expect(explicit.$schema).toBe('x');
     });
 
+    it("should keep a request hint's descriptions on the root and a follow-up's own hint when describeResponseSchemaHint is set, and strip them by default", async () => {
+      const described = { type: 'object', properties: { a: { type: 'string', description: 'the answer prose' } } };
+      const flagged = setup({ replies: ['{"answer":"one"}', '{"answer":"two"}'], describeResponseSchemaHint: true });
+      const executed = await flagged.dispatcher.preparePrompt(request({ responseSchemaHint: described })).execute();
+      await executed.followUp({ content: 'next', responseSchemaHint: described }).execute();
+      const plain = setup({ replies: ['{"answer":"one"}', '{"answer":"two"}'] });
+      const plainExecuted = await plain.dispatcher.preparePrompt(request({ responseSchemaHint: described })).execute();
+      await plainExecuted.followUp({ content: 'next', responseSchemaHint: described }).execute();
+
+      expect(JSON.stringify(flagged.requests[0].responseSchemaHint)).toContain('the answer prose');
+      expect(JSON.stringify(flagged.requests[1].responseSchemaHint)).toContain('the answer prose');
+      expect((flagged.requests[0].responseSchemaHint as Record<string, unknown>)['additionalProperties']).toBe(false);
+      expect(JSON.stringify(plain.requests[0].responseSchemaHint)).not.toContain('the answer prose');
+      expect(JSON.stringify(plain.requests[1].responseSchemaHint)).not.toContain('the answer prose');
+    });
+
     it('should split the prompt into a cache prefix and a volatile suffix holding the live context', async () => {
       const { dispatcher, requests } = setup({ replies: ['x'] });
       await dispatcher.dispatch(request());

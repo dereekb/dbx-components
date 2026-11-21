@@ -126,8 +126,8 @@ describe('makeLlmOpenRouterDecisionStrategy()', () => {
 
     expect(named.id).toBe('account-a');
     expect(named.kind).toBe(LLM_OPENROUTER_DECISION_STRATEGY_KIND);
-    expect(bare.id).toBe('openrouter-systemone');
-    expect(LLM_OPENROUTER_DECISION_STRATEGY_KIND).toBe('openrouter-systemone');
+    expect(bare.id).toBe('openrouter-decisions');
+    expect(LLM_OPENROUTER_DECISION_STRATEGY_KIND).toBe('openrouter-decisions');
     expect(bare.describe).toBe('OpenRouter System One at https://openrouter.ai/api/v1/systemone');
   });
 

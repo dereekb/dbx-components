@@ -140,11 +140,11 @@ export interface LlmRequest {
   /**
    * The per-call completion-length cap (the output-budget axis) — the `max_tokens` the strategy sends, resolved
    * from the capability / the resolved tier's config. A strategy honours it (`max_tokens: request.maxOutputTokens ??
-   * <its default cap>`) or ignores it. A dispatcher ALWAYS sets it (the route › descriptor › tier cap, else its
-   * `defaultMaxOutputTokens`), so behind a dispatcher a strategy's own default cap never applies; unset ⇒ the
-   * strategy's own default cap (`DEFAULT_LLM_MAX_OUTPUT_TOKENS` for the stock transports), which only a direct
-   * strategy call reaches. A dispatcher's bounded retry may raise it on a length-truncation decode failure (a
-   * truncated reply is re-asked with a larger cap).
+   * <its default cap>`) or ignores it. A dispatcher ALWAYS sets it: route › descriptor › tier cap, else the selected
+   * strategy's declared {@link LlmStrategy.defaultMaxOutputTokens}, else the dispatcher's `defaultMaxOutputTokens`.
+   * Unset ⇒ the strategy's own default cap (`DEFAULT_LLM_MAX_OUTPUT_TOKENS` for an unconfigured stock transport); only
+   * an UNCONFIGURED strategy's built-in default is unreachable behind a dispatcher. A dispatcher's bounded retry may
+   * raise it on a length-truncation decode failure (a truncated reply is re-asked with a larger cap).
    */
   readonly maxOutputTokens?: LlmTokenCount;
   /**
@@ -488,8 +488,9 @@ export function resolveLlmCompletionCallTimeoutMs(config: ResolveLlmCompletionCa
  *
  * Deliberately HIGH: a truncated reply is billed in full, decodes to nothing and buys a retry that bills again, and a
  * hybrid-reasoning model spends part of the cap thinking. A model with a smaller output limit (an older OpenAI model,
- * a small-context local model) needs its cap configured (`maxOutputTokens` on the strategy, provider or tier). A
- * dispatcher's `defaultMaxOutputTokens` is normally this value.
+ * a small-context local model) needs its cap configured: `maxOutputTokens` on the strategy (all providers),
+ * `maxOutputTokensByProvider` (one provider), or a tier's. A dispatcher's `defaultMaxOutputTokens` is normally this
+ * value.
  */
 export const DEFAULT_LLM_MAX_OUTPUT_TOKENS: LlmTokenCount = 8_192;
 
@@ -580,6 +581,15 @@ export interface LlmStrategy extends LlmStrategyBase {
    * dispatcher's behaviour does not branch on it.
    */
   readonly caching: LlmCacheMode;
+  /**
+   * The completion-length cap this instance was CONFIGURED with — what it sends when a request names none.
+   *
+   * A dispatcher sends it when no route, descriptor or tier names a cap, ahead of its own `defaultMaxOutputTokens`,
+   * so a provider's cap (and the call timeout that scales with it) holds behind a dispatcher. Absent ⇒ the
+   * dispatcher's default. The stock transports declare it only when configured with `maxOutputTokens`; a custom
+   * strategy should too.
+   */
+  readonly defaultMaxOutputTokens?: LlmTokenCount;
   /**
    * Run the call. Raw assembled prompt in (on the request), the raw model text out (in the completion).
    *

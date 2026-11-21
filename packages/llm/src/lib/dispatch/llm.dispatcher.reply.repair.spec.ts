@@ -297,6 +297,22 @@ describe('makeLlmDispatcher() reply repair', () => {
       expect(result.repair).toMatchObject({ tier: 'fast-fix', meta: { fixCall: 'fix-1' } });
     });
 
+    it("should land a missed fixer's meta on its decode row as fastFixMeta", async () => {
+      const missWithMeta: LlmReplyFastFixer = () => Promise.resolve({ kind: 'missed', reason: 'unusable', meta: { callId: 'fix-1' } });
+      const { decodeFailures } = await run({ subject: [MANGLED, OK], replyFastFix: missWithMeta });
+
+      expect(decodeFailures[0].payload.failures[0]).toMatchObject({ class: 'parse-error', fastFix: 'missed', fastFixMiss: 'unusable', fastFixMeta: { callId: 'fix-1' } });
+    });
+
+    it('should leave fastFixMeta off the decode row of a miss with no meta', async () => {
+      const missNoMeta: LlmReplyFastFixer = () => Promise.resolve({ kind: 'missed', reason: 'unusable' });
+      const { decodeFailures } = await run({ subject: [MANGLED, OK], replyFastFix: missNoMeta });
+      const row = decodeFailures[0].payload.failures[0];
+
+      expect(row).toMatchObject({ fastFix: 'missed', fastFixMiss: 'unusable' });
+      expect('fastFixMeta' in row).toBe(false);
+    });
+
     it("should keep the fixer's meta on the failed row of a fix the validator then rejects", async () => {
       const records: LlmCallRecord[] = [];
       const withMeta = makeLlmReplyFastFixer({ metaOf: () => ({ fixCall: 'fix-1' }) });

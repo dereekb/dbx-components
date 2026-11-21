@@ -14,13 +14,19 @@ correction / backoff vocabulary with its constants.
   `modelTiers`, `descriptorOf` and `templateResolver`. The default tier's slug is resolved at construction, so a tier map
   without it throws there. A selected strategy id that is not registered throws and names the registered ones.
 - **Resolve.** Model by `request.model` › `request.tier` › route › descriptor › default tier. The wire always names the
-  resolved slug (the default tier's included) and the cap: route › descriptor › tier, else `defaultMaxOutputTokens`. A
-  strategy behind a dispatcher therefore needs no `defaultModel`, and its own `maxOutputTokens` default never applies.
+  resolved slug (the default tier's included) and the cap: route › descriptor › tier › the selected strategy's declared
+  `defaultMaxOutputTokens` › the dispatcher's `defaultMaxOutputTokens`. A strategy behind a dispatcher therefore needs
+  no `defaultModel`. A stock strategy declares `defaultMaxOutputTokens` only when it was configured with
+  `maxOutputTokens` (per provider: `maxOutputTokensByProvider`), so a provider's cap — and the call timeout that scales
+  with it — holds behind a dispatcher, and the retry ladder raises from the cap actually sent; an unconfigured
+  strategy's built-in default never applies.
   The strategy comes from `selectStrategy` when set, else route provider › `providerByModel` › `defaultStrategyId`.
   Output controls follow `resolveLlmCapabilityOutputControls` over `reasoningDefault` (off by default). Debug breadcrumbs `model-route`, `provider-route` and `reasoning-floor` fire once
   per key.
 - **Compose.** The root runs `composeLlmCapabilityPrompt` over `layout` (default `DEFAULT_LLM_PROMPT_LAYOUT`),
-  `contributors`, `texts` and the schema hints (none on a `line` call; an explicit request hint is hardened). It sends
+  `contributors`, `texts` and the schema hints (none on a `line` call; an explicit request hint, or a follow-up's, is
+  hardened, its `description` prose stripped unless `describeResponseSchemaHint` is set — a descriptor's own hints
+  follow the flag it was defined with). It sends
   the cache split, attachments (root only) and every placement as call-record `supplements`. `promptCacheWatch`
   observes the prefix per capability and `cachePartitionOf(request)`, filing `prefix-changed` when it moves.
   `isRawJsonBlock` turns on the raw-JSON watch (skipped for a `rawJsonContext` descriptor). A follow-up is one segment
@@ -57,7 +63,9 @@ correction / backoff vocabulary with its constants.
   `onDecodeFailure`); `event.decision` marks it on both events. `onGap` gets `prompt-raw-json`, `critique-fail` and
   `prompt-over-budget` (the call is still sent).
 - **Host data.** Every hook that receives a request gets `{ lane, request }` — `lane: 'completion'` with the host's
-  `R`, or `lane: 'decision'` with the decision request; narrow on `lane`. `callAttributionOf` overrides the per-call
+  `R`, or `lane: 'decision'` with the decision request; narrow on `lane`. The dispatcher's last type parameter `E` is
+  the host's decision-request fields (a scene, a tick): `decide` takes `LlmDecisionDispatchRequest<I, Q> & E`, and the
+  decision branch's `request` is `LlmDecisionDispatchRequest & E`, so the hooks read them with no cast. `callAttributionOf` overrides the per-call
   context's attribution, `recordFieldsOf({ lane, kind })` adds the host's top-level fields to the `start` / `call` /
   `decode-failure` records and their tap events, and `resultOf` (completion only) builds the returned `X` from the
   library result and the `callProfile` snapshot (present when the context times).
@@ -136,7 +144,8 @@ one retry lever, and a mangled JSON reply gets one cheap fast fix before any re-
   `RepairReplyJson` dispatch, bounded by `fastFixLimits` (`DEFAULT_LLM_REPLY_FAST_FIX_LIMITS`). It never binds on a
   `RepairReplyJson` call, a `line` call or a call with no schema hint. It fails open: a miss or a throw falls through to
   the re-ask (`reply-fast-fix-miss` diag, swallow site `llm/reply-repair.fast-fix`). A fixer's `meta` lands on
-  `result.repair.meta`, on the call payload's `repair` and on the failed rows.
+  `result.repair.meta`, on the call payload's `repair` and on the failed rows; a miss's `meta` lands on its decode row
+  as `fastFixMeta`, so a host can link the miss to the fix call it paid for.
 - **Critique.** Root calls only, after `validate` passes. A rejection costs a re-ask with the critic's feedback and a
   `critique` failed row, never a decode row. A rejection with no retry left (the budget is spent, or the dispatch was
   cancelled) ships the reply: it is stamped accepted (`valueJson`, `clean` / `retried`), files no failed row, and its

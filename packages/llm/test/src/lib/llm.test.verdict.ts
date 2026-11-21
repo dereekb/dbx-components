@@ -6,7 +6,7 @@
  * every propagation risk a no-op regression rather than a false skip of a run someone paid for.
  */
 
-import { type Maybe, type PercentDecimal } from '@dereekb/util';
+import { type Maybe } from '@dereekb/util';
 import { llmCredentialReportErrorText, type LlmQuotaGateVerdict, type LlmStrategiesHealthReport } from '@dereekb/llm';
 import { firstLlmEnvValue, type LlmEnvView } from '@dereekb/llm/node';
 import { DEFAULT_LLM_LIVE_LANE_ENV_NAMES, type LlmLiveLaneEnvNames } from './llm.test.env';
@@ -135,19 +135,6 @@ export interface LlmQuotaVerdictResult {
    * (the advisory a lane logs so an operator sees the number before it becomes a refusal).
    */
   readonly detail?: string;
-}
-
-/**
- * Parse a quota ceiling. Accepts a `0`–`1` fraction; anything else — a non-number, zero or less, a value above 1 — reads
- * as ABSENT so the caller's default applies. Rejecting `> 1` matters: someone will write `90` meaning 90%, and honoring
- * it literally would produce a ceiling no window can exceed, silently disabling the gate they meant to tighten.
- *
- * @param raw - The raw environment value.
- * @returns The ceiling, or `undefined` when unset or unusable.
- */
-export function parseLlmQuotaMaxUsed(raw: Maybe<string>): Maybe<PercentDecimal> {
-  const value = Number((raw ?? '').trim());
-  return Number.isFinite(value) && value > 0 && value <= 1 ? value : undefined;
 }
 
 /**

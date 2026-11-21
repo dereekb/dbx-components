@@ -105,16 +105,17 @@ modules.
   is declared here as an OPTIONAL peer for `/openai` and `/openrouter`; this entry never loads it.
 - **Main exports:**
   - Strategies: `LlmStrategy`, `LlmRequest`, `LlmCompletion`, `makeLlmStrategyRegistry`, `verifyLlmStrategies`,
-    `DEFAULT_LLM_MAX_OUTPUT_TOKENS`.
+    `DEFAULT_LLM_MAX_OUTPUT_TOKENS`, `evaluateLlmQuotaGate`, `parseLlmQuotaMaxUsed`.
   - Model config: `makeLlmModelConfigSchema`, `parseLlmModelConfigFile`, `overlayLlmModelConfigFile`,
-    `resolveLlmModelTiers`, `llmModelProviderBindings`, `compileLlmModelRouting`.
+    `resolveLlmModelTiers`, `llmModelProviderBindings`, `mapLlmModelSettings`, `LLM_PROVIDER_COMPLETION_ONLY_KEYS`,
+    `compileLlmModelRouting`.
   - Adapters: `makeLlmAdapterRegistry`, `readLlmModelConfigLists`, `makeLlmProviderStrategies`.
   - Prompts: `defineLlmCapability`, `defineLlmPromptLayout`, `DEFAULT_LLM_PROMPT_LAYOUT`,
     `makeLlmTieredPromptTemplateResolver`, `composeLlmCapabilityPrompt`, `makeLlmPromptChain`.
   - Replies: `readLlmReplyValue`, `makeLlmSchemaValueValidator`, `makeLlmReplyFastFixer`, `makeLlmSemanticCritic`.
   - Dispatcher: `makeLlmDispatcher`, `LlmDispatchRequest`, `LlmDispatchFaultError`, `classifyLlmError`.
   - Records and usage: `toLlmCallLogPayload`, `LLM_CALL_EVENT_TYPE`, `llmCallTelemetry`, `readLlmCallPrompt`,
-    `reconcileLlmCallBills`, `LLM_SWALLOW_SITES`.
+    `isLlmSendFailureFinishReason`, `reconcileLlmCallBills`, `LLM_SWALLOW_SITES`.
 - **Guide:** [Guides](#guides) 1–8 and 13.
 
 ### `@dereekb/llm/decision`
@@ -124,7 +125,7 @@ through an `LlmDecisionStrategy`, read typed answers.
 
 - **Browser-safe:** yes; the System One transport is plain `fetch`.
 - **Peers:** `@dereekb/util` (with `/fetch`); `@dereekb/model` and `arktype` type-only.
-- **Main exports:** `defineLlmDecision`, `llmChoiceQuestion`, `llmScoreQuestion`, `llmNoulQuestion`,
+- **Main exports:** `defineLlmDecision`, `LlmDecisionDescriptor`, `llmChoiceQuestion`, `llmScoreQuestion`, `llmNoulQuestion`,
   `LlmDecisionStrategy`, `makeLlmSystemOneDecisionStrategy`, `llmDecisionRequestBody`, `readLlmDecisionAnswers`,
   `requireLlmDecisionAnswers`, `readLlmChoiceCertainty`, `toLlmDecisionConfidenceBand`, `LlmDecisionAnswerFaultError`,
   `LlmDecisionTransportError`. `@dereekb/openrouter/decision`'s old names are deprecated aliases of these.
@@ -159,7 +160,7 @@ The OpenAI-compatible chat strategy (OpenAI, ZenMux chat, a local vLLM) and its 
 ### `@dereekb/llm/openrouter`
 
 The OpenRouter chat strategy (`cache_control`, strict `response_format`, usage accounting), the decision strategy
-(kind `openrouter-systemone`), the credential probe and the adapters. It is not `@dereekb/openrouter`.
+(kind `openrouter-decisions`), the credential probe and the adapters. It is not `@dereekb/openrouter`.
 
 - **Browser-safe:** yes. The chat reaches `openai` through `/openai`, the decisions are plain `fetch`, and
   `@openrouter/sdk` is never loaded.
@@ -191,7 +192,7 @@ tier environment, and the craft-notes loader and compiler.
 - **Peers:** `@dereekb/llm` (with `/craft`) and `@dereekb/util`.
 - **Main exports:** `DEFAULT_LLM_ENV_NAMES`, `firstLlmEnvValue`, `firstLlmEnvEntry`, `loadEffectiveLlmModelConfigFile`,
   `writeLlmModelConfigFile`, `resolveLlmModelProfileFromEnv`, `resolveLlmModelTierEnv`, `resolveLlmProvidersFromEnv`,
-  `makeLlmStrategiesFromEnv`, `filterLlmReachableProviderGaps`, `loadLlmCraftNotes`, `compileLlmCraftNotes`,
+  `resolveLlmDefaultProviderId`, `makeLlmStrategiesFromEnv`, `filterLlmReachableProviderGaps`, `loadLlmCraftNotes`, `compileLlmCraftNotes`,
   `writeLlmCraftNotesModule`, `LLM_NODE_SWALLOW_SITES`.
 - **Guide:** [node](docs/node.md), with [A complete Node host](docs/node.md#a-complete-node-host). In a Nest app,
   pass nothing: `/node` and Nest's `ConfigService` both read `process.env` ([Nest hosts](docs/node.md#nest-hosts)).

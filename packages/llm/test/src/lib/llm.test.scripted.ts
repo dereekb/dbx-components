@@ -6,7 +6,7 @@
  * (and a dispatcher's retry ladder) without a transport.
  */
 
-import { type Maybe, type IndexNumber } from '@dereekb/util';
+import { type Maybe, type IndexNumber, type PromiseOrValue, isPromiseLike } from '@dereekb/util';
 import { type LlmCapabilityKey, type LlmCompletion, type LlmRequest, type LlmStrategy, type LlmStrategyId } from '@dereekb/llm';
 
 /**
@@ -30,22 +30,30 @@ export type LlmScriptedReply = string | LlmScriptedCompletion | Error;
 export type LlmScriptedReplies = ReadonlyArray<LlmScriptedReply>;
 
 /**
- * Answers one call. Returning `undefined` falls through to `byCapability`, then `replies`.
+ * Answers one call. Returning `undefined` falls through to `byCapability`, then `replies`. It may answer
+ * asynchronously (an async runner, say); a resolved `undefined` falls through the same way, and a rejection rejects
+ * the call.
  *
  * @param request - The request being answered.
  * @param call - The 0-based index of this call over EVERY call the strategy received.
- * @returns The reply, or `undefined` to fall through.
+ * @returns The reply, or `undefined` to fall through — or a promise of either.
  */
-export type LlmScriptedRespondFunction = (request: LlmRequest, call: IndexNumber) => Maybe<LlmScriptedReply>;
+export type LlmScriptedRespondFunction = (request: LlmRequest, call: IndexNumber) => PromiseOrValue<Maybe<LlmScriptedReply>>;
 
 /**
  * Config for {@link makeLlmScriptedStrategy}. Per call, the first source that answers wins:
  *
- * 1. {@link respond} — `respond(request, call)`; `undefined` falls through.
+ * 1. {@link respond} — `respond(request, call)`, synchronous or asynchronous; `undefined` (resolved or returned) falls
+ *    through.
  * 2. {@link byCapability} — the entry for `request.capability`: one reply, or a list indexed by THAT capability's own
  *    call count (its last entry repeats).
  * 3. {@link replies} — indexed by the number of calls that fell through to it (its last entry repeats).
  * 4. Nothing answered ⇒ the call throws `scripted strategy '<id>' has no reply for capability '<capability>' (call <n>)`.
+ *
+ * The call index and the {@link requests} sink are drawn synchronously, in invocation order. A synchronous `respond`
+ * keeps the fall-through counters in call order; an asynchronous one that falls through draws its `byCapability` /
+ * `replies` entry when it settles. Calls are never serialized, so a nested call through the same strategy cannot
+ * deadlock.
  */
 export interface LlmScriptedStrategyConfig {
   /**
@@ -53,7 +61,7 @@ export interface LlmScriptedStrategyConfig {
    */
   readonly id?: Maybe<LlmStrategyId>;
   /**
-   * Answers a call first; `undefined` falls through.
+   * Answers a call first, synchronously or asynchronously; `undefined` falls through.
    */
   readonly respond?: Maybe<LlmScriptedRespondFunction>;
   /**
@@ -100,6 +108,12 @@ function scriptedReplyAt(replies: LlmScriptedReplies, index: IndexNumber): Maybe
  * const requests: LlmRequest[] = [];
  * const strategy = makeLlmScriptedStrategy({ byCapability: { classify: ['{"label":"a"}', new Error('503')] }, replies: ['fallback'], requests });
  * ```
+ *
+ * @example
+ * ```ts
+ * // wrap a host's async runner; the full assembled prompt rides request.prompt
+ * const strategy = makeLlmScriptedStrategy({ respond: async (request) => run(request.prompt, request.model) });
+ * ```
  */
 export function makeLlmScriptedStrategy(config: LlmScriptedStrategyConfig): LlmStrategy {
   const id = config.id ?? LLM_SCRIPTED_STRATEGY_ID;
@@ -108,20 +122,17 @@ export function makeLlmScriptedStrategy(config: LlmScriptedStrategyConfig): LlmS
   let calls = 0;
   let fallthroughCalls = 0;
 
-  const replyOf = (request: LlmRequest, call: IndexNumber): Maybe<LlmScriptedReply> => {
-    let reply = config.respond?.(request, call);
+  const fallThroughReplyOf = (request: LlmRequest): Maybe<LlmScriptedReply> => {
+    let reply: Maybe<LlmScriptedReply>;
+    const entry = config.byCapability?.[request.capability];
 
-    if (reply == null) {
-      const entry = config.byCapability?.[request.capability];
-
-      if (entry != null) {
-        if (Array.isArray(entry)) {
-          const index = capabilityCalls.get(request.capability) ?? 0;
-          capabilityCalls.set(request.capability, index + 1);
-          reply = scriptedReplyAt(entry as LlmScriptedReplies, index);
-        } else {
-          reply = entry as LlmScriptedReply;
-        }
+    if (entry != null) {
+      if (Array.isArray(entry)) {
+        const index = capabilityCalls.get(request.capability) ?? 0;
+        capabilityCalls.set(request.capability, index + 1);
+        reply = scriptedReplyAt(entry as LlmScriptedReplies, index);
+      } else {
+        reply = entry as LlmScriptedReply;
       }
     }
 
@@ -133,6 +144,11 @@ export function makeLlmScriptedStrategy(config: LlmScriptedStrategyConfig): LlmS
     return reply;
   };
 
+  const replyOf = (request: LlmRequest, call: IndexNumber): PromiseOrValue<Maybe<LlmScriptedReply>> => {
+    const responded = config.respond?.(request, call);
+    return isPromiseLike(responded) ? Promise.resolve(responded).then((reply) => reply ?? fallThroughReplyOf(request)) : (responded ?? fallThroughReplyOf(request));
+  };
+
   return {
     id,
     kind: LLM_SCRIPTED_STRATEGY_ID,
@@ -142,7 +158,7 @@ export function makeLlmScriptedStrategy(config: LlmScriptedStrategyConfig): LlmS
       const call = calls;
       calls += 1;
       config.requests?.push(request);
-      const reply = replyOf(request, call);
+      const reply = await replyOf(request, call);
 
       if (reply == null) {
         throw new Error(`scripted strategy '${id}' has no reply for capability '${request.capability}' (call ${call})`);

@@ -37,15 +37,18 @@ descriptor also carries the two schema projections the request and the prompt re
 - **Validation.** `makeLlmSchemaValueValidator(schema)` is a pure schema check: `true`, or `{ error }`, which re-asks. A
   schema-valid but unusable value is a legitimate "no decision", not a re-ask.
 - **Schema projection.** `defineLlmCapability` builds `responseSchemaHint()` and `contractSchemaHint()` from
-  `responseSchema`. Each exports through `@dereekb/model` `arktypeToJsonSchemaForExport(schema, { strict: true })`: a
+  `responseSchema` — or from `hintSchema` when set: the schema the model is SHOWN when it is not the one enforced (a
+  strict wire shape over a tolerant `responseSchema` that every reply is still validated against; bound at definition,
+  not carried on the descriptor). Each exports through `@dereekb/model` `arktypeToJsonSchemaForExport(schema, { strict: true })`: a
   `.narrow`ed or morphed schema projects its JSON base, and a type with no JSON form (`Date`, `symbol`, `bigint`, an
   `undefined` union arm) throws on first projection. Then `@dereekb/model` `toStrictJsonSchema`: `$schema` dropped,
   `additionalProperties: false` on every object, including inside tuples, `$defs` and records, described literal unions
   folded back to `enum`, union arm prose hoisted, and descriptions stripped from the `response_format` payload (they
   ride the output contract). Both hints are lazy and memoized; a projection that throws is not cached.
   `describeResponseSchemaHint` keeps the prose in the payload, per descriptor, default off.
-  `hardenLlmResponseSchemaHint` (over `toStrictJsonSchema`) serves request-supplied hints; other projections, such as
-  a tool's input schema, call `toStrictJsonSchema` directly.
+  `hardenLlmResponseSchemaHint` (over `toStrictJsonSchema`) serves request-supplied hints, stripping their prose unless
+  the dispatcher's own `describeResponseSchemaHint` is set (a host with one switch passes it to both); other
+  projections, such as a tool's input schema, call `toStrictJsonSchema` directly.
 - **Critique.** `compileLlmCritiquePolicy` (built on `compileLlmCapabilityRules`, with the judge excluded) is
   fail-loud (unknown capability or tag, no target, or the judge itself);
   a key match beats a tag match, and the first match wins. `resolveLlmCritiqueFields` gives `{}` unless a rule matches, so off is

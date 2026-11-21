@@ -16,7 +16,7 @@ import { type LlmReplyVerdict, type LlmValueValidator } from '../reply/llm.reply
 import { type LlmSwallowSink } from '../record/llm.swallow';
 import { type FetchErrorClassification, type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
 import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification, formatLlmErrorSummary } from '../strategy/llm.error';
-import { type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
+import { type LlmCallMeta, type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { type LlmDispatchPauseSignal, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
 import { makeLlmTimeoutResult, makeLlmTransportResult, makeLlmUnretryableResult } from './llm.dispatch.outcome';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
@@ -347,6 +347,10 @@ export interface LlmReplyRepairLaneResult {
    */
   readonly fastFixMiss?: LlmReplyFastFixMissReason;
   /**
+   * The fixer's `meta` on a miss, when it returned one (never on a thrown fixer).
+   */
+  readonly fastFixMissMeta?: LlmCallMeta;
+  /**
    * The scorer's rounded reading of the served reply ({@link toLlmDecodeRowShape}) — set on every pass. The repair
    * summary, the lane's diags and a `parse-error` decode row all carry these bytes.
    */
@@ -400,7 +404,7 @@ async function runLlmReplyFastFixTier(config: RunLlmReplyRepairLaneConfig & { re
     outcome = { repaired: { result, reading: read(result.text), summary }, fastFixCalled: true };
   } else {
     attemptContext.diag({ level: 'warn', code: 'reply-fast-fix-miss', fields: { capability, attempt, reason: fixed.reason }, message: 'the fast fix produced no usable value; falling through to the re-ask / drop' });
-    outcome = { fastFixCalled: true, fastFixMiss: fixed.reason };
+    outcome = { fastFixCalled: true, fastFixMiss: fixed.reason, ...(fixed.meta == null ? {} : { fastFixMissMeta: fixed.meta }) };
   }
 
   return outcome;

@@ -22,7 +22,10 @@ import {
   LLM_DECODE_FAILURE_TAIL_EXCERPT_MAX_LENGTH,
   LLM_FAILED_ATTEMPT_TEXT_MAX_LENGTH,
   LLM_TIMEOUT_FINISH_REASON,
-  LLM_TRANSPORT_FINISH_REASON
+  LLM_TRANSPORT_FINISH_REASON,
+  LLM_UNRETRYABLE_FINISH_REASON,
+  LLM_SEND_FAILURE_FINISH_REASONS,
+  isLlmSendFailureFinishReason
 } from './llm.decode.failure';
 
 // A minimal completion for the classifier — only `text` + `finishReason` (+ `usage`) matter here.
@@ -168,6 +171,25 @@ describe('isLlmReasoningOnlyReply', () => {
   it('is false for a blank reply without usage, and for any reply with text', () => {
     expect(isLlmReasoningOnlyReply(result(''))).toBe(false);
     expect(isLlmReasoningOnlyReply(result('{"a":1}', 'stop', REASONING_USAGE))).toBe(false);
+  });
+});
+
+describe('isLlmSendFailureFinishReason()', () => {
+  it('should hold exactly the three send-failure sentinels', () => {
+    expect([...LLM_SEND_FAILURE_FINISH_REASONS]).toEqual([LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, LLM_UNRETRYABLE_FINISH_REASON]);
+  });
+
+  it('should be true for the three sentinels', () => {
+    expect(isLlmSendFailureFinishReason('__timeout__')).toBe(true);
+    expect(isLlmSendFailureFinishReason('__transport__')).toBe(true);
+    expect(isLlmSendFailureFinishReason('__unretryable__')).toBe(true);
+  });
+
+  it('should be false for a model finish reason, a blank and an absent value', () => {
+    expect(isLlmSendFailureFinishReason('stop')).toBe(false);
+    expect(isLlmSendFailureFinishReason('length')).toBe(false);
+    expect(isLlmSendFailureFinishReason('')).toBe(false);
+    expect(isLlmSendFailureFinishReason(undefined)).toBe(false);
   });
 });
 

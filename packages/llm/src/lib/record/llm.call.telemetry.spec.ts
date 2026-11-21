@@ -55,7 +55,7 @@ describe('llmCallTelemetry', () => {
   });
 
   it('projects strategyKind when present and omits it otherwise', () => {
-    expect(llmCallTelemetry({ text: 'hi', strategyId: 'account-a', strategyKind: 'openrouter-systemone', capability: 'summarize' })).toEqual({ strategyId: 'account-a', strategyKind: 'openrouter-systemone' });
+    expect(llmCallTelemetry({ text: 'hi', strategyId: 'account-a', strategyKind: 'openrouter-decisions', capability: 'summarize' })).toEqual({ strategyId: 'account-a', strategyKind: 'openrouter-decisions' });
     expect(llmCallTelemetry({ text: 'hi', strategyId: 'account-a', capability: 'summarize' })).not.toHaveProperty('strategyKind');
   });
 
@@ -85,7 +85,7 @@ describe('llmCallTelemetry', () => {
       usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 },
       provider: 'Fireworks',
       model: FLASH_MODEL,
-      strategyKind: 'openrouter-systemone',
+      strategyKind: 'openrouter-decisions',
       strategyId: 'openrouter',
       capability: 'summarize',
       text: '{}'

@@ -42,8 +42,10 @@ export type LlmDispatchLane = 'completion' | 'decision';
  * Narrow on `lane` before reading a lane-only request field; both requests share `LlmDispatchRequestBase`.
  *
  * @typeParam R - The host's request type.
+ * @typeParam E - The host's decision-request fields — a scene, a tick — that every decision request carries and the
+ *   decision lane's hooks see typed.
  */
-export type LlmDispatchLaneRequest<R extends LlmDispatchRequest = LlmDispatchRequest> =
+export type LlmDispatchLaneRequest<R extends LlmDispatchRequest = LlmDispatchRequest, E extends object = object> =
   | {
       /**
        * The completion lane.
@@ -60,9 +62,9 @@ export type LlmDispatchLaneRequest<R extends LlmDispatchRequest = LlmDispatchReq
        */
       readonly lane: 'decision';
       /**
-       * The decision request, widened to the library type.
+       * The decision request, widened to the library type plus the host's decision-request fields `E`.
        */
-      readonly request: LlmDecisionDispatchRequest;
+      readonly request: LlmDecisionDispatchRequest & E;
     };
 
 /**
@@ -71,8 +73,10 @@ export type LlmDispatchLaneRequest<R extends LlmDispatchRequest = LlmDispatchReq
  *
  * @typeParam R - The host's request type.
  * @typeParam A - The call-context attribution type.
+ * @typeParam E - The host's decision-request fields — a scene, a tick — that every decision request carries and the
+ *   decision lane's hooks see typed.
  */
-export type LlmDispatchCallContextParams<R extends LlmDispatchRequest = LlmDispatchRequest, A extends object = object> = LlmDispatchLaneRequest<R> & {
+export type LlmDispatchCallContextParams<R extends LlmDispatchRequest = LlmDispatchRequest, A extends object = object, E extends object = object> = LlmDispatchLaneRequest<R, E> & {
   /**
    * The context's label — the capability (on a decision, the consuming capability).
    */
@@ -90,8 +94,10 @@ export type LlmDispatchCallContextParams<R extends LlmDispatchRequest = LlmDispa
  * @typeParam R - The host's request type.
  * @typeParam H - The host's top-level record fields.
  * @typeParam A - The call-context attribution type.
+ * @typeParam E - The host's decision-request fields — a scene, a tick — that every decision request carries and the
+ *   decision lane's hooks see typed.
  */
-export interface LlmDispatchRecorder<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object> {
+export interface LlmDispatchRecorder<R extends LlmDispatchRequest = LlmDispatchRequest, H extends LlmCallHostFields = LlmCallHostFields, A extends object = object, E extends object = object> {
   /**
    * Mint the ROOT call context of a call (a dispatch or a decision) that has no parent context of its own. Absent (or
    * no recorder) ⇒ a context that does not time.
@@ -99,7 +105,7 @@ export interface LlmDispatchRecorder<R extends LlmDispatchRequest = LlmDispatchR
    * @param params - The lane and its request, the label and the attribution override.
    * @returns The dispatch's root call context.
    */
-  newCallContext?(params: LlmDispatchCallContextParams<R, A>): LlmCallContext<A>;
+  newCallContext?(params: LlmDispatchCallContextParams<R, A, E>): LlmCallContext<A>;
   /**
    * Record that a call is about to be sent (before the first `strategy.complete` / `strategy.decide`).
    *
@@ -187,7 +193,9 @@ export type LlmDispatchGap = LlmDispatchRawJsonGap | LlmDispatchOverBudgetGap | 
  * The decision lane of a dispatcher — absent (or an empty registry) ⇒ the dispatcher has no `decide`.
  *
  * A decision shares the dispatcher's host hooks: its context is minted by `recorder.newCallContext` (or nests under
- * the request's `callContext`), and `callAttributionOf` / `recordFieldsOf` see it as `lane: 'decision'`.
+ * the request's `callContext`), and `callAttributionOf` / `recordFieldsOf` see it as `lane: 'decision'`, its request
+ * typed `LlmDecisionDispatchRequest & E` — the host's decision-request fields (`LlmDispatcherConfig`'s `E`) arrive
+ * with no cast.
  */
 export interface LlmDispatcherDecisionConfig {
   /**
@@ -275,8 +283,10 @@ export type LlmDispatchStrategySelector<R extends LlmDispatchRequest = LlmDispat
  * The inputs of {@link LlmDispatcherConfig.callAttributionOf} — the lane and its request.
  *
  * @typeParam R - The host's request type.
+ * @typeParam E - The host's decision-request fields — a scene, a tick — that every decision request carries and the
+ *   decision lane's hooks see typed.
  */
-export type LlmDispatchCallAttributionParams<R extends LlmDispatchRequest = LlmDispatchRequest> = LlmDispatchLaneRequest<R>;
+export type LlmDispatchCallAttributionParams<R extends LlmDispatchRequest = LlmDispatchRequest, E extends object = object> = LlmDispatchLaneRequest<R, E>;
 
 /**
  * The record a host-field read is for.
@@ -289,8 +299,10 @@ export type LlmDispatchRecordKind = 'start' | 'call' | 'decode-failure';
  *
  * @typeParam R - The host's request type.
  * @typeParam A - The call-context attribution type.
+ * @typeParam E - The host's decision-request fields — a scene, a tick — that every decision request carries and the
+ *   decision lane's hooks see typed.
  */
-export type LlmDispatchRecordFieldsParams<R extends LlmDispatchRequest = LlmDispatchRequest, A extends object = object> = LlmDispatchLaneRequest<R> & {
+export type LlmDispatchRecordFieldsParams<R extends LlmDispatchRequest = LlmDispatchRequest, A extends object = object, E extends object = object> = LlmDispatchLaneRequest<R, E> & {
   /**
    * The record kind the fields are for.
    */
@@ -334,8 +346,10 @@ export interface LlmDispatchResultParams<R extends LlmDispatchRequest = LlmDispa
  * @typeParam H - The host's top-level record fields.
  * @typeParam D - The host's capability descriptor type.
  * @typeParam A - The call-context attribution type.
+ * @typeParam E - The host's decision-request fields — a scene, a tick — that every decision request carries and the
+ *   decision lane's hooks see typed.
  */
-export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult, H extends LlmCallHostFields = LlmCallHostFields, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor, A extends object = object> {
+export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult, H extends LlmCallHostFields = LlmCallHostFields, D extends LlmCapabilityDescriptor = LlmCapabilityDescriptor, A extends object = object, E extends object = object> {
   // MARK: Resolve
   /**
    * The registered strategies. A dispatch whose selected id is not registered throws (never a fallback instance).
@@ -346,10 +360,11 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
    */
   readonly defaultStrategyId: LlmStrategyId;
   /**
-   * The cap a dispatch SENDS when no route, descriptor or tier names one — the floor the retry ladder raises from.
-   * Behind a dispatcher a strategy's own `maxOutputTokens` default never applies (every dispatched request names its
-   * cap), so pass the cap the strategy would otherwise use (normally `DEFAULT_LLM_MAX_OUTPUT_TOKENS`) to send the
-   * same `max_tokens` a direct strategy call sends.
+   * The cap a dispatch SENDS when no route, descriptor or tier names one AND the selected strategy declares no
+   * `defaultMaxOutputTokens` — the floor the retry ladder raises from. Normally `DEFAULT_LLM_MAX_OUTPUT_TOKENS`, the
+   * cap an unconfigured stock strategy sends on a direct call.
+   *
+   * Precedence: route › descriptor › tier › `strategy.defaultMaxOutputTokens` › this.
    */
   readonly defaultMaxOutputTokens: LlmTokenCount;
   /**
@@ -407,6 +422,14 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
    */
   readonly defaultReplyProtocol?: Maybe<LlmReplyProtocol>;
   /**
+   * Keep the `description` prose when a REQUEST-supplied `responseSchemaHint`, or a follow-up's, is hardened for
+   * `response_format`. Default `false`: the prose rides the output contract only.
+   *
+   * A descriptor's own hints follow the `describeResponseSchemaHint` it was defined with (`defineLlmCapability`),
+   * never this. A host with one switch passes it to both.
+   */
+  readonly describeResponseSchemaHint?: Maybe<boolean>;
+  /**
    * The envelope keys a `json-envelope` reply is read through. Defaults to `DEFAULT_LLM_REPLY_ENVELOPE_KEYS`.
    */
   readonly replyEnvelope?: Maybe<LlmReplyEnvelopeKeys>;
@@ -438,7 +461,7 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
   /**
    * The host's call-record writer — serves both lanes: a decision writes its start and call records here too.
    */
-  readonly recorder?: Maybe<LlmDispatchRecorder<R, H, A>>;
+  readonly recorder?: Maybe<LlmDispatchRecorder<R, H, A, E>>;
   /**
    * The live taps — held by reference, so a tap attached after construction is seen. A decision fires `onDispatch`
    * and `onDispatchComplete` too (never `onDecodeFailure`).
@@ -455,12 +478,12 @@ export interface LlmDispatcherConfig<R extends LlmDispatchRequest = LlmDispatchR
   /**
    * The attribution override of a call's context — called once per dispatch and once per decision, with the lane.
    */
-  readonly callAttributionOf?: Maybe<(params: LlmDispatchCallAttributionParams<R>) => Maybe<Partial<A>>>;
+  readonly callAttributionOf?: Maybe<(params: LlmDispatchCallAttributionParams<R, E>) => Maybe<Partial<A>>>;
   /**
    * The host's top-level fields of each record kind — called at most once per kind per dispatch or decision, with the
    * lane. Absent ⇒ none.
    */
-  readonly recordFieldsOf?: Maybe<(params: LlmDispatchRecordFieldsParams<R, A>) => H>;
+  readonly recordFieldsOf?: Maybe<(params: LlmDispatchRecordFieldsParams<R, A, E>) => H>;
   /**
    * Builds the returned result. Absent ⇒ the library result as `X` — a host whose `X` adds required fields passes
    * this. Must keep `text` (a chained follow-up replays it). Completion lane only: a decision returns its answers.

@@ -27,6 +27,7 @@ import {
   type LlmModelProviderBindingMap,
   type LlmModelRoutingConfig,
   type LlmPartialModelTierMap,
+  type LlmProviderConfig,
   type LlmProviderConfigGap,
   type LlmExtendedProviderConfig,
   type LlmProviderStrategyOptions,
@@ -104,6 +105,40 @@ export interface LlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmModelCon
 }
 
 /**
+ * Config for {@link resolveLlmDefaultProviderId}.
+ */
+export interface ResolveLlmDefaultProviderIdConfig {
+  /**
+   * The explicit selection, ALREADY matched and validated — it wins as given, keyed or not.
+   */
+  readonly explicitProviderId?: Maybe<LlmStrategyId>;
+  /**
+   * The KEYED providers, in resolution order.
+   */
+  readonly providers: ReadonlyArray<Pick<LlmProviderConfig, 'id'>>;
+  /**
+   * The ids of the env defaults marked `fallback`, in order, keyed or not.
+   */
+  readonly fallbackProviderIds?: Maybe<ReadonlyArray<LlmStrategyId>>;
+}
+
+/**
+ * The default-provider rule, pure: the explicit selection, else the first keyed provider that is not a fallback, else
+ * the first keyed fallback, else the first fallback id (unkeyed — a binding-less call then fails loud at the
+ * credential). {@link resolveLlmProvidersFromEnv} applies it after matching (and refusing) the explicit selection; a
+ * host re-applies it to providers it resolved itself.
+ *
+ * @param config - The explicit selection, the keyed providers and the fallback ids.
+ * @returns The default provider id, or `undefined` when there is nothing at all.
+ */
+export function resolveLlmDefaultProviderId(config: ResolveLlmDefaultProviderIdConfig): Maybe<LlmStrategyId> {
+  const { explicitProviderId, providers } = config;
+  const fallbackProviderIds = config.fallbackProviderIds ?? [];
+  const isFallback = (provider: Pick<LlmProviderConfig, 'id'>) => fallbackProviderIds.includes(provider.id);
+  return explicitProviderId ?? providers.find((provider) => !isFallback(provider))?.id ?? providers.find(isFallback)?.id ?? fallbackProviderIds[0];
+}
+
+/**
  * Resolve every completion provider a run holds — the env defaults and the declared providers — and the default.
  *
  * - **Env defaults** mint only for a registered completion transport, under their own id, with the base URL,
@@ -115,7 +150,8 @@ export interface LlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmModelCon
  * - **The default**: an explicit selection (an exact match among the env-default and declared completion ids, else a
  *   case-insensitive match among the env-default ids; anything else THROWS — a typo, an env default whose adapter is
  *   not registered, a provider that serves no completions), else the first keyed
- *   non-fallback provider, else the fallback. An explicit selection adds no provider: when it names an unkeyed one,
+ *   non-fallback provider, else the fallback — the rule {@link resolveLlmDefaultProviderId} applies once the explicit
+ *   selection is matched. An explicit selection adds no provider: when it names an unkeyed one,
  *   {@link LlmProvidersFromEnv.defaultProviderId} keeps it (a binding-less call fails loud at the credential) while
  *   {@link LlmProvidersFromEnv.defaultProvider} is the first keyed one.
  *
@@ -188,7 +224,7 @@ export function resolveLlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmMo
     }
   }
 
-  const defaultProviderId = explicitProviderId ?? [...primarySlots, ...declaredRest][0]?.id ?? fallbackSlots[0]?.id ?? envDefaults.find((provider) => provider.fallback === true)?.id;
+  const defaultProviderId = resolveLlmDefaultProviderId({ explicitProviderId, providers, fallbackProviderIds: envDefaults.filter((provider) => provider.fallback === true).map((provider) => provider.id) });
   const defaultProvider = providers.find((provider) => provider.id === defaultProviderId) ?? providers[0];
 
   return {
