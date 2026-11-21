@@ -37,7 +37,7 @@ export const MCP_TEST_ENVELOPE = {
  * Per-request context a spec wants the factory to build its server from.
  */
 export interface McpSpecDriverContext {
-  readonly auth?: FirebaseServerAuthData;
+  readonly auth?: FirebaseServerAuthData | undefined;
   /**
    * Partial Express request stub. Specs that exercise header-derived behaviour pass one; the rest
    * leave it undefined and the driver substitutes an empty object.

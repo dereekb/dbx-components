@@ -1120,7 +1120,7 @@ function _downloadMultipleStorageFilesFactory(context: StorageFileServerActionsC
             action: 'read',
             expiresAt: downloadUrlExpiresAt,
             responseDisposition: itemResponseDisposition ?? undefined, // can be set by anyone
-            responseType: asAdmin ? (itemResponseContentType ?? undefined) : undefined // can only be set by admins
+            ...(asAdmin && itemResponseContentType != null ? { responseType: itemResponseContentType } : {}) // can only be set by admins
           }),
           fileAccessor.getMetadata()
         ]);

@@ -366,7 +366,7 @@ function buildGroupsOutput(manifest: ReadonlyArray<McpManifestModelEntry>): Mode
 interface GroupFilterConfig {
   readonly group: string;
   readonly manifest: ReadonlyArray<McpManifestModelEntry>;
-  readonly fields?: boolean;
+  readonly fields?: boolean | undefined;
 }
 
 function buildGroupFilterOutput(config: GroupFilterConfig): ModelInfoToolOutput {
@@ -395,7 +395,7 @@ interface ModelLookupConfig {
   readonly queries: ReadonlyArray<string>;
   readonly isArray: boolean;
   readonly manifest: ReadonlyArray<McpManifestModelEntry>;
-  readonly fields?: boolean;
+  readonly fields?: boolean | undefined;
 }
 
 function buildModelLookupOutput(config: ModelLookupConfig): ModelInfoToolOutput {

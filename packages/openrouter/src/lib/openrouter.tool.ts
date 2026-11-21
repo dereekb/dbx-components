@@ -81,7 +81,7 @@ export function openRouterResolvedDeferredToolResults<TTools extends readonly To
     const call = byTaskId.get(resolution.taskId);
 
     if (call != null) {
-      results.push({ callId: call.callId, name: call.name as UnsentToolResult<TTools>['name'], output: resolution.output, error: resolution.error });
+      results.push({ callId: call.callId, name: call.name as UnsentToolResult<TTools>['name'], output: resolution.output, ...(resolution.error == null ? undefined : { error: resolution.error }) });
     }
   });
 

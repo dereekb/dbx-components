@@ -8,7 +8,7 @@ interface FakeStorageState {
   readonly fileText: string;
   exists: boolean;
   deleteCount: number;
-  lastPathString?: string;
+  lastPathString?: string | undefined;
 }
 
 /**

@@ -8,7 +8,7 @@ import { type TestFirebaseStorageContext, type TestFirebaseStorageInstance, type
 import { AbstractTestContextFixture, testContextBuilder, type TestContextFactory, type TestContextFixture } from '@dereekb/util/test';
 import { applyFirebaseGCloudTestProjectIdToFirebaseConfigEnv, getGCloudTestProjectId, isAdminEnvironmentInitialized, rollNewGCloudProjectEnvironmentVariable } from './firebase';
 import { type FirebaseAdminTestContext, FirebaseAdminTestContextInstance } from './firebase.admin';
-import { type Maybe, cachedGetter } from '@dereekb/util';
+import { type Maybe, cachedGetter, filterUndefinedValues } from '@dereekb/util';
 import { firebaseAdminCloudFunctionWrapper } from './firebase.function';
 import { type Storage as GoogleCloudStorage } from '@google-cloud/storage';
 
@@ -219,17 +219,18 @@ export const firebaseAdminFunctionTestBuilder = testContextBuilder<FirebaseAdmin
 
     const projectId = getGCloudTestProjectId();
     const storageBucket = 'b-' + projectId;
+    const appOptions = filterUndefinedValues({ projectId, storageBucket });
     let app: admin.app.App;
 
     try {
-      app = admin.initializeApp({ projectId, storageBucket });
+      app = admin.initializeApp(appOptions);
     } catch (e) {
       if (e instanceof Error && e.message.includes('already exists')) {
         // Safety net: a previous test's teardown failed to delete the app.
         // Delete the stale app and re-initialize with the correct config.
         app = admin.app();
         await app.delete();
-        app = admin.initializeApp({ projectId, storageBucket });
+        app = admin.initializeApp(appOptions);
       } else {
         throw e;
       }

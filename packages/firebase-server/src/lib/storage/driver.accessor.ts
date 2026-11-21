@@ -126,8 +126,8 @@ export function googleCloudStorageAccessorFile(storage: GoogleCloudStorage, stor
   }
 
   interface ConfigureMetadataOptions {
-    readonly metadata?: ConfigurableStorageMetadata;
-    readonly customMetadata?: StorageCustomMetadata;
+    readonly metadata?: ConfigurableStorageMetadata | undefined;
+    readonly customMetadata?: StorageCustomMetadata | undefined;
   }
 
   function _configureMetadata(options: ConfigureMetadataOptions): FileMetadata {
@@ -394,8 +394,8 @@ export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, st
       const { maxResults, pageToken, includeNestedResults: listAll } = options ?? {};
 
       const listOptions: GetFilesOptions = {
-        maxResults,
-        pageToken,
+        ...(maxResults != null ? { maxResults } : {}),
+        ...(pageToken != null ? { pageToken } : {}),
         autoPaginate: false,
         versions: false,
         ...(listAll

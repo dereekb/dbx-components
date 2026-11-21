@@ -34,5 +34,5 @@ export abstract class GlobalRoutePrefixConfig implements NestGlobalRoutePrefixCo
   /**
    * Routes excluded from the global prefix, such as webhook endpoints or health checks.
    */
-  readonly exclude?: NestGlobalRoutePrefixConfig['exclude'];
+  readonly exclude?: NonNullable<NestGlobalRoutePrefixConfigExclude>;
 }

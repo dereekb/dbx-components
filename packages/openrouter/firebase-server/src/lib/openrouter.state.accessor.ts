@@ -89,8 +89,8 @@ export function conversationStateForOpenRouterRunTask<TTools extends readonly To
   return {
     id: key,
     messages: (task.msg ?? []) as unknown as InputsUnion,
-    pendingToolCalls: (task.ptc ?? []).map((call) => ({ id: call.callId, name: call.name, arguments: call.arguments })) as ConversationState<TTools>['pendingToolCalls'],
-    unsentToolResults: (task.utr ?? []).map((result) => ({ callId: result.callId, name: result.name, output: result.output, error: result.error ?? undefined })) as ConversationState<TTools>['unsentToolResults'],
+    pendingToolCalls: (task.ptc ?? []).map((call) => ({ id: call.callId, name: call.name, arguments: call.arguments })) as NonNullable<ConversationState<TTools>['pendingToolCalls']>,
+    unsentToolResults: (task.utr ?? []).map((result) => ({ callId: result.callId, name: result.name, output: result.output, error: result.error ?? undefined })) as NonNullable<ConversationState<TTools>['unsentToolResults']>,
     status: conversationStatusForOpenRouterRunTaskState(task.s),
     createdAt: task.qat.getTime(),
     updatedAt: updatedAt.getTime()

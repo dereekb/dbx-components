@@ -57,7 +57,7 @@ export interface ModelAccessMultiReadResult {
 export interface ModelAccessReadError {
   readonly key: FirestoreModelKey;
   readonly message: string;
-  readonly code?: string;
+  readonly code?: string | undefined;
 }
 
 /**
@@ -585,7 +585,7 @@ export class ModelApiGetService {
    * @param auth - The Firebase server auth data from the HTTP request, or undefined for unauthenticated requests.
    * @returns An object containing a synthetic {@link AuthData} for use with `useModel()`, or undefined auth.
    */
-  private _makeAuthRef(auth: Maybe<FirebaseServerAuthData>): { auth?: AuthData } {
+  private _makeAuthRef(auth: Maybe<FirebaseServerAuthData>): { auth?: AuthData | undefined } {
     let synthetic: AuthData | undefined;
     if (auth) {
       const baseToken = (auth as any).token ?? {};

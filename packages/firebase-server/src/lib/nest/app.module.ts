@@ -64,40 +64,40 @@ export interface NestServerRootModuleConfig {
   /**
    * Additional providers to include globally.
    */
-  readonly providers?: Provider[];
+  readonly providers?: Provider[] | undefined;
   /**
    * Environment configuration. When provided, injects env tokens via `firebaseServerEnvTokenProviders`.
    */
-  readonly envConfig?: FirebaseServerEnvironmentConfig;
+  readonly envConfig?: FirebaseServerEnvironmentConfig | undefined;
   /**
    * Whether to configure `FirebaseServerEnvService` / `ServerEnvironmentService`.
    * Defaults to true when `envConfig` is provided.
    */
-  readonly configureEnvService?: boolean;
+  readonly configureEnvService?: boolean | undefined;
   /**
    * Default storage bucket ID.
    */
-  readonly defaultStorageBucket?: StorageBucketId;
+  readonly defaultStorageBucket?: StorageBucketId | undefined;
   /**
    * Whether to force using the storage bucket.
    */
-  readonly forceStorageBucket?: boolean;
+  readonly forceStorageBucket?: boolean | undefined;
   /**
    * Global route prefix configuration.
    * The `GlobalRoutePrefixConfig` token is always provided (empty object when no config given).
    *
    * Example: '/api'
    */
-  readonly globalApiRoutePrefix?: WebsitePath | GlobalRoutePrefixConfig;
+  readonly globalApiRoutePrefix?: WebsitePath | GlobalRoutePrefixConfig | undefined;
   /**
    * Whether to add the webhook middleware module.
    */
-  readonly configureWebhooks?: boolean;
+  readonly configureWebhooks?: boolean | undefined;
   /**
    * Whether to add the AppCheck middleware module.
    * Defaults to false (production code sets this to true via `appCheckEnabled`).
    */
-  readonly appCheckEnabled?: boolean;
+  readonly appCheckEnabled?: boolean | undefined;
   /**
    * Optional asset loader configuration.
    *
@@ -214,7 +214,7 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
     providers.push(
       firebaseServerStorageDefaultBucketIdTokenProvider({
         defaultBucketId: config.defaultStorageBucket,
-        forceBucket: config.forceStorageBucket
+        ...(config.forceStorageBucket != null ? { forceBucket: config.forceStorageBucket } : {})
       })
     );
   }

@@ -231,7 +231,7 @@ export interface OnCallWithCallTypeModelConfig<N> {
   /**
    * Optional assertion run before the model handler; throw to reject.
    */
-  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallTypedModelParams>;
+  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallTypedModelParams> | undefined;
   /**
    * Error factory invoked when the requested model type has no handler in the map.
    */
@@ -275,7 +275,7 @@ export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N
 
       return crudFn({
         ...request,
-        specifier,
+        ...(specifier != null ? { specifier } : {}),
         data
       });
     }

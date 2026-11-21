@@ -56,7 +56,7 @@ import { BATCH_EXECUTE_TOOL_NAME, createBatchExecuteTool, batchOperationCoordKey
  * chain can satisfy `nestApplication`, `auth`, and `rawRequest` consumers.
  */
 export interface McpRequestContext {
-  readonly auth?: FirebaseServerAuthData;
+  readonly auth?: FirebaseServerAuthData | undefined;
   readonly rawRequest: Request;
 }
 
@@ -1340,7 +1340,7 @@ interface McpRoutedCallResult {
    * The resolved method, or `undefined` when it could not be resolved or was the wrong kind.
    */
   readonly method?: McpMethod;
-  readonly requestedMethod?: string;
+  readonly requestedMethod?: string | undefined;
   /**
    * The method arguments (the inner `params`, reason stripped).
    */
@@ -1351,7 +1351,7 @@ interface McpRoutedCallResult {
 /**
  * The parsed `tools/call` request shape consumed by the dispatch chain.
  */
-type McpCallToolRequest = { params: { name: string; arguments?: Record<string, unknown> } };
+type McpCallToolRequest = { params: { name: string; arguments?: Record<string, unknown> | undefined } };
 
 /**
  * Internal resolved outcome of a single MCP tool invocation: the wire response plus the

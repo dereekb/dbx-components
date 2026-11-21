@@ -10,7 +10,7 @@ import { type AuthData } from '../type';
  * from callable function requests where the caller may or may not be authenticated.
  */
 export interface AuthDataRef<T extends AuthData = AuthData> {
-  readonly auth?: T;
+  readonly auth?: T | undefined;
 }
 
 /**

@@ -6,7 +6,7 @@ import { unauthenticatedContextHasNoAuthData } from './error';
  *
  * Used as the base context type for authenticated function handlers throughout `@dereekb/firebase-server`.
  */
-export type CallableContextWithAuthData<R extends CallableContext = CallableContext> = Omit<R, 'auth'> & Required<Pick<R, 'auth'>>;
+export type CallableContextWithAuthData<R extends CallableContext = CallableContext> = R & { auth: NonNullable<R['auth']> };
 
 /**
  * Type guard that checks whether the given callable context contains authenticated user data (non-null auth with a uid).

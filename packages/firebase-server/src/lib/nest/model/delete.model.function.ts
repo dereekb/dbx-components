@@ -64,7 +64,7 @@ export interface OnCallDeleteModelConfig<N> {
   /**
    * Optional assertion run before the delete handler; throw to reject.
    */
-  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallDeleteModelParams>;
+  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallDeleteModelParams> | undefined;
 }
 
 /**

@@ -51,7 +51,7 @@ export interface CreateWhoamiToolDeps {
    * a {@link AuthRoleSet}; the resulting roles are returned alongside the
    * claim details. When absent, `roles` is empty.
    */
-  readonly roleReader?: McpAuthRoleReader;
+  readonly roleReader?: McpAuthRoleReader | undefined;
 }
 
 /**

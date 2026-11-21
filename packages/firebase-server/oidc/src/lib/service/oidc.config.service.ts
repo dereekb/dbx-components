@@ -46,7 +46,7 @@ export interface OidcDiscoveryMetadata {
   readonly token_endpoint: WebsiteUrl;
   readonly userinfo_endpoint: WebsiteUrl;
   readonly jwks_uri: WebsiteUrl;
-  readonly registration_endpoint?: WebsiteUrl;
+  readonly registration_endpoint?: WebsiteUrl | undefined;
   readonly scopes_supported: OidcScope[];
   readonly response_types_supported: string[];
   readonly response_modes_supported: string[];

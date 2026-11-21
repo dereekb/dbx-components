@@ -117,7 +117,7 @@ export class OidcService {
    * @param tier - Whether the resolving user is an admin and whether the grant carries a service-token scope.
    * @returns The resolved Grant TTL in seconds.
    */
-  resolveLoginDurationForGrant(requestedRawTtl: unknown, clientPayload: { dbx_max_session_ttl?: number } | undefined, tier: ResolveLoginDurationTier): number {
+  resolveLoginDurationForGrant(requestedRawTtl: unknown, clientPayload: { dbx_max_session_ttl?: number | undefined } | undefined, tier: ResolveLoginDurationTier): number {
     const config = this.config;
     const serverMaxSeconds = resolveTieredServerMaxSeconds({
       isAdmin: tier.isAdmin,
@@ -264,8 +264,8 @@ export class OidcService {
         rawToken,
         oidcValidatedToken: {
           sub: verified.subject,
-          scope,
-          client_id: clientId,
+          ...(scope == null ? {} : { scope }),
+          ...(clientId == null ? {} : { client_id: clientId }),
           ...accountClaims
         }
       };

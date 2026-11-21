@@ -242,23 +242,23 @@ export interface FirebaseServerErrorInfo {
   /**
    * Firebase error code, if available.
    */
-  readonly firebaseErrorCode?: FirebaseErrorCode;
+  readonly firebaseErrorCode?: FirebaseErrorCode | undefined;
   /**
    * Set if the error is a HttpsError
    */
-  readonly httpsError?: HttpsError;
+  readonly httpsError?: HttpsError | undefined;
   /**
    * Set if the error is a HttpsError and a ServerError is provided.
    */
-  readonly httpsErrorDetailsServerError?: ServerError;
+  readonly httpsErrorDetailsServerError?: ServerError | undefined;
   /**
    * StringErrorCode from httpsErrorDetailsServerError, if applicable.
    */
-  readonly serverErrorCode?: StringErrorCode;
+  readonly serverErrorCode?: StringErrorCode | undefined;
   /**
    * Set if the error is a FirebaseError
    */
-  readonly firebaseError?: admin.FirebaseError;
+  readonly firebaseError?: admin.FirebaseError | undefined;
 }
 
 /**

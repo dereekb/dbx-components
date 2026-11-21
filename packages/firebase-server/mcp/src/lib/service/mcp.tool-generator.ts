@@ -67,7 +67,7 @@ export interface McpToolDefinition {
    * JSON Schema for the tool output, when the manifest provides one. The wire `tools/list`
    * response only includes this when the pinned MCP SDK type allows it.
    */
-  readonly outputSchema?: object;
+  readonly outputSchema?: object | undefined;
   /**
    * Standard MCP read/write hints for this tool, mirrored onto {@link staticWireEntry} and the
    * dynamic wire path so opt-in `toolDetails` handlers keep their annotations. Resolved at boot
@@ -112,7 +112,7 @@ export interface McpToolDefinition {
    * `undefined` for tools that did not opt in (the common case) and for statically
    * registered tools.
    */
-  readonly toolDetailsBuilder?: McpToolDetailsBuilder;
+  readonly toolDetailsBuilder?: McpToolDetailsBuilder | undefined;
   /**
    * The handler's escalating params, hoisted from `details.mcp.escalatingParams` once at boot like
    * {@link toolDetailsBuilder}. Never set on a read-only tool.
@@ -146,7 +146,7 @@ export type McpStaticToolHandler = (args: Record<string, unknown>, ctx: McpStati
  * depend on the server factory module (the dependency goes the other way).
  */
 export interface McpStaticToolHandlerContext {
-  readonly auth?: FirebaseServerAuthData;
+  readonly auth?: FirebaseServerAuthData | undefined;
   readonly rawRequest: Request;
 }
 
@@ -161,7 +161,7 @@ export interface McpToolDispatchTarget {
    * `undefined` when the handler isn't behind a specifier (default `_` entry on a
    * non-specifier model type).
    */
-  readonly specifier?: string;
+  readonly specifier?: string | undefined;
 }
 
 /**
@@ -282,7 +282,7 @@ export interface BuildStaticWireEntryInput {
   readonly name: string;
   readonly description: string;
   readonly inputSchema?: object;
-  readonly outputSchema?: object;
+  readonly outputSchema?: object | undefined;
   readonly annotations?: ToolAnnotations;
 }
 
@@ -354,7 +354,7 @@ export interface BuildStaticToolDefinitionInput {
   readonly name: string;
   readonly description: string;
   readonly inputSchema: object;
-  readonly outputSchema?: object;
+  readonly outputSchema?: object | undefined;
   readonly dispatch: McpToolDispatchTarget;
   readonly staticHandler: McpStaticToolHandler;
   /**
@@ -368,16 +368,16 @@ export interface BuildStaticToolDefinitionInput {
    * Unset on a write tool leaves it unclassified: it is advertised `destructiveHint: true` and runs through the destructive
    * router (fail-safe), but keeps the `[WRITE] ` marker.
    */
-  readonly destructive?: boolean;
+  readonly destructive?: boolean | undefined;
   /**
    * Whether the tool reaches outside the app (sends real messages or changes a third-party service). Advertised as
    * `openWorldHint` when set; a write tool with `openWorld: true` runs through the destructive router.
    */
-  readonly openWorld?: boolean;
+  readonly openWorld?: boolean | undefined;
   /**
    * Declarative visibility rule checked per request. Defaults to `{}` (always visible) when omitted.
    */
-  readonly rule?: McpVisibilityRule;
+  readonly rule?: McpVisibilityRule | undefined;
   /**
    * OIDC scope TERMS an OIDC caller must satisfy to see AND to invoke this tool, evaluated by the
    * same `oidcScopeTermsSatisfied` path the generated callModel tools use.
@@ -386,7 +386,7 @@ export interface BuildStaticToolDefinitionInput {
    * verb to derive from, so a privileged one declares its own here (e.g. the CLI-token mint gates on
    * `token.cli`). Omitted ⇒ no scope requirement, which is right for every read-only built-in.
    */
-  readonly requiredScopeTerms?: readonly OidcScopeTerm[];
+  readonly requiredScopeTerms?: readonly OidcScopeTerm[] | undefined;
   /**
    * When `true`, the auto-injected reason parameter is never added to this tool's input schema.
    */
@@ -630,22 +630,22 @@ export interface GenerateMcpToolDefinitionsContext {
    * Build-time manifest map supplying overrides for descriptions and input/output schemas, keyed by
    * {@link mcpManifestKey}.
    */
-  readonly manifest?: ReadonlyMap<string, McpManifestToolEntry>;
+  readonly manifest?: ReadonlyMap<string, McpManifestToolEntry> | undefined;
   /**
    * Per-model name segment overrides (e.g. collection prefixes).
    */
-  readonly naming?: McpToolGenerationNamingOptions;
+  readonly naming?: McpToolGenerationNamingOptions | undefined;
   /**
    * Default OIDC scope group term required on every op unless a finer term overrides it. Mirrors the
    * model-api layer's `ModelApiDispatchConfig.defaultRequiredScope` so a tool is advertised only when
    * the caller could invoke it.
    */
-  readonly defaultRequiredScope?: OidcScopeTerm;
+  readonly defaultRequiredScope?: OidcScopeTerm | undefined;
   /**
    * Per-model OIDC scope group-term overrides, keyed by {@link FirestoreModelType}. Mirrors the model-api
    * layer's `ModelApiDispatchConfig.modelRequiredScopes` so per-model / verb-keyed restrictions apply to tool visibility.
    */
-  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;
+  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement> | undefined;
 }
 
 /**
@@ -782,15 +782,15 @@ interface BuildToolFromCandidateContext {
    */
   readonly clashCounts: ReadonlyMap<string, number>;
   readonly options: JsonSchemaGenerationOptions;
-  readonly manifest?: ReadonlyMap<string, McpManifestToolEntry>;
+  readonly manifest?: ReadonlyMap<string, McpManifestToolEntry> | undefined;
   /**
    * Module default OIDC scope group term, threaded from {@link GenerateMcpToolDefinitionsContext}.
    */
-  readonly defaultRequiredScope?: OidcScopeTerm;
+  readonly defaultRequiredScope?: OidcScopeTerm | undefined;
   /**
    * Per-model OIDC scope group-term overrides, threaded from {@link GenerateMcpToolDefinitionsContext}.
    */
-  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;
+  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement> | undefined;
   /**
    * Names of already-registered visible tools, used to drop residual collisions. Mutated as tools
    * are registered across the whole generation pass.
