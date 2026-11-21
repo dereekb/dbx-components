@@ -5,6 +5,7 @@
 
 import { type JsonRepairShape, type Maybe } from '@dereekb/util';
 import { LLM_REPLY_REPAIR_FAST_FIX_SWALLOW_SITE } from '../capability/llm.capability.repair.reply.json';
+import { type LlmDecodeRowShape, toLlmDecodeRowShape } from '../record/llm.call.attempt';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { isLlmCleanStopFinish } from '../record/llm.decode.failure';
 import { type LlmReplyEnvelopeKeys, type LlmReplyReading, readLlmReply, resolveLlmReplyReadingEnvelope } from '../reply/llm.reply.envelope';
@@ -17,7 +18,7 @@ import { type FetchErrorClassification, type IsRetryableUnknownErrorFunction } f
 import { classifyLlmError, isLlmAbortError, isRetryableLlmErrorClassification, formatLlmErrorSummary } from '../strategy/llm.error';
 import { type LlmDispatchResult, type LlmReplyRepairSummary, type LlmRequest, type LlmStrategy } from '../strategy/llm.strategy';
 import { type LlmDispatchPauseSignal, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
-import { type LlmDecodeRowShape, makeLlmTimeoutResult, makeLlmTransportResult, makeLlmUnretryableResult, toLlmDecodeRowShape } from './llm.dispatch.outcome';
+import { makeLlmTimeoutResult, makeLlmTransportResult, makeLlmUnretryableResult } from './llm.dispatch.outcome';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 
 /**

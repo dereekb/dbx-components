@@ -6,6 +6,7 @@
 
 import { type Maybe } from '@dereekb/util';
 import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey, type LlmTokenCount } from '../model/llm.value';
+import { toLlmCallPhases } from '../record/llm.call.attempt';
 import { type LlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
 import { type LlmCallHostFields, type LlmCallRecord, type LlmCallStartRecord } from '../record/llm.call.record';
 import { llmDecodeContextExcerpt } from '../record/llm.decode.failure';
@@ -14,7 +15,7 @@ import { type LlmDispatchTapRegistry } from '../record/llm.dispatch.tap';
 import { type LlmStrategyBase } from '../strategy/llm.strategy';
 import { llmStrategyKind } from '../strategy/llm.strategy.registry';
 import { type LlmComposedDispatch } from './llm.dispatch.compose';
-import { toLlmCallPhases, type LlmDispatchOutcome } from './llm.dispatch.outcome';
+import { type LlmDispatchOutcome } from './llm.dispatch.outcome';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { type LlmResolvedDispatch } from './llm.dispatch.resolve';
 import { type LlmDispatchGap, type LlmDispatchLaneRequest, type LlmDispatchRecorder, type LlmDispatchRecordFieldsParams, type LlmDispatchRecordKind } from './llm.dispatcher.config';

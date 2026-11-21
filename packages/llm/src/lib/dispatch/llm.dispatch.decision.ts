@@ -32,6 +32,7 @@ import { type LlmModelId, type LlmModelTierKey } from '../model/llm.value';
 import { estimateLlmTokens } from '../prompt/llm.prompt.budget';
 import { type LlmPromptSlotId } from '../prompt/llm.prompt.layout';
 import { joinLlmPromptSegments, type LlmPromptSegment, type LlmPromptSegmentOrigin } from '../prompt/llm.prompt.segment';
+import { toLlmCallFailedAttempt } from '../record/llm.call.attempt';
 import { type LlmCallContext } from '../record/llm.call.context';
 import { type LlmCallFailedAttempt, type LlmCallHostFields, type LlmCallRecord } from '../record/llm.call.record';
 import { type LlmSwallowSiteId } from '../record/llm.swallow';
@@ -40,7 +41,7 @@ import { classifyLlmError, formatLlmErrorSummary, isLlmAbortError } from '../str
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { llmStrategyKind } from '../strategy/llm.strategy.registry';
 import { type LlmDispatchPauseSignal, type LlmDispatchTransportBackoff, mergeLlmDispatchSignals, parkLlmDispatchWhilePaused } from './llm.dispatch.control';
-import { toLlmCallFailedAttempt, makeLlmTimeoutResult, makeLlmTransportResult, makeLlmUnretryableResult } from './llm.dispatch.outcome';
+import { makeLlmTimeoutResult, makeLlmTransportResult, makeLlmUnretryableResult } from './llm.dispatch.outcome';
 import { isLlmDispatchTapsActive, makeLlmDispatchRecordFields, type LlmDispatchRecordSinks, recordLlmDispatchStart } from './llm.dispatch.record';
 import { type LlmDispatchRequest } from './llm.dispatch.request';
 import { resolveLlmDispatchMaxAttempts } from './llm.dispatch.run';

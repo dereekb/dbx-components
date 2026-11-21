@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { makeLlmCallContext, noopLlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
 import { LLM_FAILED_ATTEMPT_TEXT_MAX_LENGTH, LLM_TIMEOUT_FINISH_REASON, LLM_TRANSPORT_FINISH_REASON, llmDecodeFailureTailExcerpt } from '../record/llm.decode.failure';
 import { type LlmDispatchResult } from '../strategy/llm.strategy';
-import { LLM_REPLY_REPAIR_SCORE_PRECISION, toLlmCallAttemptPhase, toLlmCallPhases, toLlmDecodeFailureAttempt, toLlmDecodeRowShape, toLlmCallFailedAttempt, toLlmRepairedDecodeAttempt, makeLlmTimeoutResult, makeLlmTransportResult } from './llm.dispatch.outcome';
+import { LLM_REPLY_REPAIR_SCORE_PRECISION, toLlmCallAttemptPhase, toLlmCallPhases, toLlmDecodeFailureAttempt, toLlmDecodeRowShape, toLlmCallFailedAttempt, toLlmRepairedDecodeAttempt } from '../record/llm.call.attempt';
+import { makeLlmTimeoutResult, makeLlmTransportResult } from './llm.dispatch.outcome';
 import { scoreLlmReplyJson } from '../reply/llm.reply.repair';
 import { roundToPrecision } from '@dereekb/util';
 

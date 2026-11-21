@@ -6,7 +6,7 @@ import { DEFAULT_LLM_REPLY_FAST_FIX_LIMITS, type LlmReplyFastFixOutcome } from '
 import { DEFAULT_LLM_REPLY_ENVELOPE_KEYS } from '../reply/llm.reply.envelope';
 import { scoreLlmReplyJson } from '../reply/llm.reply.repair';
 import { isDegenerateLlmReplyReading, type LlmBoundReplyFastFix, makeLlmBoundReplyFastFix, readLlmDispatchReply, type LlmReplyRepairRefusal, runLlmReplyRepairLane, sendLlmDispatchAttempt, validateLlmDispatchValue } from './llm.dispatch.attempt';
-import { toLlmDecodeRowShape } from './llm.dispatch.outcome';
+import { toLlmDecodeRowShape } from '../record/llm.call.attempt';
 
 class APIUserAbortError extends Error {}
 
