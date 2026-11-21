@@ -7,7 +7,8 @@
  * budgeting the next billed round reads the real figure instead of a 2× one.
  *
  * Read-only by design: it returns a reconciliation and writes nothing. Pending reads (the bill lags the call by
- * minutes) and failed ones are COUNTED, never folded as zero, so a half-reconciled run says so.
+ * minutes) and failed ones are COUNTED, never folded as zero, so a half-reconciled run says so. A billed call whose row
+ * logged no cost is counted the same way (`loggedMissing`), never folded as a free call.
  */
 
 import { type AbortSignalRef, asFiniteNumber, compareStringsByCodeUnit, type DollarAmount, type Maybe, type PercentDecimal, type Count } from '@dereekb/util';
@@ -47,13 +48,20 @@ export interface LlmBillReconcileCell {
    */
   readonly billedCalls: Count;
   /**
-   * The logged (synchronous) cost summed over the BILLED calls — the figure the bill is compared against.
+   * The logged (synchronous) cost summed over the BILLED calls that logged one — the figure the bill is compared
+   * against.
    */
   readonly logged: DollarAmount;
   /**
    * The bills summed over the billed calls.
    */
   readonly billed: DollarAmount;
+  /**
+   * Billed calls whose row carried no readable logged cost (no `usage`, no `usage.cost`, or an unreadable one). Their
+   * bills count in `billed`, but they add nothing to `logged`. While it is above zero, `logged` is a lower bound and
+   * {@link computeLlmBilledShare} is `undefined`.
+   */
+  readonly loggedMissing: Count;
 }
 
 /**
@@ -149,6 +157,7 @@ interface MutableCell {
   billedCalls: Count;
   logged: number;
   billed: number;
+  loggedMissing: Count;
 }
 
 /**
@@ -156,7 +165,9 @@ interface MutableCell {
  *
  * Only calls with a non-empty generation id are asked about; the rest count toward `withoutGenerationId`. A small
  * worker pool pulls the reads in order and stops pulling once `signal` aborts; an unread slot counts as `pending` with
- * the detail `'not read (cancelled)'`. Pending and failed reads are counted but never folded into either sum.
+ * the detail `'not read (cancelled)'`. Pending and failed reads are counted but never folded into either sum. A billed
+ * call whose row logged no readable cost is a hole, not a free call: its bill counts, and it is counted in
+ * `loggedMissing` instead of adding $0 to `logged`.
  *
  * @param config - The calls, the reader, and the optional concurrency / cancellation.
  * @returns The reconciliation.
@@ -183,7 +194,7 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
 
   await Promise.all(Array.from({ length: Math.min(concurrency, asked.length) }, () => worker()));
 
-  const total: MutableCell = { calls: 0, billedCalls: 0, logged: 0, billed: 0 };
+  const total: MutableCell = { calls: 0, billedCalls: 0, logged: 0, billed: 0, loggedMissing: 0 };
   const byModel = new Map<Maybe<LlmModelId>, MutableCell>();
   const details: LlmBillReconcileDetail[] = [];
   let pending = 0;
@@ -191,7 +202,7 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
 
   asked.forEach((call, index) => {
     const model = call.model ?? undefined;
-    const cell = byModel.get(model) ?? { calls: 0, billedCalls: 0, logged: 0, billed: 0 };
+    const cell = byModel.get(model) ?? { calls: 0, billedCalls: 0, logged: 0, billed: 0, loggedMissing: 0 };
     byModel.set(model, cell);
     cell.calls += 1;
     total.calls += 1;
@@ -199,13 +210,21 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
     const read: LlmCallBillRead = reads[index] ?? { status: 'pending', generationId: call.generationId as string, detail: 'not read (cancelled)' };
 
     if (read.status === 'billed') {
-      const logged = asFiniteNumber(call.usage?.cost) ?? 0;
+      // A billed call whose row logged no readable cost is a HOLE, never a free call: its bill still counts, but it adds
+      // nothing to `logged` and is counted in `loggedMissing`, which makes the logged figure a lower bound.
+      const logged = asFiniteNumber(call.usage?.cost);
       cell.billedCalls += 1;
-      cell.logged += logged;
       cell.billed += read.bill.billed;
       total.billedCalls += 1;
-      total.logged += logged;
       total.billed += read.bill.billed;
+
+      if (logged == null) {
+        cell.loggedMissing += 1;
+        total.loggedMissing += 1;
+      } else {
+        cell.logged += logged;
+        total.logged += logged;
+      }
     } else {
       if (read.status === 'pending') {
         pending += 1;
@@ -233,8 +252,9 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
 }
 
 /**
- * The billed share of the logged figure (`billed / logged`), or `undefined` when nothing logged was billed. It may
- * exceed 1: a billed call with no logged cost adds to `billed` but nothing to `logged`.
+ * The billed share of the logged figure (`billed / logged`), or `undefined` when there is no comparable pair: nothing
+ * logged was billed, or some billed call logged no cost (`loggedMissing`). It may still exceed 1 when a bill is above
+ * its logged figure.
  *
  * @param cell - The reconciled slice.
  * @returns The ratio.
@@ -245,11 +265,15 @@ export async function reconcileLlmCallBills(config: ReconcileLlmCallBillsConfig)
  * ```
  */
 export function computeLlmBilledShare(cell: LlmBillReconcileCell): Maybe<PercentDecimal> {
-  return cell.billedCalls > 0 && cell.logged > 0 ? cell.billed / cell.logged : undefined;
+  return cell.billedCalls > 0 && cell.loggedMissing === 0 && cell.logged > 0 ? cell.billed / cell.logged : undefined;
 }
 
 /**
  * Render a reconciliation as markdown — the run totals, one row per model, and the pending / failed reads.
+ *
+ * A slice with a cost hole (`loggedMissing > 0`) renders its logged figure as a lower bound (`>=$x`, or `n/a` when no
+ * billed call in it logged a cost) with no billed share, and a note after the table counts the holes. Text without a
+ * hole is unchanged.
  *
  * @param reconciliation - The reconciliation.
  * @param sessionId - The run / session it covers (the heading).
@@ -262,6 +286,7 @@ export function computeLlmBilledShare(cell: LlmBillReconcileCell): Maybe<Percent
  */
 export function renderLlmBillReconciliationMarkdown(reconciliation: LlmBillReconciliation, sessionId: string): string {
   const money = (value: DollarAmount): string => formatLlmUsageCost({ cost: value, calls: 1, partial: false });
+  const loggedMoney = (cell: LlmBillReconcileCell): string => formatLlmUsageCost({ cost: cell.logged, calls: cell.billedCalls, partial: cell.loggedMissing > 0 });
   const share = (cell: LlmBillReconcileCell): string => {
     const ratio = computeLlmBilledShare(cell);
     return ratio == null ? 'n/a' : `${(ratio * 100).toFixed(1)}%`;
@@ -273,12 +298,16 @@ export function renderLlmBillReconciliationMarkdown(reconciliation: LlmBillRecon
     lines.push(`- No reconcilable calls in scope (${reconciliation.withoutGenerationId} call(s) carried no generation id).`);
   } else {
     lines.push(
-      `- **Billed:** ${money(total.billed)} over ${total.billedCalls} of ${total.calls} call(s) · **logged (list) for the same calls:** ${money(total.logged)} · **billed share:** ${share(total)}`,
+      `- **Billed:** ${money(total.billed)} over ${total.billedCalls} of ${total.calls} call(s) · **logged (list) for the same calls:** ${loggedMoney(total)} · **billed share:** ${share(total)}`,
       '',
       '| model | calls | billed calls | logged | billed | billed share |',
       '|---|---|---|---|---|---|',
-      ...reconciliation.byModel.map(({ model, cell }) => `| ${model ?? UNKNOWN_MODEL_BUCKET} | ${cell.calls} | ${cell.billedCalls} | ${money(cell.logged)} | ${money(cell.billed)} | ${share(cell)} |`)
+      ...reconciliation.byModel.map(({ model, cell }) => `| ${model ?? UNKNOWN_MODEL_BUCKET} | ${cell.calls} | ${cell.billedCalls} | ${loggedMoney(cell)} | ${money(cell.billed)} | ${share(cell)} |`)
     );
+
+    if (total.loggedMissing > 0) {
+      lines.push('', `- _${total.loggedMissing} billed call(s) logged no cost: the logged figures above leave them out, so the rows they fall in show no billed share._`);
+    }
   }
 
   if (reconciliation.pending > 0) {

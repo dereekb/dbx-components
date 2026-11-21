@@ -35,7 +35,7 @@ describe('makeLlmCompletionAdapterFake()', () => {
     const fake = makeLlmCompletionAdapterFake({ kind: 'openai' });
     const strategy = fake.adapter.make({ provider: PROVIDER });
 
-    await expect(strategy.complete({ prompt: 'hi' })).rejects.toThrow('not called');
+    await expect(strategy.complete({ prompt: 'hi', capability: 'summarize' })).rejects.toThrow('not called');
     expect(fake.calls.complete).toBe(1);
   });
 });

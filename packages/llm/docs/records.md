@@ -127,8 +127,11 @@ What a host persists for each call, the readers that read it back, and the math 
 - **Bill reconcile.** `reconcileLlmCallBills({ calls, reader, concurrency?, signal? })` reads each call's bill through
   any `LlmCallBillReader` (e.g. `/zenmux`'s `makeLlmZenmuxGenerationBillReader`) and folds billed against logged cost per
   model. Pending and failed reads are counted and kept as details, never folded as zero; once `signal` aborts, no new
-  read starts and each unread call is pending. `computeLlmBilledShare` gives billed / logged (a `PercentDecimal` that
-  may exceed 1), and `renderLlmBillReconciliationMarkdown(reconciliation, sessionId)` renders the result. Calls with no
+  read starts and each unread call is pending. A billed call whose row logged no cost (no `usage`, no `usage.cost`, or an
+  unreadable one) is a hole, not a free call: its bill counts, the cell counts it in `loggedMissing`, the logged figure
+  renders as a lower bound (`>=$x`, or `n/a` when no billed call logged a cost), and its billed share is `undefined`.
+  `computeLlmBilledShare` gives billed / logged (a `PercentDecimal` that may exceed 1 when a bill is above its logged
+  figure), and `renderLlmBillReconciliationMarkdown(reconciliation, sessionId)` renders the result. Calls with no
   recorded model fold into one `byModel` row whose `model` is `undefined`; the markdown labels it `(unknown model)`.
 
 ```ts
