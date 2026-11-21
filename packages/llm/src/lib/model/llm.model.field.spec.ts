@@ -14,7 +14,7 @@ import {
   toCanonicalLlmModelOutputControls,
   toCanonicalLlmReasoningConfig
 } from './llm.model.field';
-import { llmModelTierConfigType } from './llm.model.type';
+import { llmModelOutputControlsType, llmModelTierConfigType, llmReasoningConfigType } from './llm.model.type';
 
 const LABEL = `MODEL_TIERS['fast']`;
 
@@ -67,5 +67,19 @@ describe('canonical assembly', () => {
   it('re-assembles reasoning and output controls in key order, dropping absent keys', () => {
     expect(Object.keys(toCanonicalLlmReasoningConfig({ enabled: true, effort: 'low' }))).toEqual(['effort', 'enabled']);
     expect(Object.keys(toCanonicalLlmModelOutputControls({ reasoning: { exclude: true }, maxOutputTokens: 10 }))).toEqual(['maxOutputTokens', 'reasoning']);
+  });
+});
+
+describe('the arktype prop order the key lists do not derive from', () => {
+  // The canary of the four-representation decision in `llm.model.field.ts`: arktype sorts optional props, so a key list
+  // read off a type would reorder the first reported failure and the written key order. If this starts failing, the
+  // `*_KEYS` lists may be derivable from the types.
+  it('should read the optional props of a type back sorted, not in the canonical key order', () => {
+    const propsOf = (props: ReadonlyArray<{ readonly key: unknown }>) => props.map((prop) => String(prop.key));
+
+    expect(propsOf(llmReasoningConfigType.props)).toEqual(['effort', 'enabled', 'exclude', 'maxTokens']);
+    expect(propsOf(llmReasoningConfigType.props)).not.toEqual([...LLM_REASONING_CONFIG_KEYS]);
+    expect(propsOf(llmModelOutputControlsType.props)).toEqual([...LLM_MODEL_OUTPUT_CONTROLS_KEYS]);
+    expect(propsOf(llmModelTierConfigType.props)).toEqual(['model', 'maxOutputTokens', 'reasoning']);
   });
 });

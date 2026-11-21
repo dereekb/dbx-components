@@ -7,6 +7,23 @@
  *
  * An extension (a host's own provider or model keys) calls those two checks directly, so its messages read like the
  * library's.
+ *
+ * **Why a field set is still declared beside its arktype type, not derived from it.** The arktype type, the `*_KEYS`
+ * list, the `*_FIELD_RULES` table and the canonical assembly are four representations of one set. They cannot yet
+ * collapse into one arktype declaration without moving pinned messages or written bytes:
+ *
+ * - arktype normalizes an object's props to required keys first, then optional keys sorted ALPHABETICALLY — in
+ *   `.props` and in the order its errors come back. So `{ effort?, maxTokens?, exclude?, enabled? }` reads back as
+ *   `effort, enabled, exclude, maxTokens`. A key list read off the type would change which failing field is reported
+ *   first and the key order `flattenLlmModelConfigFile` writes. `*_KEYS` therefore stays the order's one declaration;
+ *   `llm.model.field.spec.ts` pins the arktype behaviour this rests on, so the collapse is revisited if it changes.
+ * - A rule COULD ride the prop as meta (`type(...).configure({ must, remedy })` survives on `.props[i].value.meta`),
+ *   but that trades the compile-time exhaustiveness of {@link ArktypeFieldRules} for a runtime lookup, so the tables
+ *   stay.
+ * - `'+': 'reject'` reports `<key> must be removed`, not the pinned unknown-key message, so `assertObjectKeys` (and
+ *   the retired-key pre-pass) stays in front of the type.
+ * - The assemblers are not uniform: most trim or keep specific fields byte for byte, and extensions append theirs,
+ *   so they stay per set.
  */
 
 import { type ArktypeFieldRule, type ArktypeFieldRules } from '@dereekb/model';
