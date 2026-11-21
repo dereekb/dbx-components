@@ -18,7 +18,6 @@ import {
   llmDecodeContextExcerpt,
   llmDecodeFailureExcerpt,
   llmDecodeFailureTailExcerpt,
-  llmDecodePromptId,
   LLM_DECODE_FAILURE_EXCERPT_MAX_LENGTH,
   LLM_DECODE_FAILURE_TAIL_EXCERPT_MAX_LENGTH,
   LLM_FAILED_ATTEMPT_TEXT_MAX_LENGTH,
@@ -102,14 +101,6 @@ describe('clipLlmFailedAttemptReply', () => {
     const cut = clipLlmFailedAttemptReply(wide);
     expect(cut.clipped).toBe(true);
     expect(cut.text.length).toBe(LLM_FAILED_ATTEMPT_TEXT_MAX_LENGTH);
-  });
-});
-
-describe('llmDecodePromptId', () => {
-  it('is a stable hex fingerprint (same input ⇒ same id, different input ⇒ different id)', () => {
-    expect(llmDecodePromptId('a prompt')).toBe(llmDecodePromptId('a prompt'));
-    expect(llmDecodePromptId('a prompt')).not.toBe(llmDecodePromptId('another prompt'));
-    expect(llmDecodePromptId('a prompt')).toMatch(/^[0-9a-f]+$/);
   });
 });
 

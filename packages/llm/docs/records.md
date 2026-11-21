@@ -17,11 +17,16 @@ What a dispatcher records about each call, and the seams a host observes it thro
   `classifyLlmReplyOutcome` (what the reply looked like), the finish-reason predicates (`isLlmLengthCappedFinish`,
   `isLlmCleanStopFinish`, `isLlmReasoningOnlyReply`), the two sentinels a dispatcher stamps on a synthesized reply
   (`LLM_TIMEOUT_FINISH_REASON`, `LLM_TRANSPORT_FINISH_REASON`, `LLM_UNRETRYABLE_FINISH_REASON`) and the bounded
-  excerpt helpers.
+  excerpt helpers. The decode-failure payload's `cachePrefixHash` is the same 16-hex `llmPromptCacheHash` the call
+  record carries, so the two join on one key: on a root dispatch it is the cache watch's hash of the stable prefix;
+  a chained follow-up has no prefix, so it carries the hash of the whole prompt it sent.
 - **Retry lever.** `chooseLlmRetryLever` picks the ONE thing the next attempt changes (budget, model, reasoning off /
   low, structured output off, or nothing, with the reason); `applyLlmRetryLever` applies it.
 - **Call records.** `LlmCallRecord`, `LlmCallStartRecord`, `LlmDecodeFailureRecord` and their event-type tags. A host's
-  own fields sit at the top level: pass them as `H`. `llmCallTelemetry` projects the per-call telemetry block.
+  own fields sit at the top level: pass them as `H`. `llmCallTelemetry` projects the per-call telemetry block. Every
+  root dispatch's call record carries `cachePrefixHash` (the cache watch's hash of its stable prefix) at the top level,
+  whether or not the call context times; `phases` keeps only the timing and the `promptChars` / `cachePrefixChars`
+  sizes.
   `LlmCallLogPayload` is the persisted read-side view of a record, and `toLlmCallLogPayload` writes it (see
   [Readers, ledger and reconcile](#readers-ledger-and-reconcile)). Each placed or cut supplement row
   (`LlmCallSupplement`) carries a `hash` and a `bytes` size; `bytes` counts UTF-16 code units (`.length`), not bytes,
@@ -97,7 +102,7 @@ What a host persists for each call, the readers that read it back, and the math 
   | `validationErrors` | `record.result` | always |
   | `subject`, `decision` | the record's own fields | always |
   | `supplements` | `record.supplements` | only when non-empty |
-  | `reasoningOff`, `estimatedPromptTokens` | the record's own fields | always |
+  | `reasoningOff`, `estimatedPromptTokens`, `cachePrefixHash` | the record's own fields | always |
   | `phases` | `record.phases` | `keepPhases` |
 
 - **Readers.** `readLlmCallPrompt`, `readLlmCallPromptSegments` and `readLlmCallFailedAttempts` take `unknown` and

@@ -13,7 +13,8 @@ ordinals (`attempt`) and UTF-16 lengths whose name carries the unit (`rawLength`
 
 The SHA-256 helpers live in `@dereekb/util`: `sha256Hex(text)` and `sha256HexPrefix(text, length)`. They are
 synchronous and byte-identical to `node:crypto`'s `createHash('sha256').update(text, 'utf8').digest('hex')`. llm uses 16
-hex chars for cache / call-row / supplement hashes (`llmPromptCacheHash`) and 12 for tapes (`hashLlmTapePrompt`).
+hex chars for cache / call-row / supplement hashes (`llmPromptCacheHash`) and 12 for tapes (`hashLlmTapePrompt`). The
+prompt fingerprint is one hash under one name: the call record's and the decode-failure payload's `cachePrefixHash`.
 
 **Generic helpers in util and model.** Helpers whose body carries no LLM concept live in the shared packages, and llm
 calls them: `@dereekb/model`'s `assertObjectKeys` and `parseArktypeFieldsWithMessages` (with `ArktypeFieldRule(s)` and

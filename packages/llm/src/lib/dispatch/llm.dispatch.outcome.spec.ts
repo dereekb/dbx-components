@@ -131,9 +131,9 @@ describe('toLlmCallPhases()', () => {
       ],
       children: []
     };
-    const phases = toLlmCallPhases({ profile, attemptPhases: [{ attempt: 1, wallMs: 20 }], request: { prompt: 'abcdef', cacheSegments: { cachePrefix: 'abc', volatileSuffix: 'def' } as never }, cachePrefixHash: 'h' });
+    const phases = toLlmCallPhases({ profile, attemptPhases: [{ attempt: 1, wallMs: 20 }], request: { prompt: 'abcdef', cacheSegments: { cachePrefix: 'abc', volatileSuffix: 'def' } as never } });
 
-    expect(phases).toEqual({ totalMs: 50, renderMs: 2, assembleMs: 3, completeMs: 20, attempts: [{ attempt: 1, wallMs: 20 }], promptChars: 6, cachePrefixChars: 3, cachePrefixHash: 'h' });
+    expect(phases).toEqual({ totalMs: 50, renderMs: 2, assembleMs: 3, completeMs: 20, attempts: [{ attempt: 1, wallMs: 20 }], promptChars: 6, cachePrefixChars: 3 });
   });
 });
 

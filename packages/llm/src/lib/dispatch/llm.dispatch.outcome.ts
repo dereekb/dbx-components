@@ -4,7 +4,7 @@
  * timeout / transport envelopes a failed send is recorded as.
  */
 
-import { filterMaybeValues, type JsonRepairShape, type Maybe, type NumberPrecision, roundToPrecision, type HexString } from '@dereekb/util';
+import { filterMaybeValues, type JsonRepairShape, type Maybe, type NumberPrecision, roundToPrecision } from '@dereekb/util';
 import { type FetchErrorClassification } from '@dereekb/util/fetch';
 import { type LlmStrategyId, type LlmTokenCount } from '../model/llm.value';
 import { type LlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
@@ -349,21 +349,17 @@ export interface LlmCallPhasesConfig {
    * The request THIS call sent — its prompt and cache split give the sizes.
    */
   readonly request: Pick<LlmRequest, 'prompt' | 'cacheSegments'>;
-  /**
-   * The cache watch's hash of that prefix, when the dispatch was segmented.
-   */
-  readonly cachePrefixHash?: Maybe<HexString>;
 }
 
 /**
  * Project the persisted call phases out of a dispatch's snapshotted profile — the `render` / `assemble` spans (root
  * only), the summed per-attempt wall, and the prompt / cache-prefix sizes.
  *
- * @param config - The snapshot, the attempt phases, the sent request and the prefix hash.
+ * @param config - The snapshot, the attempt phases and the sent request.
  * @returns The phase block.
  */
 export function toLlmCallPhases(config: LlmCallPhasesConfig): LlmCallPhases {
-  const { profile, attemptPhases, request, cachePrefixHash } = config;
+  const { profile, attemptPhases, request } = config;
   const renderMs = profile.spans.find((span) => span.name === 'render')?.durationMs;
   const assembleMs = profile.spans.find((span) => span.name === 'assemble')?.durationMs;
   const completeMs = attemptPhases.reduce((sum, attempt) => sum + attempt.wallMs, 0);
@@ -375,8 +371,7 @@ export function toLlmCallPhases(config: LlmCallPhasesConfig): LlmCallPhases {
     completeMs,
     ...(attemptPhases.length > 0 ? { attempts: attemptPhases } : {}),
     promptChars: request.prompt.length,
-    ...(request.cacheSegments == null ? {} : { cachePrefixChars: request.cacheSegments.cachePrefix.length }),
-    ...(cachePrefixHash == null ? {} : { cachePrefixHash })
+    ...(request.cacheSegments == null ? {} : { cachePrefixChars: request.cacheSegments.cachePrefix.length })
   };
 }
 

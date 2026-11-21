@@ -23,7 +23,7 @@
  * | `validationErrors` | `record.result` | always |
  * | `subject`, `decision` | the record's own fields | always |
  * | `supplements` | `record.supplements` | only when non-empty |
- * | `reasoningOff`, `estimatedPromptTokens` | the record's own fields | always |
+ * | `reasoningOff`, `estimatedPromptTokens`, `cachePrefixHash` | the record's own fields | always |
  * | `phases` | `record.phases` | `keepPhases` |
  *
  * Every key is written only when its value is present. The projector writes no host field: a host places its own,
@@ -33,7 +33,7 @@
  * and the deterministic repair re-runs on replay.
  */
 
-import { filterMaybeValues, type Maybe, type Milliseconds, type Count } from '@dereekb/util';
+import { filterMaybeValues, type Maybe, type Milliseconds, type Count, type HexString } from '@dereekb/util';
 import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey, LlmStrategyId, LlmTokenCount, LlmGenerationId } from '../model/llm.value';
 import type { LlmPromptSegment } from '../prompt/llm.prompt.segment';
 import type { LlmDispatchResult, LlmReplyRepairSummary } from '../strategy/llm.strategy';
@@ -168,6 +168,13 @@ export interface LlmCallLogPayloadBase {
    */
   readonly estimatedPromptTokens?: LlmTokenCount;
   /**
+   * The 16-hex `llmPromptCacheHash` of the call's stable cache prefix ({@link LlmCallRecordBase.cachePrefixHash}) —
+   * the key a decode-failure row's `payload.cachePrefixHash` joins on, and the identity two rows of one call site
+   * compare on. Kept on every row whether or not the dispatch timed. Absent on a follow-up, a decision-lane row and a
+   * row projected from a record built outside a dispatcher.
+   */
+  readonly cachePrefixHash?: HexString;
+  /**
    * The prompt as its provenance-tagged {@link LlmPromptSegment}s — the ONLY prompt key a new row carries, and only
    * when the host keeps prompts. NEVER dereference it directly: go through `readLlmCallPrompt` /
    * `readLlmCallPromptSegments`, which also answer for the flat shape below.
@@ -250,7 +257,7 @@ export interface LlmCallLogPayloadConfig {
  * and the result, so a renamed or retyped source field fails here. A decision record's `stamp` keys ride in front at
  * runtime and are not typed. The read side is {@link LlmCallLogPayloadBase}; `llm.call.payload.spec.ts` checks the two.
  */
-export type LlmCallLogPayloadWrite = Pick<LlmCallRecordBase, 'capability' | 'tier' | 'subject' | 'decision' | 'supplements' | 'reasoningOff' | 'estimatedPromptTokens' | 'phases' | 'failedAttempts'> &
+export type LlmCallLogPayloadWrite = Pick<LlmCallRecordBase, 'capability' | 'tier' | 'subject' | 'decision' | 'supplements' | 'reasoningOff' | 'estimatedPromptTokens' | 'cachePrefixHash' | 'phases' | 'failedAttempts'> &
   LlmCallTelemetry &
   Pick<LlmDispatchResult, 'schemaEnforced' | 'attempts' | 'decodeStatus' | 'decodeOutcome' | 'lengthCapped' | 'validationErrors'> & {
     /**
@@ -323,6 +330,7 @@ export function toLlmCallLogPayload(record: LlmCallRecordBase, config?: Maybe<Ll
       supplements: supplements != null && supplements.length > 0 ? supplements : undefined,
       reasoningOff: record.reasoningOff,
       estimatedPromptTokens: record.estimatedPromptTokens,
+      cachePrefixHash: record.cachePrefixHash,
       phases: keepPhases ? record.phases : undefined
     })
   };

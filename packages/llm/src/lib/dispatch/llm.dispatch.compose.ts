@@ -110,7 +110,8 @@ export interface LlmComposedDispatch {
    */
   readonly liveContext: string;
   /**
-   * The cache watch's hash of the root's cache prefix (absent on a follow-up).
+   * The cache watch's hash of the root's cache prefix (absent on a follow-up) — stamped on the call record and reused
+   * as the decode-failure payload's `cachePrefixHash`.
    */
   readonly cachePrefixHash?: HexString;
   /**

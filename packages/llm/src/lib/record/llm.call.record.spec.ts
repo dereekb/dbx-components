@@ -58,7 +58,7 @@ describe('the host extension', () => {
     // @ts-expect-error -- the start record's model is always present
     const missingModel: LlmCallStartRecord = { capability: 'summarize' };
     const start: LlmCallStartRecord<RequestFields> = { capability: 'summarize', model: 'vendor/model-flash', requestId: 'r1' };
-    const failure: LlmDecodeFailureRecord<RequestFields> = { payload: { capability: 'summarize', promptId: 'abc', promptChars: 1, contextExcerpt: '', attempts: 1, recovered: false, failures: [] }, requestId: 'r1' };
+    const failure: LlmDecodeFailureRecord<RequestFields> = { payload: { capability: 'summarize', cachePrefixHash: 'abc', promptChars: 1, contextExcerpt: '', attempts: 1, recovered: false, failures: [] }, requestId: 'r1' };
 
     expect(missingModel.capability).toBe('summarize');
     expect(start.requestId).toBe(failure.requestId);

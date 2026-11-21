@@ -80,7 +80,8 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   `required` one, and never blocking a send. `toLlmBudgetTrimSummary` folds the trim report for a host's log.
 - **Cache watch.** `makeLlmPromptCachePrefixWatch()` hashes each dispatch's cacheable prefix (16 hex chars of SHA-256)
   and compares it with the previous dispatch of the same capability and partition, naming the first segment — and its
-  key — that moved, or the first one appended. It keeps digests, never prompt bytes.
+  key — that moved, or the first one appended. It keeps digests, never prompt bytes. The dispatcher stamps the hash on
+  the call record as `cachePrefixHash` and reuses it for the decode-failure payload's `cachePrefixHash`.
 - **Library contributors.** `makeLlmModelAddendumPromptContributor({ promptAddendumByModel })` places the resolved model's
   `promptAddendum` (from `llmModelPromptAddenda(config)`) in the `model-addendum` slot; `llmModelAddendumSegment` mints
   the same segment, and `restampLlmModelAddendum` swaps a captured prompt's addendum for another model's, placing it

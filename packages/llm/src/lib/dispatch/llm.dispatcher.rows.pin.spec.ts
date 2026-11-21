@@ -20,6 +20,7 @@ import { defineLlmDecision } from '../decision/llm.decision.descriptor';
 import { llmChoiceQuestion, llmNoulQuestion } from '../decision/llm.decision.question';
 import { type LlmDecisionStrategy, LlmDecisionTransportError } from '../decision/llm.decision.strategy';
 import { type LlmModelTierMap } from '../model/llm.model.tier';
+import { llmPromptCacheHash } from '../prompt/llm.prompt.hash';
 import { type LlmLiveContextBlock } from '../prompt/llm.prompt.live.context';
 import { type LlmPromptTemplate, makeLlmTieredPromptTemplateResolver } from '../prompt/llm.prompt.template';
 import { makeLlmCallContext } from '../record/llm.call.context';
@@ -434,8 +435,8 @@ describe('makeLlmDispatcher() rows (pin)', () => {
 
       expectPin(
         calls[0].phases ?? {},
-        ['totalMs', 'renderMs', 'assembleMs', 'completeMs', 'attempts', 'promptChars', 'cachePrefixChars', 'cachePrefixHash'],
-        '{"totalMs":13,"renderMs":1,"assembleMs":1,"completeMs":1,"attempts":[{"attempt":1,"wallMs":1,"repair":{"tier":"deterministic","attempt":1,"verdict":"near-miss","score":1,"ops":{"close-object":1}}}],"promptChars":31,"cachePrefixChars":25,"cachePrefixHash":"522153e78572010f"}'
+        ['totalMs', 'renderMs', 'assembleMs', 'completeMs', 'attempts', 'promptChars', 'cachePrefixChars'],
+        '{"totalMs":13,"renderMs":1,"assembleMs":1,"completeMs":1,"attempts":[{"attempt":1,"wallMs":1,"repair":{"tier":"deterministic","attempt":1,"verdict":"near-miss","score":1,"ops":{"close-object":1}}}],"promptChars":31,"cachePrefixChars":25}'
       );
     });
   });
@@ -448,9 +449,9 @@ describe('makeLlmDispatcher() rows (pin)', () => {
       expectPin(
         decodeFailures[0],
         ['payload', 'host'],
-        String.raw`{"payload":{"capability":"TestCap","model":"test/fast","tier":"fast","promptId":"c51bbc0f","promptChars":31,"contextExcerpt":"D-LIVE","attempts":1,"recovered":false,"failures":[{"attempt":1,"class":"schema-validation","excerpt":"{\"answer\":1}","rawLength":12,"maxOutputTokens":1024,"validatorError":"answer must be a string"}]},"host":"decode-failure"}`
+        String.raw`{"payload":{"capability":"TestCap","model":"test/fast","tier":"fast","cachePrefixHash":"522153e78572010f","promptChars":31,"contextExcerpt":"D-LIVE","attempts":1,"recovered":false,"failures":[{"attempt":1,"class":"schema-validation","excerpt":"{\"answer\":1}","rawLength":12,"maxOutputTokens":1024,"validatorError":"answer must be a string"}]},"host":"decode-failure"}`
       );
-      expect(Object.keys(decodeFailures[0].payload)).toEqual(['capability', 'model', 'tier', 'promptId', 'promptChars', 'contextExcerpt', 'attempts', 'recovered', 'failures']);
+      expect(Object.keys(decodeFailures[0].payload)).toEqual(['capability', 'model', 'tier', 'cachePrefixHash', 'promptChars', 'contextExcerpt', 'attempts', 'recovered', 'failures']);
     });
 
     it('keeps a recovered decode-failure record, payload and host field (pin)', async () => {
@@ -460,9 +461,44 @@ describe('makeLlmDispatcher() rows (pin)', () => {
       expectPin(
         decodeFailures[0],
         ['payload', 'host'],
-        String.raw`{"payload":{"capability":"TestCap","model":"test/fast","tier":"fast","promptId":"c51bbc0f","promptChars":31,"contextExcerpt":"D-LIVE","attempts":1,"recovered":true,"failures":[{"attempt":1,"class":"parse-error","excerpt":"{\"answer\":\"ok\"","rawLength":14,"shape":{"verdict":"near-miss","score":1},"finishReason":"stop","maxOutputTokens":1024,"repaired":"deterministic","repairOps":{"close-object":1}}]},"host":"decode-failure"}`
+        String.raw`{"payload":{"capability":"TestCap","model":"test/fast","tier":"fast","cachePrefixHash":"522153e78572010f","promptChars":31,"contextExcerpt":"D-LIVE","attempts":1,"recovered":true,"failures":[{"attempt":1,"class":"parse-error","excerpt":"{\"answer\":\"ok\"","rawLength":14,"shape":{"verdict":"near-miss","score":1},"finishReason":"stop","maxOutputTokens":1024,"repaired":"deterministic","repairOps":{"close-object":1}}]},"host":"decode-failure"}`
       );
-      expect(Object.keys(decodeFailures[0].payload)).toEqual(['capability', 'model', 'tier', 'promptId', 'promptChars', 'contextExcerpt', 'attempts', 'recovered', 'failures']);
+      expect(Object.keys(decodeFailures[0].payload)).toEqual(['capability', 'model', 'tier', 'cachePrefixHash', 'promptChars', 'contextExcerpt', 'attempts', 'recovered', 'failures']);
+    });
+  });
+
+  describe('prompt fingerprint', () => {
+    it('stamps the decode-failure payload with the call record hash on a segmented root, with timing off', async () => {
+      const { dispatcher, calls, decodeFailures } = setup({ replies: [INVALID] });
+      await dispatcher.dispatch(request({ validate: VALID, maxAttempts: 1 }));
+
+      expect('phases' in calls[0]).toBe(false);
+      expect(calls[0].cachePrefixHash).toMatch(/^[0-9a-f]{16}$/);
+      expect(decodeFailures[0].payload.cachePrefixHash).toBe(calls[0].cachePrefixHash);
+      // segmented: the volatile live context is not part of the fingerprint
+      expect(calls[0].cachePrefixHash).not.toBe(llmPromptCacheHash(calls[0].prompt));
+    });
+
+    it('stamps the decode-failure payload with the call record hash on an unsegmented root (no volatile bytes: the whole prompt)', async () => {
+      const { dispatcher, calls, decodeFailures } = setup({ replies: [INVALID] });
+      await dispatcher.dispatch(request({ renderLiveContext: () => [], validate: VALID, maxAttempts: 1 }));
+
+      // an empty live context leaves only the empty volatile boundary segment, so nothing splits off the prefix
+      expect(calls[0].segments.filter((segment) => segment.volatile === true).every((segment) => segment.promptSegment === '')).toBe(true);
+      expect(calls[0].cachePrefixHash).toBe(llmPromptCacheHash(calls[0].prompt));
+      expect(decodeFailures[0].payload.cachePrefixHash).toBe(calls[0].cachePrefixHash);
+    });
+
+    it('falls back to the hash of the sent prompt on a follow-up decode failure', async () => {
+      const { dispatcher, calls, decodeFailures } = setup({ replies: [OK, INVALID] });
+      const root = await dispatcher.preparePrompt(request()).execute();
+      await root.followUp({ content: 'next item', validate: VALID, maxAttempts: 1 }).execute();
+
+      expect(calls).toHaveLength(2);
+      expect(decodeFailures).toHaveLength(1);
+      expect('cachePrefixHash' in calls[1]).toBe(false);
+      expect(decodeFailures[0].payload.cachePrefixHash).toBe(llmPromptCacheHash(calls[1].prompt));
+      expect(decodeFailures[0].payload.cachePrefixHash).not.toBe(calls[0].cachePrefixHash);
     });
   });
 });

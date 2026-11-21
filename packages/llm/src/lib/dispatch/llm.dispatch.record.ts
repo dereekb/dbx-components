@@ -8,7 +8,8 @@ import { type Maybe } from '@dereekb/util';
 import { type LlmCapabilityKey, type LlmModelId, type LlmModelTierKey, type LlmTokenCount } from '../model/llm.value';
 import { type LlmCallContext, type LlmCallProfile } from '../record/llm.call.context';
 import { type LlmCallHostFields, type LlmCallRecord, type LlmCallStartRecord } from '../record/llm.call.record';
-import { llmDecodeContextExcerpt, llmDecodePromptId } from '../record/llm.decode.failure';
+import { llmDecodeContextExcerpt } from '../record/llm.decode.failure';
+import { llmPromptCacheHash } from '../prompt/llm.prompt.hash';
 import { type LlmDispatchTapRegistry } from '../record/llm.dispatch.tap';
 import { type LlmStrategyBase } from '../strategy/llm.strategy';
 import { llmStrategyKind } from '../strategy/llm.strategy.registry';
@@ -214,7 +215,7 @@ export function recordLlmDispatch<R extends LlmDispatchRequest = LlmDispatchRequ
   const { result, decodeFailures, failedAttempts, recovered } = outcome;
   const capability = request.capability;
   const callProfile = callContext.enabled ? callContext.profile() : undefined;
-  const phases = callProfile == null ? undefined : toLlmCallPhases({ profile: callProfile, attemptPhases: outcome.attemptPhases, request: baseRequest, cachePrefixHash });
+  const phases = callProfile == null ? undefined : toLlmCallPhases({ profile: callProfile, attemptPhases: outcome.attemptPhases, request: baseRequest });
   const callRecord: LlmCallRecord<H> = {
     capability,
     prompt: baseRequest.prompt,
@@ -225,6 +226,7 @@ export function recordLlmDispatch<R extends LlmDispatchRequest = LlmDispatchRequ
     reasoningOff: reasoning.enabled === false,
     ...(request.subjectCapability == null ? {} : { subject: request.subjectCapability }),
     estimatedPromptTokens,
+    ...(cachePrefixHash == null ? {} : { cachePrefixHash }),
     ...(phases == null ? {} : { phases }),
     ...(failedAttempts.length === 0 ? {} : { failedAttempts }),
     ...fields('call')
@@ -240,7 +242,8 @@ export function recordLlmDispatch<R extends LlmDispatchRequest = LlmDispatchRequ
         ...(result.model == null ? {} : { model: result.model }),
         ...(tier == null ? {} : { tier }),
         ...(result.schemaEnforced == null ? {} : { schemaEnforced: result.schemaEnforced }),
-        promptId: llmDecodePromptId(cacheSegments?.cachePrefix ?? baseRequest.prompt),
+        // the watch's root hash, so this row joins its call record; a follow-up (no watch hash) hashes what it sent
+        cachePrefixHash: cachePrefixHash ?? llmPromptCacheHash(baseRequest.prompt),
         promptChars: baseRequest.prompt.length,
         contextExcerpt: llmDecodeContextExcerpt(cacheSegments?.volatileSuffix ?? baseRequest.prompt),
         attempts: result.attempts ?? decodeFailures.length,

@@ -12,7 +12,7 @@
  * and size stay visible.
  */
 
-import { cutString, hashStringToNumber, isNotBlankString, sliceStringFunction, type Milliseconds, type HexString, type PercentDecimal, type Count } from '@dereekb/util';
+import { cutString, isNotBlankString, sliceStringFunction, type Milliseconds, type HexString, type PercentDecimal, type Count } from '@dereekb/util';
 import type { FetchErrorClassification } from '@dereekb/util/fetch';
 import type { LlmCapabilityKey, LlmModelId, LlmModelTierKey, LlmTokenCount } from '../model/llm.value';
 import type { LlmCompletion, LlmReplyOutcomeClass, LlmReplyRepairTier } from '../strategy/llm.strategy';
@@ -200,7 +200,7 @@ export interface LlmDecodeFailureAttempt {
 
 /**
  * The payload of one decode-failure record — ONE per dispatch that hit any decode failure (never more). Carries the
- * dispatch attribution, a stable `promptId`, the volatile-suffix context tail (which carries the live request
+ * dispatch attribution, the prompt fingerprint `cachePrefixHash`, the volatile-suffix context tail (which carries the live request
  * fragment for free), whether the bounded retry `recovered`, and the per-attempt `failures`.
  */
 export interface LlmDecodeFailurePayload {
@@ -221,10 +221,15 @@ export interface LlmDecodeFailurePayload {
    */
   readonly schemaEnforced?: boolean;
   /**
-   * A stable hex fingerprint ({@link llmDecodePromptId}) of the dispatch's stable cache prefix (or the whole prompt
-   * when un-segmented) — groups repeat failures of the SAME prompt without recording the (heavy) prompt itself.
+   * The prompt fingerprint — the SAME 16-hex `llmPromptCacheHash` (a `sha256HexPrefix`) the prompt cache watch stamps
+   * on the call record's top-level `cachePrefixHash`, so a decode failure groups with its call rows on
+   * one key name and one value. Groups repeat failures of the SAME prompt without recording the (heavy) prompt itself.
+   *
+   * On a ROOT dispatch it is the watch's hash of the stable cache prefix (the whole prompt when no segment is
+   * volatile). A chained FOLLOW-UP has no cache prefix and no watch hash, so it falls back to the `llmPromptCacheHash`
+   * of the whole prompt the follow-up sent — a follow-up's call record carries no `cachePrefixHash` to match it.
    */
-  readonly promptId: HexString;
+  readonly cachePrefixHash: HexString;
   /**
    * The prompt length (chars) sent.
    */
@@ -336,18 +341,6 @@ export function llmDecodeFailureTailExcerpt(text: string): string | undefined {
  */
 export function llmDecodeContextExcerpt(suffix: string): string {
   return sliceLlmDecodeContextTail(collapseDegenerateRuns(suffix));
-}
-
-/**
- * Compute the stable hex `promptId` fingerprint for a dispatch's prompt — the FNV-1a {@link hashStringToNumber} as
- * base-16, so repeat failures of the same prompt group without the record carrying the (heavy) prompt bytes. Not a
- * sha256: persisted ids must not move.
- *
- * @param text - The prompt text (the stable cache prefix when segmented, else the whole prompt).
- * @returns The hex fingerprint.
- */
-export function llmDecodePromptId(text: string): HexString {
-  return hashStringToNumber(text).toString(16);
 }
 
 /**

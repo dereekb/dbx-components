@@ -38,7 +38,7 @@ const FAILED: LlmCallFailedAttempt = { attempt: 1, cause: 'schema-validation', e
 
 const SUPPLEMENT: LlmCallSupplement = { contributor: 'craft', slot: 'craft', id: 'n1', hash: 'h1', bytes: 4 };
 
-const PHASES: LlmCallPhases = { totalMs: 5, completeMs: 2, attempts: [{ attempt: 1, wallMs: 2 }], cachePrefixHash: 'abc' };
+const PHASES: LlmCallPhases = { totalMs: 5, completeMs: 2, attempts: [{ attempt: 1, wallMs: 2 }] };
 
 const MAX_RESULT: LlmDispatchResult = {
   text: '{"answer":"ok"}',
@@ -78,6 +78,7 @@ const MAX: LlmCallRecord<{ readonly requestId: string }> = {
   supplements: [SUPPLEMENT],
   reasoningOff: true,
   estimatedPromptTokens: 7,
+  cachePrefixHash: 'abc',
   phases: PHASES,
   failedAttempts: [FAILED],
   requestId: 'r1'
@@ -148,9 +149,10 @@ const P1_PINS: ReadonlyArray<GatePin> = [
       'decision',
       'supplements',
       'reasoningOff',
-      'estimatedPromptTokens'
+      'estimatedPromptTokens',
+      'cachePrefixHash'
     ],
-    '{"tier":"strong","craft":{"asked":2,"kept":1},"capability":"StrongCap","strategyId":"s","strategyKind":"scripted","model":"test/strong","provider":"acme","usage":{"promptTokens":10,"completionTokens":5,"totalTokens":15,"cost":0.01},"latencyMs":42,"generationId":"gen-1","finishReason":"stop","repair":{"tier":"deterministic","attempt":2,"verdict":"near-miss","score":1,"ops":{"close-object":1}},"schemaEnforced":true,"attempts":2,"decodeStatus":"retried","decodeOutcome":"ok","lengthCapped":true,"validationErrors":["answer must be a string"],"subject":"Judged","decision":"PickRow","supplements":[{"contributor":"craft","slot":"craft","id":"n1","hash":"h1","bytes":4}],"reasoningOff":true,"estimatedPromptTokens":7}'
+    '{"tier":"strong","craft":{"asked":2,"kept":1},"capability":"StrongCap","strategyId":"s","strategyKind":"scripted","model":"test/strong","provider":"acme","usage":{"promptTokens":10,"completionTokens":5,"totalTokens":15,"cost":0.01},"latencyMs":42,"generationId":"gen-1","finishReason":"stop","repair":{"tier":"deterministic","attempt":2,"verdict":"near-miss","score":1,"ops":{"close-object":1}},"schemaEnforced":true,"attempts":2,"decodeStatus":"retried","decodeOutcome":"ok","lengthCapped":true,"validationErrors":["answer must be a string"],"subject":"Judged","decision":"PickRow","supplements":[{"contributor":"craft","slot":"craft","id":"n1","hash":"h1","bytes":4}],"reasoningOff":true,"estimatedPromptTokens":7,"cachePrefixHash":"abc"}'
   ],
   [
     { keepIo: true },
@@ -181,9 +183,10 @@ const P1_PINS: ReadonlyArray<GatePin> = [
       'decision',
       'supplements',
       'reasoningOff',
-      'estimatedPromptTokens'
+      'estimatedPromptTokens',
+      'cachePrefixHash'
     ],
-    String.raw`{"tier":"strong","craft":{"asked":2,"kept":1},"capability":"StrongCap","promptSegments":[{"id":"body","promptSegment":"P","origin":{"kind":"template"}}],"text":"{\"answer\":\"ok\"","failedAttempts":[{"attempt":1,"cause":"schema-validation","error":"answer must be a string","text":"{\"answer\":1}","rawLength":12,"strategyId":"s"}],"strategyId":"s","strategyKind":"scripted","model":"test/strong","provider":"acme","usage":{"promptTokens":10,"completionTokens":5,"totalTokens":15,"cost":0.01},"latencyMs":42,"generationId":"gen-1","finishReason":"stop","repair":{"tier":"deterministic","attempt":2,"verdict":"near-miss","score":1,"ops":{"close-object":1}},"schemaEnforced":true,"attempts":2,"decodeStatus":"retried","decodeOutcome":"ok","lengthCapped":true,"lever":"{\"answer\":\"ok\"}","validationErrors":["answer must be a string"],"subject":"Judged","decision":"PickRow","supplements":[{"contributor":"craft","slot":"craft","id":"n1","hash":"h1","bytes":4}],"reasoningOff":true,"estimatedPromptTokens":7}`
+    String.raw`{"tier":"strong","craft":{"asked":2,"kept":1},"capability":"StrongCap","promptSegments":[{"id":"body","promptSegment":"P","origin":{"kind":"template"}}],"text":"{\"answer\":\"ok\"","failedAttempts":[{"attempt":1,"cause":"schema-validation","error":"answer must be a string","text":"{\"answer\":1}","rawLength":12,"strategyId":"s"}],"strategyId":"s","strategyKind":"scripted","model":"test/strong","provider":"acme","usage":{"promptTokens":10,"completionTokens":5,"totalTokens":15,"cost":0.01},"latencyMs":42,"generationId":"gen-1","finishReason":"stop","repair":{"tier":"deterministic","attempt":2,"verdict":"near-miss","score":1,"ops":{"close-object":1}},"schemaEnforced":true,"attempts":2,"decodeStatus":"retried","decodeOutcome":"ok","lengthCapped":true,"lever":"{\"answer\":\"ok\"}","validationErrors":["answer must be a string"],"subject":"Judged","decision":"PickRow","supplements":[{"contributor":"craft","slot":"craft","id":"n1","hash":"h1","bytes":4}],"reasoningOff":true,"estimatedPromptTokens":7,"cachePrefixHash":"abc"}`
   ],
   [
     { keepPhases: true },
@@ -211,9 +214,10 @@ const P1_PINS: ReadonlyArray<GatePin> = [
       'supplements',
       'reasoningOff',
       'estimatedPromptTokens',
+      'cachePrefixHash',
       'phases'
     ],
-    '{"tier":"strong","craft":{"asked":2,"kept":1},"capability":"StrongCap","strategyId":"s","strategyKind":"scripted","model":"test/strong","provider":"acme","usage":{"promptTokens":10,"completionTokens":5,"totalTokens":15,"cost":0.01},"latencyMs":42,"generationId":"gen-1","finishReason":"stop","repair":{"tier":"deterministic","attempt":2,"verdict":"near-miss","score":1,"ops":{"close-object":1}},"schemaEnforced":true,"attempts":2,"decodeStatus":"retried","decodeOutcome":"ok","lengthCapped":true,"validationErrors":["answer must be a string"],"subject":"Judged","decision":"PickRow","supplements":[{"contributor":"craft","slot":"craft","id":"n1","hash":"h1","bytes":4}],"reasoningOff":true,"estimatedPromptTokens":7,"phases":{"totalMs":5,"completeMs":2,"attempts":[{"attempt":1,"wallMs":2}],"cachePrefixHash":"abc"}}'
+    '{"tier":"strong","craft":{"asked":2,"kept":1},"capability":"StrongCap","strategyId":"s","strategyKind":"scripted","model":"test/strong","provider":"acme","usage":{"promptTokens":10,"completionTokens":5,"totalTokens":15,"cost":0.01},"latencyMs":42,"generationId":"gen-1","finishReason":"stop","repair":{"tier":"deterministic","attempt":2,"verdict":"near-miss","score":1,"ops":{"close-object":1}},"schemaEnforced":true,"attempts":2,"decodeStatus":"retried","decodeOutcome":"ok","lengthCapped":true,"validationErrors":["answer must be a string"],"subject":"Judged","decision":"PickRow","supplements":[{"contributor":"craft","slot":"craft","id":"n1","hash":"h1","bytes":4}],"reasoningOff":true,"estimatedPromptTokens":7,"cachePrefixHash":"abc","phases":{"totalMs":5,"completeMs":2,"attempts":[{"attempt":1,"wallMs":2}]}}'
   ],
   [
     { keepIo: true, keepPhases: true },
@@ -245,9 +249,10 @@ const P1_PINS: ReadonlyArray<GatePin> = [
       'supplements',
       'reasoningOff',
       'estimatedPromptTokens',
+      'cachePrefixHash',
       'phases'
     ],
-    String.raw`{"tier":"strong","craft":{"asked":2,"kept":1},"capability":"StrongCap","promptSegments":[{"id":"body","promptSegment":"P","origin":{"kind":"template"}}],"text":"{\"answer\":\"ok\"","failedAttempts":[{"attempt":1,"cause":"schema-validation","error":"answer must be a string","text":"{\"answer\":1}","rawLength":12,"strategyId":"s"}],"strategyId":"s","strategyKind":"scripted","model":"test/strong","provider":"acme","usage":{"promptTokens":10,"completionTokens":5,"totalTokens":15,"cost":0.01},"latencyMs":42,"generationId":"gen-1","finishReason":"stop","repair":{"tier":"deterministic","attempt":2,"verdict":"near-miss","score":1,"ops":{"close-object":1}},"schemaEnforced":true,"attempts":2,"decodeStatus":"retried","decodeOutcome":"ok","lengthCapped":true,"lever":"{\"answer\":\"ok\"}","validationErrors":["answer must be a string"],"subject":"Judged","decision":"PickRow","supplements":[{"contributor":"craft","slot":"craft","id":"n1","hash":"h1","bytes":4}],"reasoningOff":true,"estimatedPromptTokens":7,"phases":{"totalMs":5,"completeMs":2,"attempts":[{"attempt":1,"wallMs":2}],"cachePrefixHash":"abc"}}`
+    String.raw`{"tier":"strong","craft":{"asked":2,"kept":1},"capability":"StrongCap","promptSegments":[{"id":"body","promptSegment":"P","origin":{"kind":"template"}}],"text":"{\"answer\":\"ok\"","failedAttempts":[{"attempt":1,"cause":"schema-validation","error":"answer must be a string","text":"{\"answer\":1}","rawLength":12,"strategyId":"s"}],"strategyId":"s","strategyKind":"scripted","model":"test/strong","provider":"acme","usage":{"promptTokens":10,"completionTokens":5,"totalTokens":15,"cost":0.01},"latencyMs":42,"generationId":"gen-1","finishReason":"stop","repair":{"tier":"deterministic","attempt":2,"verdict":"near-miss","score":1,"ops":{"close-object":1}},"schemaEnforced":true,"attempts":2,"decodeStatus":"retried","decodeOutcome":"ok","lengthCapped":true,"lever":"{\"answer\":\"ok\"}","validationErrors":["answer must be a string"],"subject":"Judged","decision":"PickRow","supplements":[{"contributor":"craft","slot":"craft","id":"n1","hash":"h1","bytes":4}],"reasoningOff":true,"estimatedPromptTokens":7,"cachePrefixHash":"abc","phases":{"totalMs":5,"completeMs":2,"attempts":[{"attempt":1,"wallMs":2}]}}`
   ]
 ];
 
@@ -266,9 +271,11 @@ interface CharaWriterConfig {
 
 /**
  * The payload literal of dbx-chara's `SoulTelemetryLog.recordLlmCall`, copied from dbx-chara@87d8968a2
- * `packages/chara-soul/src/observe/soul-telemetry-log.ts:361-403` with two edits: its two host keys (`triggerReason`,
- * `stage`) are dropped, and the reply value reads `result.valueJson` where chara read `result.lever` (F9's rename; the
- * row key stays `lever`). Its `...(input.stamp ?? {})` is written `...input.stamp` (the same spread; the lint rule).
+ * `packages/chara-soul/src/observe/soul-telemetry-log.ts:361-403` with three edits: its two host keys (`triggerReason`,
+ * `stage`) are dropped, the reply value reads `result.valueJson` where chara read `result.lever` (F9's rename; the
+ * row key stays `lever`), and the top-level `cachePrefixHash` is written after `estimatedPromptTokens` (the prompt
+ * fingerprint moved out of `phases`, where chara's rows carried it only when timed). Its `...(input.stamp ?? {})` is
+ * written `...input.stamp` (the same spread; the lint rule).
  *
  * @param input - The record.
  * @param config - Chara's two gates.
@@ -296,6 +303,7 @@ function charaWriterPayloadOf(input: LlmCallRecordBase, config: CharaWriterConfi
     ...(input.supplements == null || input.supplements.length === 0 ? {} : { supplements: input.supplements }),
     ...(input.reasoningOff == null ? {} : { reasoningOff: input.reasoningOff }),
     ...(input.estimatedPromptTokens == null ? {} : { estimatedPromptTokens: input.estimatedPromptTokens }),
+    ...(input.cachePrefixHash == null ? {} : { cachePrefixHash: input.cachePrefixHash }),
     ...(recordTimingPhases && input.phases != null ? { phases: input.phases } : {})
   };
 }
@@ -448,8 +456,8 @@ describe('toLlmCallLogPayload()', () => {
 
       expectPin(
         lean(toLlmCallLogPayload(calls[0], { keepIo: true, keepPhases: true })),
-        ['capability', 'promptSegments', 'text', 'failedAttempts', 'strategyId', 'strategyKind', 'model', 'tier', 'attempts', 'decodeStatus', 'decodeOutcome', 'lever', 'validationErrors', 'reasoningOff', 'estimatedPromptTokens', 'phases'],
-        String.raw`{"capability":"StrongCap","promptSegments":5,"text":"{\"answer\":\"ok\"}","failedAttempts":[{"attempt":1,"cause":"schema-validation","error":"answer must be a string","text":"{\"answer\":1}","rawLength":12,"strategyId":"s","strategyKind":"scripted","model":"test/strong","maxOutputTokens":1024,"retry":{"lever":"reasoning-low","from":"off","to":"low","cause":"schema-validation","headroom":2048}}],"strategyId":"s","strategyKind":"scripted","model":"test/strong","tier":"strong","attempts":2,"decodeStatus":"retried","decodeOutcome":"ok","lever":"{\"answer\":\"ok\"}","validationErrors":["attempt 1: answer must be a string"],"reasoningOff":true,"estimatedPromptTokens":88,"phases":{"totalMs":19,"renderMs":1,"assembleMs":1,"completeMs":2,"attempts":[{"attempt":1,"wallMs":1},{"attempt":2,"wallMs":1,"retry":{"lever":"reasoning-low","from":"off","to":"low","cause":"schema-validation","headroom":2048}}],"promptChars":221,"cachePrefixChars":215,"cachePrefixHash":"ca81ae14b915d426"}}`
+        ['capability', 'promptSegments', 'text', 'failedAttempts', 'strategyId', 'strategyKind', 'model', 'tier', 'attempts', 'decodeStatus', 'decodeOutcome', 'lever', 'validationErrors', 'reasoningOff', 'estimatedPromptTokens', 'cachePrefixHash', 'phases'],
+        String.raw`{"capability":"StrongCap","promptSegments":5,"text":"{\"answer\":\"ok\"}","failedAttempts":[{"attempt":1,"cause":"schema-validation","error":"answer must be a string","text":"{\"answer\":1}","rawLength":12,"strategyId":"s","strategyKind":"scripted","model":"test/strong","maxOutputTokens":1024,"retry":{"lever":"reasoning-low","from":"off","to":"low","cause":"schema-validation","headroom":2048}}],"strategyId":"s","strategyKind":"scripted","model":"test/strong","tier":"strong","attempts":2,"decodeStatus":"retried","decodeOutcome":"ok","lever":"{\"answer\":\"ok\"}","validationErrors":["attempt 1: answer must be a string"],"reasoningOff":true,"estimatedPromptTokens":88,"cachePrefixHash":"ca81ae14b915d426","phases":{"totalMs":19,"renderMs":1,"assembleMs":1,"completeMs":2,"attempts":[{"attempt":1,"wallMs":1},{"attempt":2,"wallMs":1,"retry":{"lever":"reasoning-low","from":"off","to":"low","cause":"schema-validation","headroom":2048}}],"promptChars":221,"cachePrefixChars":215}}`
       );
     });
 
@@ -470,8 +478,8 @@ describe('toLlmCallLogPayload()', () => {
 
       expectPin(
         lean(toLlmCallLogPayload(calls[0], { keepIo: true, keepPhases: true })),
-        ['capability', 'promptSegments', 'text', 'strategyId', 'strategyKind', 'model', 'finishReason', 'repair', 'tier', 'attempts', 'decodeStatus', 'decodeOutcome', 'lever', 'reasoningOff', 'estimatedPromptTokens'],
-        String.raw`{"capability":"TestCap","promptSegments":4,"text":"{\"answer\":\"ok\"","strategyId":"s","strategyKind":"scripted","model":"test/fast","finishReason":"stop","repair":{"tier":"deterministic","attempt":1,"verdict":"near-miss","score":1,"ops":{"close-object":1}},"tier":"fast","attempts":1,"decodeStatus":"clean","decodeOutcome":"ok","lever":"{\"answer\":\"ok\"}","reasoningOff":true,"estimatedPromptTokens":12}`
+        ['capability', 'promptSegments', 'text', 'strategyId', 'strategyKind', 'model', 'finishReason', 'repair', 'tier', 'attempts', 'decodeStatus', 'decodeOutcome', 'lever', 'reasoningOff', 'estimatedPromptTokens', 'cachePrefixHash'],
+        String.raw`{"capability":"TestCap","promptSegments":4,"text":"{\"answer\":\"ok\"","strategyId":"s","strategyKind":"scripted","model":"test/fast","finishReason":"stop","repair":{"tier":"deterministic","attempt":1,"verdict":"near-miss","score":1,"ops":{"close-object":1}},"tier":"fast","attempts":1,"decodeStatus":"clean","decodeOutcome":"ok","lever":"{\"answer\":\"ok\"}","reasoningOff":true,"estimatedPromptTokens":12,"cachePrefixHash":"522153e78572010f"}`
       );
     });
   });

@@ -231,18 +231,10 @@ export interface LlmCallPhases {
    */
   readonly promptChars?: number;
   /**
-   * The stable cache-prefix char count, when the call was segmented.
+   * The stable cache-prefix char count, when the call was segmented. Its HASH is the record's top-level
+   * {@link LlmCallRecordBase.cachePrefixHash}, which does not depend on timing.
    */
   readonly cachePrefixChars?: number;
-  /**
-   * The HASH of that stable cache prefix (the 16-hex-char `sha256HexPrefix` from `@dereekb/util`) — the identity two
-   * consecutive records of the same call site are compared on. It rides this `phases` block, so it exists only when
-   * the dispatch's call context timed; a root dispatch then always carries it (the prompt cache watch hashes every
-   * root), and a follow-up never does. Stamped on EVERY timed root dispatch, not only on a changed one: a reader
-   * diffing two call records must be able to conclude "unchanged" from the record rather than from the ABSENCE of a
-   * breadcrumb (which a level gate can swallow).
-   */
-  readonly cachePrefixHash?: HexString;
 }
 
 /**
@@ -367,6 +359,17 @@ export interface LlmCallRecordBase {
    */
   readonly estimatedPromptTokens?: LlmTokenCount;
   /**
+   * The HASH of the stable cache prefix (the 16-hex-char `llmPromptCacheHash`, a `sha256HexPrefix` from
+   * `@dereekb/util`) — the identity two consecutive records of the same call site are compared on, and the key a
+   * decode-failure record's `payload.cachePrefixHash` joins on.
+   *
+   * Stamped on EVERY root dispatch, whether or not its call context times (the prompt cache watch hashes every root),
+   * not only on one whose prefix changed: a reader diffing two call records must be able to conclude "unchanged" from
+   * the record rather than from the ABSENCE of a breadcrumb (which a level gate can swallow). A chained follow-up has no
+   * cache prefix and never carries it; neither does a decision-lane record or one built outside a dispatcher.
+   */
+  readonly cachePrefixHash?: HexString;
+  /**
    * The per-dispatch phase timing block ({@link LlmCallPhases}). Present only when the dispatch's call context times
    * (`callContext.enabled`); persisting it is the host's choice (`toLlmCallLogPayload`'s `keepPhases`).
    */
@@ -430,7 +433,7 @@ export type LlmCallStartRecord<H extends LlmCallHostFields = LlmCallHostFields> 
  */
 export interface LlmDecodeFailureRecordBase {
   /**
-   * The decode-failure payload (capability / model / promptId / context excerpt / recovered / per-attempt
+   * The decode-failure payload (capability / model / cachePrefixHash / context excerpt / recovered / per-attempt
    * failures).
    */
   readonly payload: LlmDecodeFailurePayload;
