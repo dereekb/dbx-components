@@ -167,14 +167,16 @@ The decision vocabulary is SDK-free by construction: it lives in `@dereekb/llm/d
 guard `isLlmDecisionModelId`. `@dereekb/openrouter/decision` adds what is OpenRouter's, and also loads nothing
 under `@openrouter/sdk`:
 
-- `openRouterDecisionRequest`, `openRouterDecisionRequestBody` (the `/systemone` body, wire mapping
-  included), `openRouterRunUsageFromDecisionsUsage`, `validateOpenRouterDecisionRequest`;
+- `openRouterDecisionRequest`, `openRouterDecisionRequestBody` (the `/systemone` body: `@dereekb/llm/decision`'s
+  `llmDecisionRequestBody` plus OpenRouter's `provider`, `user`, session id and trace),
+  `openRouterRunUsageFromDecisionsUsage`, `validateOpenRouterDecisionRequest`;
 - the model config and the model ids (`OPENROUTER_JEV_*`, `DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID`);
 - the deprecated aliases below.
 
 What it does NOT carry is `openRouterDecision` — the transport, and the one `systemOneCreate` caller. A
 consumer that owns its transport (its own timeout, retry policy or error shape) builds the body here, sends
-it through its own lazily-loaded client, and reads the reply with `readLlmDecisionAnswers`. The moved classes
+it through its own lazily-loaded client, and reads the reply with `requireLlmDecisionAnswers` — the throwing read
+`openRouterDecision` itself uses (`readLlmDecisionAnswers` returns the faults instead). The moved classes
 live once in `@dereekb/llm`, so a class has one identity whichever entry it was imported through.
 
 ### Deprecated names

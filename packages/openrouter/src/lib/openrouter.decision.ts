@@ -1,6 +1,6 @@
-import { type Maybe, filterUndefinedValues, mapObjectMap } from '@dereekb/util';
+import { type Maybe, filterUndefinedValues } from '@dereekb/util';
 import { type OpenRouterModelConfig, type OpenRouterModelConfigValidation, mergeOpenRouterModelConfig } from './openrouter.config';
-import { type LlmDecisionQuestions, type LlmDecisionState, LlmDecisionDeclarationError, isLlmDecisionModelId, llmDecisionWireQuestion, validateLlmDecisionQuestions } from '@dereekb/llm/decision';
+import { type LlmDecisionQuestions, type LlmDecisionState, LlmDecisionDeclarationError, isLlmDecisionModelId, llmDecisionRequestBody, validateLlmDecisionQuestions } from '@dereekb/llm/decision';
 import { type OpenRouterResolvedPrompt } from './openrouter.prompt';
 import { type OpenRouterRequestTrace } from './openrouter.request';
 // TYPE-ONLY, and it must stay so: this file is the pure half of the decision layer and ships through the
@@ -194,6 +194,16 @@ export function validateOpenRouterDecisionRequest(request: Maybe<OpenRouterDecis
 /**
  * Converts a built request into the `/systemone` request body.
  *
+ * The body is `@dereekb/llm/decision`'s {@link llmDecisionRequestBody} — `model`, `state` and the wire-mapped
+ * `questions`, built once for every System One client — plus the keys only OpenRouter's route takes: `provider` and
+ * `user` from the config, the `sessionId` (sent as `session_id`) and the `trace` (its keys flattened onto the wire by
+ * the SDK). An `undefined` key is dropped; a `null` one is kept.
+ *
+ * The config's keys are spread FIRST and llm's body over them, so the object's key order stays what it has always been
+ * (`model`, `provider`, `user`, `state`, `questions`, `sessionId`, `trace`). The SDK re-serializes the body in its own
+ * schema order, so the wire bytes never depended on it — but this object is public through
+ * `@dereekb/openrouter/decision`, and its order is pinned (`openrouter.decision.pin.spec.ts`).
+ *
  * @param request - The built request.
  * @returns The request body, in the SDK's request surface.
  */
@@ -202,9 +212,7 @@ export function openRouterDecisionRequestBody(request: OpenRouterDecisionRequest
 
   return filterUndefinedValues({
     ...requestConfig,
-    model: requestConfig.model ?? '',
-    state: request.state,
-    questions: mapObjectMap(request.questions, (question) => llmDecisionWireQuestion(question)),
+    ...llmDecisionRequestBody({ model: requestConfig.model ?? '', state: request.state, questions: request.questions }),
     sessionId: request.sessionId ?? undefined,
     trace: request.trace == null ? undefined : { additionalProperties: { ...request.trace } }
   }) as unknown as DecisionsRequest;

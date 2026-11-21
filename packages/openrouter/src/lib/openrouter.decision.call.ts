@@ -6,10 +6,11 @@
  * that everything a decision is built from can be loaded without evaluating `@openrouter/sdk` — see the
  * `@dereekb/openrouter/decision` entry. A caller that owns its own transport (its own timeout, retry
  * policy or error shape) builds the body with `openRouterDecisionRequestBody` and reads the reply with
- * `readLlmDecisionAnswers`, and never needs this file.
+ * `requireLlmDecisionAnswers` (as this file does; `readLlmDecisionAnswers` hands the faults back instead of throwing),
+ * and never needs this file.
  */
 
-import { type LlmDecisionAnswer, LlmDecisionAnswerFaultError, type LlmDecisionAnswers, LlmDecisionDeclarationError, type LlmDecisionQuestions, readLlmDecisionAnswers } from '@dereekb/llm/decision';
+import { type LlmDecisionAnswers, LlmDecisionDeclarationError, type LlmDecisionQuestions, requireLlmDecisionAnswers } from '@dereekb/llm/decision';
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterDecisionRequest, openRouterDecisionRequestBody, openRouterRunUsageFromDecisionsUsage, splitOpenRouterDecisionModelConfig, validateOpenRouterDecisionRequest } from './openrouter.decision';
 import { type DecisionsResponse, type OpenRouterCore, type RequestOptions, systemOneCreate } from './openrouter.sdk';
@@ -102,11 +103,7 @@ export async function openRouterDecision<Q extends LlmDecisionQuestions = LlmDec
   }
 
   const response = result.value;
-  const read = readLlmDecisionAnswers({ questions: request.questions, raw: (response.answers ?? {}) as Readonly<Record<string, Maybe<LlmDecisionAnswer>>> });
+  const answers = requireLlmDecisionAnswers({ questions: request.questions, raw: response.answers ?? {} });
 
-  if (read.faults != null) {
-    throw new LlmDecisionAnswerFaultError(read.faults);
-  }
-
-  return { answers: read.answers, model: response.model, provider: response.provider, generationIds: response.id ? [response.id] : [], usage: openRouterRunUsageFromDecisionsUsage(response.usage), response };
+  return { answers, model: response.model, provider: response.provider, generationIds: response.id ? [response.id] : [], usage: openRouterRunUsageFromDecisionsUsage(response.usage), response };
 }
