@@ -73,7 +73,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.29.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.30.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -1691,6 +1691,24 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
     serviceFactory: { exportName: 'notificationLoggedEventDayFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
   },
   {
+    modelType: 'notificationRedirectEntry',
+    modelName: 'NotificationRedirectEntry',
+    identityConst: 'notificationRedirectEntryIdentity',
+    collectionPrefix: 'nre',
+    exampleKey: 'nre/<notificationRedirectEntryId>',
+    description: 'The record behind a notification short link. The document id is the {@link NotificationRedirectEntryId} in the link.',
+    sourcePackage: '@dereekb/firebase',
+    sourceFile: 'packages/firebase/src/lib/model/notification/notification.redirect.ts',
+    fields: [
+      { name: 'cat', longName: 'createdAt', tsType: 'Date', optional: false, description: 'Creation date of this entry.' },
+      { name: 'xat', longName: 'expiresAt', tsType: 'Date', optional: false, description: 'When this entry expires. An expired entry no longer redirects to its target, even before it is deleted.' },
+      { name: 'o', longName: 'ownerKey', tsType: 'Maybe<FirebaseAuthOwnershipKey>', optional: true, description: "Ownership key of the only person who may open this entry (e.g. `'pr/<uid>'`)." },
+      { name: 'm', longName: 'targetModelKey', tsType: 'Maybe<FirestoreModelKey>', optional: true, description: "Model key of the model the link opens. With no target, the link opens its prefix's fallback page." }
+    ],
+    read: 'owner',
+    serviceFactory: { exportName: 'notificationRedirectEntryFirebaseModelServiceFactory', sourceFile: 'components/demo-firebase/src/lib/model/service.ts' }
+  },
+  {
     modelType: 'notificationSummary',
     modelName: 'NotificationSummary',
     identityConst: 'notificationSummaryIdentity',
@@ -1718,7 +1736,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
           { name: 's', longName: 's', tsType: 'Maybe<string>', optional: true, description: "Subject text override. Replaces the template's default subject when present." },
           { name: 'g', longName: 'g', tsType: 'Maybe<string>', optional: true, description: "Message text override. Replaces the template's default message when present." },
           { name: 'd', longName: 'd', tsType: 'Maybe<D>', optional: true, description: 'Arbitrary metadata payload. Stored directly in Firestore — keep values serializable and small.' },
-          { name: 'v', longName: 'v', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Read/viewed flag. True if the recipient has seen this notification item.' }
+          { name: 'v', longName: 'v', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Read/viewed flag. True if the recipient has seen this notification item.' },
+          { name: 'l', longName: 'l', tsType: 'Maybe<NotificationRedirectEntryId>', optional: true, description: 'Id of the {@link NotificationRedirectEntry} created alongside this notification, if one was requested.' }
         ],
         nestedIsArray: true
       },
@@ -1886,7 +1905,8 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
           { name: 's', longName: 's', tsType: 'Maybe<string>', optional: true, description: "Subject text override. Replaces the template's default subject when present." },
           { name: 'g', longName: 'g', tsType: 'Maybe<string>', optional: true, description: "Message text override. Replaces the template's default message when present." },
           { name: 'd', longName: 'd', tsType: 'Maybe<D>', optional: true, description: 'Arbitrary metadata payload. Stored directly in Firestore — keep values serializable and small.' },
-          { name: 'v', longName: 'v', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Read/viewed flag. True if the recipient has seen this notification item.' }
+          { name: 'v', longName: 'v', tsType: 'Maybe<SavedToFirestoreIfTrue>', optional: true, description: 'Read/viewed flag. True if the recipient has seen this notification item.' },
+          { name: 'l', longName: 'l', tsType: 'Maybe<NotificationRedirectEntryId>', optional: true, description: 'Id of the {@link NotificationRedirectEntry} created alongside this notification, if one was requested.' }
         ],
         nestedIsArray: true
       }

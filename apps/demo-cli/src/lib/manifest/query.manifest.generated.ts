@@ -12,6 +12,7 @@ import {
   notificationBoxesFlaggedForNeedsInitializationQuery,
   notificationBoxesFlaggedInvalidQuery,
   notificationLoggedEventDaysOlderThanQuery,
+  notificationRedirectEntriesExpiredQuery,
   notificationsNewestFirstQuery,
   notificationsPastSendAtTimeQuery,
   notificationsReadyForCleanupQuery,
@@ -44,7 +45,7 @@ import { openRouterPromptsWithStateQuery, openRouterRunTasksExpiredQuery, openRo
 import { profileWithUsernameQuery, publishedGuestbookEntriesQuery, publishedGuestbooksQuery } from 'demo-firebase';
 import { type CliFirestoreQueryManifest, type CliGeneratedManifestStamp } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.29.0' };
+export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.30.0' };
 
 export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST: CliFirestoreQueryManifest = [
   {
@@ -220,6 +221,24 @@ export const DEMO_CLI_FIRESTORE_QUERY_MANIFEST: CliFirestoreQueryManifest = [
     queryMode: 'parent-child',
     rules: { list: 'allowed', collectionGroup: false, reason: 'no-collection-group-rule', parentPaths: ['nb/{notificationBox}'] },
     factory: notificationLoggedEventDaysOlderThanQuery
+  },
+  {
+    slug: 'notification-redirect-entries-expired-query',
+    name: 'notificationRedirectEntriesExpiredQuery',
+    module: '@dereekb/firebase',
+    subpath: 'model/notification/notification.query',
+    model: 'NotificationRedirectEntry',
+    collection: 'nre',
+    isNested: false,
+    scope: 'COLLECTION',
+    signature: 'notificationRedirectEntriesExpiredQuery(now?: Date): FirestoreQueryConstraint[]',
+    params: [{ name: 'now', type: 'Date', description: '- Entries with an `xat` at or before this time are returned. Defaults to now.', optional: true }],
+    description: "Query constraints for finding {@link NotificationRedirectEntry} documents that expired at or before the given time.\n\nUsed by `cleanupSentNotifications` to delete expired short link entries. Firestore's automatic single-field index covers it.",
+    category: 'cleanup',
+    tags: ['cleanup', 'notificationredirectentry', 'notification', 'redirect', 'entries', 'expired', 'query', 'notificationredirectentriesexpiredquery', 'entry', 'constraints', 'finding', 'link', 'documents', 'before', 'given', 'time', 'used'],
+    queryMode: 'unavailable',
+    rules: { list: 'denied', collectionGroup: false, reason: 'list-denied' },
+    factory: notificationRedirectEntriesExpiredQuery
   },
   {
     slug: 'notification-summaries-flagged-for-needs-initialization-query',
