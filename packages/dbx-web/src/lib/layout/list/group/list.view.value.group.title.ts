@@ -15,7 +15,7 @@ export interface DbxListTitleGroupData<O extends PrimativeKey> {
    */
   readonly icon?: string | undefined;
   readonly title: string;
-  readonly hint?: string;
+  readonly hint?: string | undefined;
   /**
    * Custom CSS classes to apply only to this group.
    */
@@ -50,7 +50,7 @@ export interface DbxListTitleGroupTitleDelegate<T, O extends PrimativeKey, D ext
    *
    * DbxListTitleGroupHeaderComponent is injected by default.
    */
-  readonly headerComponentClass?: Type<unknown>;
+  readonly headerComponentClass?: Type<unknown> | undefined;
   /**
    * Custom footer component class to inject, if applicable.
    */

@@ -19,6 +19,7 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "strict": true,
+    "exactOptionalPropertyTypes": true,
     "paths": {
       "@dereekb/browser": ["./packages/browser/src/index.ts"],
       "@dereekb/browser/oidc": ["./packages/browser/oidc/src/index.ts"],

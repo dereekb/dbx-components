@@ -12,7 +12,7 @@ export type DbxPopoverConfigSizing = Pick<NgOverlayContainerConfiguration, 'orig
  * Full configuration for opening a popover via {@link DbxPopoverService}, combining component config with sizing and an optional injector.
  */
 export interface DbxPopoverConfig<O, I, T> extends DbxPopoverComponentConfig<O, I, T>, DbxPopoverConfigSizing {
-  readonly injector?: Injector;
+  readonly injector?: Injector | undefined;
 }
 
 /**
