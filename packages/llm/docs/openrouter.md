@@ -11,7 +11,7 @@ Entry: `@dereekb/llm/openrouter` · [← @dereekb/llm](../README.md)
 - `usage: { include: true }` rides every call, so the reply carries `cost`; the request's reasoning config rides as
   OpenRouter's nested `reasoning` object (an OFF config is sent as `reasoning: { enabled: false }` alone); the served
   upstream `provider` is echoed; `native_finish_reason` is the finish-reason fallback.
-- No built-in model, and the same defaults as `/openai`. The same seams (`client`, `probeFetch`), browser rule,
+- No built-in model, and the same defaults as `/openai`. The same seams (`client`, `probeFetch`), [browser rule](browser.md),
   `openai` SDK environment reads ([openai](openai.md)) and `costBasis` / `providerStatusSource` /
   `credentialProbeSource` facets as `/openai` — the chat strategy runs on `/openai`'s client; the generic credential
   probe is `GET {baseUrl}/key`, and a 404 there is an error.

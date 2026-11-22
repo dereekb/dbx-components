@@ -6,7 +6,7 @@ ladder, usage accounting, and a decision lane for short structured answers. It h
 dependency, and its browser entries run unchanged in a browser, a worker or Node.
 
 > **Status: new.** All eight entries below are in place. While the first hosts adopt the package, a minor release may
-> still rename an export — pin an exact version.
+> still rename an export — pin an exact version ([Versioning and stability](#versioning-and-stability)).
 
 ## Quick start: define a capability and dispatch it
 
@@ -114,7 +114,8 @@ modules.
     `makeLlmTieredPromptTemplateResolver`, `composeLlmCapabilityPrompt`, `makeLlmPromptChain`.
   - Replies: `readLlmReplyValue`, `makeLlmSchemaValueValidator`, `makeLlmReplyFastFixer`, `makeLlmSemanticCritic`.
   - Dispatcher: `makeLlmDispatcher`, `LlmDispatchRequest`, `LlmDispatchFaultError`, `classifyLlmError`.
-  - Records and usage: `toLlmCallLogPayload`, `LLM_CALL_EVENT_TYPE`, `llmCallTelemetry`, `readLlmCallPrompt`,
+  - Records and usage: `toLlmCallLogPayload`, `LLM_CALL_EVENT_TYPE` (`'llm_call'`), `LLM_CALL_START_EVENT_TYPE`
+    (`'llm_call_start'`), `LLM_DECODE_FAILURE_EVENT_TYPE` (`'llm_decode_failure'`), `llmCallTelemetry`, `readLlmCallPrompt`,
     `isLlmSendFailureFinishReason`, `reconcileLlmCallBills`, `LLM_SWALLOW_SITES`.
 - **Guide:** [Guides](#guides) 1–8 and 13.
 
@@ -149,7 +150,7 @@ per prompt site and placed in the prompt by a contributor.
 The OpenAI-compatible chat strategy (OpenAI, ZenMux chat, a local vLLM) and its completion adapter.
 
 - **Browser-safe:** yes. The SDK loads lazily from one boundary module; in a browser, pass `dangerouslyAllowBrowser`
-  or inject a client. On Node the SDK itself reads `OPENAI_CUSTOM_HEADERS` and `OPENAI_LOG`.
+  or inject a client ([Browser hosts](docs/browser.md)). On Node the SDK itself reads `OPENAI_CUSTOM_HEADERS` and `OPENAI_LOG`.
 - **Peers:** `@dereekb/llm`, `@dereekb/util`, and `openai` (the package's optional peer; install it to use this
   entry).
 - **Main exports:** `makeLlmOpenAiStrategy`, `makeLlmOpenAiCompatibleChatStrategy`, `toLlmOpenAiStrategyConfig`,
@@ -179,7 +180,8 @@ reader, the management reads and the adapters.
 - **Peers:** `@dereekb/llm` and `@dereekb/util` (with `/fetch`).
 - **Main exports:** `makeLlmZenmuxAdapters`, `makeLlmZenmuxDecisionStrategy`, `makeLlmZenmuxProviderStatusSource`,
   `makeLlmZenmuxGenerationBillReader`, `probeLlmZenmuxCredential`, `readLlmZenmuxManagement`,
-  `LLM_ZENMUX_MANAGEMENT_API_KEY_ENV_VAR`, `DEFAULT_LLM_ZENMUX_BASE_URL`, `LLM_ZENMUX_SWALLOW_SITES`.
+  `LLM_ZENMUX_DECISION_STRATEGY_KIND`, `LLM_ZENMUX_MANAGEMENT_API_KEY_ENV_VAR`, `DEFAULT_LLM_ZENMUX_BASE_URL`,
+  `LLM_ZENMUX_SWALLOW_SITES`.
 - **Guide:** [zenmux](docs/zenmux.md).
 
 ### `@dereekb/llm/node`
@@ -255,6 +257,34 @@ These rules are enforced, not just documented:
   evaluated (`itShouldLoadWithoutEvaluating` from `@dereekb/util/test`).
 - The browser entries compile with `types: []`, so a Node API or `process` reference fails the build's typecheck;
   `/test` compiles with `types: ["node"]`, so a vitest global in its sources fails its typecheck.
+- To run a dispatcher in a page, see [Browser hosts](docs/browser.md).
+
+## Versioning and stability
+
+- **Lockstep versions.** `@dereekb/llm` is released with every other dbx-components package under one version number.
+  Its `@dereekb/*` peers (`@dereekb/util`, `@dereekb/model`) are pinned to that exact version, so install them at the
+  same version as `@dereekb/llm`. `@dereekb/openrouter` pins `@dereekb/llm` the same way. The third-party peers take
+  ranges: `arktype` `^2.2.0`, and the optional `openai` `^7.8.0`.
+- **Exports.** While the first hosts adopt the package, a minor release may still rename an export. Pin an exact
+  version, and read the changelog (`CHANGELOG.md`) before moving it.
+- **Prompt bytes are not covered.** Any release may change the bytes a capability sends: the assembly, the default
+  texts and layout, the correction and protocol wording, or the built-in templates.
+  - Such a change is its own commit, named in the changelog.
+  - It re-keys `cachePrefixHash` and a tape's prompt hashes. A tape still replays, matching by order.
+  - It can move a model's answers, so re-record your tapes and re-run your evals when you upgrade across one.
+- **Persisted rows are covered.** These form a compatibility surface:
+  - the three event types: `LLM_CALL_EVENT_TYPE` (`'llm_call'`), `LLM_CALL_START_EVENT_TYPE` (`'llm_call_start'`) and
+    `LLM_DECODE_FAILURE_EVENT_TYPE` (`'llm_decode_failure'`)
+  - the keys `toLlmCallLogPayload` writes
+  - the persisted values: the `strategyKind`s, the finish-reason sentinels, the `decodeStatus` / `decodeOutcome` words,
+    and the supplement cut reasons
+
+  A key or value is never renamed or repurposed once published; `lever` and `max-bytes` keep the names existing rows
+  carry. New keys are optional. The readers read rows an older or newer build wrote: every key but `capability` is
+  optional, an unknown string value reads as itself, and a malformed field reads as `undefined`. Removing a key or
+  value would take a major release, plus a reader for the old rows.
+- **Not covered:** the in-memory `LlmCallRecord` (persist the row, never the record), and the diag and gap codes, which
+  a release may add to.
 
 ## Guides
 
@@ -271,6 +301,6 @@ The guides live in `docs/` and ship with the package. In reading order:
 8. [Call records, readers and reconcile](docs/records.md) — what a dispatcher records and a host persists, the readers, the ledger and the spend math.
 9. [Decisions](docs/decision.md) — `@dereekb/llm/decision`: questions, the wire format, answers, decision strategies, and coming from `@dereekb/openrouter`.
 10. Providers — [OpenAI-compatible chat](docs/openai.md) (`/openai`), [OpenRouter](docs/openrouter.md) (`/openrouter`) and [ZenMux](docs/zenmux.md) (`/zenmux`).
-11. [Node host quick start](docs/node.md) — `@dereekb/llm/node`: the config file and environment reads, [a complete Node host](docs/node.md#a-complete-node-host) from env to dispatcher, [Nest hosts](docs/node.md#nest-hosts), and the craft-notes loader and compiler.
+11. Hosts — [Node host quick start](docs/node.md) (`@dereekb/llm/node`: the config file and environment reads, [a complete Node host](docs/node.md#a-complete-node-host) from env to dispatcher, [Nest hosts](docs/node.md#nest-hosts), and the craft-notes loader and compiler) and [Browser hosts](docs/browser.md) (where keys live, an injected client, CORS).
 12. [Test infrastructure](docs/test.md) — `@dereekb/llm/test`: tapes, scripted strategies, the fakes and the billed-lane factories.
 13. [Utilities](docs/utilities.md) — the semantic type aliases the API is typed with, and where the SHA-256 helpers live.

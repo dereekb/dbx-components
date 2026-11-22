@@ -15,7 +15,7 @@ a provider naming one you did not register fails loud, listing the ones you did.
   `readLlmModelConfigLists(adapters)` gives `makeLlmModelConfigSchema` its `transports`, `meterings` and
   `decisionRoutes`.
 - **Strategies.** `makeLlmProviderStrategies({ providers, adapters, defaultModel, maxOutputTokens,
-  maxOutputTokensByProvider, timeoutMs, visionByModel, reasoningOffByModel })` builds one strategy per resolved
+  maxOutputTokensByProvider, timeoutMs, visionByModel, reasoningOffByModel, fetch })` builds one strategy per resolved
   provider (`resolveLlmProviderConfigs`), registered under the provider's own name. A provider's cap is its
   `maxOutputTokensByProvider[provider.id]` entry, else the shared `maxOutputTokens`; a stock strategy declares it as
   `defaultMaxOutputTokens`, so it also applies behind a dispatcher. Construction is inert. Both builders check each minted strategy with
@@ -43,4 +43,48 @@ const { providers } = resolveLlmProviderConfigs({ providers: effective.providers
 
 const strategies = makeLlmStrategyRegistry(makeLlmProviderStrategies({ providers, adapters, defaultModel, timeoutMs: 60_000 }));
 const decisions = makeLlmDecisionStrategies({ providers, adapters, routePreference: ['zenmux', 'openrouter'] });
+```
+
+## Writing an adapter
+
+An adapter turns a configured provider (an `LlmProviderConfig`, from `models.json` or your code) into a strategy. That
+is how `makeLlmProviderStrategies` and `/node`'s env reads mint yours.
+
+- **Shape.** A completion adapter is an `LlmCompletionAdapter`, `{ facet: 'completion', kind, defaultBaseUrl?, make }`:
+  - `kind` is the `transport` a provider names.
+  - `defaultBaseUrl` is the endpoint a provider of that transport gets when it declares none
+    (`resolveLlmProviderBaseUrl`).
+  - `make(config)` mints the strategy.
+
+  A decision adapter is an `LlmDecisionAdapter`, `{ facet: 'decision', kind, strategyKind, transports?, make }`, keyed
+  by decision route. The account facets are `LlmMeteringAdapter`, `LlmBillAdapter` and `LlmCredentialProbeAdapter`.
+- **`make` is inert and keeps the id.** It receives an `LlmCompletionAdapterConfig`: the `provider` (its `id`, `apiKey`
+  and declared fields), the resolved `baseUrl`, the host's `fetch`, and the shared options (`defaultModel`,
+  `maxOutputTokens`, `timeoutMs`, `visionByModel`, `reasoningOffByModel`, `costBasis`, `providerStatusSource`,
+  `credentialProbe`). It returns a strategy whose `id` is `provider.id`; `checkLlmAdapterStrategy` refuses anything
+  else. It does no I/O: probes and status reads run later.
+- **Register it** beside the stock adapters, and feed `readLlmModelConfigLists(adapters)` to `makeLlmModelConfigSchema`
+  so a `models.json` provider may name your transport. There is one adapter per facet and kind, so to replace a stock
+  adapter (to inject a client, say), register yours INSTEAD of it.
+  `LLM_OPENROUTER_ADAPTERS.filter((adapter) => adapter.facet !== 'completion')` keeps the rest of an entry's adapters.
+- **Extending a stock transport.** Map the config with the entry's own mapping and add your fields, for example
+  `make: (config) => makeLlmOpenAiStrategy({ ...toLlmOpenAiStrategyConfig(config), dangerouslyAllowBrowser: true })`
+  ([Browser hosts](browser.md)). OpenRouter's mapping is `/openai`'s `toLlmOpenAiCompatibleChatStrategyConfig`.
+
+`makeInHouseStrategy` stands for the host's factory around the strategy in
+[Writing a strategy](strategy.md#writing-a-strategy):
+
+```ts
+import { makeLlmAdapterRegistry, makeLlmModelConfigSchema, readLlmModelConfigLists, type LlmCompletionAdapter } from '@dereekb/llm';
+import { LLM_OPENAI_ADAPTERS } from '@dereekb/llm/openai';
+
+const IN_HOUSE_ADAPTER: LlmCompletionAdapter = {
+  facet: 'completion',
+  kind: 'in-house',
+  defaultBaseUrl: 'http://models.internal:8080',
+  make: ({ provider, baseUrl, maxOutputTokens }) => makeInHouseStrategy({ id: provider.id, apiKey: provider.apiKey, baseUrl, maxOutputTokens })
+};
+
+const adapters = makeLlmAdapterRegistry([...LLM_OPENAI_ADAPTERS, IN_HOUSE_ADAPTER]);
+const schema = makeLlmModelConfigSchema({ ...readLlmModelConfigLists(adapters), label: 'my-app models' }); // "transport": "in-house" now parses
 ```

@@ -59,7 +59,7 @@ export interface ResolveLlmProvidersFromEnvConfig<X extends LlmModelConfigTypes 
    */
   readonly file?: Maybe<LlmModelConfigFile<X>>;
   /**
-   * The schema — drops the entries of transports the extension owns (they serve no completions).
+   * The schema the file was parsed with. It types the extension's fields, and its `label` prefixes this function's errors.
    */
   readonly schema: LlmModelConfigSchema<X>;
   /**
@@ -93,8 +93,10 @@ export interface LlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmModelCon
    */
   readonly explicitProviderId?: LlmStrategyId;
   /**
-   * Where a binding-less call routes — the dispatcher's default provider. Concrete whenever a fallback env default is
-   * registered, keyed or not, so the first call fails loud at the credential rather than at an unknown id.
+   * Where a binding-less call routes — the dispatcher's default provider. Concrete whenever a fallback env default's
+   * transport is registered, keyed or not. So it may name a provider with no key, and therefore no strategy: when
+   * nothing is keyed, or when the explicit selection names an unkeyed provider. A dispatch routed there throws `no LLM
+   * strategy registered`. Guard with `strategies.has(defaultProviderId)` before building a dispatcher.
    */
   readonly defaultProviderId?: LlmStrategyId;
   /**
@@ -124,8 +126,8 @@ export interface ResolveLlmDefaultProviderIdConfig {
 
 /**
  * The default-provider rule, pure: the explicit selection, else the first keyed provider that is not a fallback, else
- * the first keyed fallback, else the first fallback id (unkeyed — a binding-less call then fails loud at the
- * credential). {@link resolveLlmProvidersFromEnv} applies it after matching (and refusing) the explicit selection; a
+ * the first keyed fallback, else the first fallback id (unkeyed — no strategy is built for it, so a binding-less
+ * dispatch throws `no LLM strategy registered`). {@link resolveLlmProvidersFromEnv} applies it after matching (and refusing) the explicit selection; a
  * host re-applies it to providers it resolved itself.
  *
  * @param config - The explicit selection, the keyed providers and the fallback ids.
@@ -152,7 +154,8 @@ export function resolveLlmDefaultProviderId(config: ResolveLlmDefaultProviderIdC
  *   not registered, a provider that serves no completions), else the first keyed
  *   non-fallback provider, else the fallback — the rule {@link resolveLlmDefaultProviderId} applies once the explicit
  *   selection is matched. An explicit selection adds no provider: when it names an unkeyed one,
- *   {@link LlmProvidersFromEnv.defaultProviderId} keeps it (a binding-less call fails loud at the credential) while
+ *   {@link LlmProvidersFromEnv.defaultProviderId} keeps it (no strategy is built for it, so a binding-less dispatch
+ *   throws `no LLM strategy registered`) while
  *   {@link LlmProvidersFromEnv.defaultProvider} is the first keyed one.
  *
  * @param config - The environment, the env names, the effective file, the schema, the adapters and the stored keys.

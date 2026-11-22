@@ -6,6 +6,8 @@
  *
  * It also compiles and runs the `## Nest hosts` keys-from-elsewhere literal (`LlmProviderConfig` into
  * `makeLlmProviderStrategies`).
+ *
+ * The second case pins why the doc guards on the registry: with nothing keyed, the default still names the fallback.
  */
 
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -33,7 +35,7 @@ import {
   type LlmCompletionAdapter,
   type LlmProviderConfig
 } from '@dereekb/llm';
-import { loadEffectiveLlmModelConfigFile, makeLlmStrategiesFromEnv, resolveLlmModelProfileFromEnv, resolveLlmModelTierEnv } from '@dereekb/llm/node';
+import { DEFAULT_LLM_ENV_NAMES, loadEffectiveLlmModelConfigFile, makeLlmStrategiesFromEnv, resolveLlmModelProfileFromEnv, resolveLlmModelTierEnv } from '@dereekb/llm/node';
 import { makeLlmScriptedStrategy } from './llm.test.scripted';
 
 /**
@@ -90,7 +92,8 @@ describe('docs/node.md: a complete Node host', () => {
 
   it('builds a dispatcher from the env and the models file, and routes each tier', async () => {
     const adapters = makeLlmAdapterRegistry([standIn('openai'), standIn('openrouter')]);
-    const schema = makeLlmModelConfigSchema({ ...readLlmModelConfigLists(adapters), label: 'my-app models' });
+    // implicitProviders: models.json may bind a slug to the env defaults (openai, openrouter) without declaring them
+    const schema = makeLlmModelConfigSchema({ ...readLlmModelConfigLists(adapters), implicitProviders: DEFAULT_LLM_ENV_NAMES.providers.map((provider) => provider.id), label: 'my-app models' });
 
     // LLM_MODELS_FILE, else ~/.my-app/models.json, else the base tiers alone.
     const loaded = loadEffectiveLlmModelConfigFile({ env, schema, defaultPath: join(dir, 'default-models.json') });
@@ -111,8 +114,10 @@ describe('docs/node.md: a complete Node host', () => {
       visionByModel: llmModelVisionCapabilities(loaded.file)
     });
 
-    if (defaultProviderId == null) {
-      throw new Error('No LLM provider is configured.');
+    // The default may name a provider with no key, and so no strategy: the OpenRouter fallback when nothing is keyed,
+    // or an unkeyed LLM_PROVIDER pick.
+    if (defaultProviderId == null || !strategies.has(defaultProviderId)) {
+      throw new Error(`No key is set for the default LLM provider '${defaultProviderId ?? '(none)'}'.`);
     }
 
     const rows: LlmCallLogPayloadWrite[] = [];
@@ -145,6 +150,15 @@ describe('docs/node.md: a complete Node host', () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]).toMatchObject({ capability: 'summarize', strategyId: 'local', model: 'local/small' });
     expect(rows[1]).toMatchObject({ capability: 'summarize', strategyId: 'openrouter', model: 'vendor/large' });
+  });
+
+  it('names the unkeyed fallback as the default when nothing is keyed, which the guard catches', () => {
+    const adapters = makeLlmAdapterRegistry([standIn('openai'), standIn('openrouter')]);
+    const schema = makeLlmModelConfigSchema({ ...readLlmModelConfigLists(adapters), implicitProviders: DEFAULT_LLM_ENV_NAMES.providers.map((provider) => provider.id), label: 'my-app models' });
+    const { strategies, defaultProviderId } = makeLlmStrategiesFromEnv({ env: {}, schema, adapters });
+
+    expect(defaultProviderId).toBe('openrouter');
+    expect(strategies.has('openrouter')).toBe(false); // the doc's guard throws here
   });
 
   it('builds a strategy from a key that never touched the env (## Nest hosts)', () => {

@@ -21,7 +21,8 @@ export const DEFAULT_LLM_ZENMUX_BASE_URL: WebsiteUrlWithPrefix = 'https://zenmux
 
 /**
  * The conventional env var NAME for the ZenMux **Management API Key** — the third credential, beside the subscription and
- * pay-as-you-go inference keys, and the only one the account endpoints accept.
+ * pay-as-you-go inference keys, and the only one the quota endpoints accept (bills take the
+ * pay-as-you-go key).
  *
  * A LABEL only: this entry never reads the environment. The host resolves the key and passes the value in, and this name is
  * what a missing-key report tells an operator to set when the host names no other.

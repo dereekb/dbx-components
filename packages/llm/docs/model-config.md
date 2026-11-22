@@ -9,7 +9,8 @@ pure half — the file shape, a fail-loud parse, the overlay of a host's built-i
 environment variable and no file: `/node` does that, and a browser host passes the parsed JSON in. On Node, the
 [Node host quick start](node.md) shows `/node` doing those reads.
 
-- **Tiers.** A capability names a tier (`fast`, `strong`, or any key a host adds), never a slug.
+- **Tiers.** A capability names a tier (`fast`, `strong`, or any key a host adds). A descriptor's `model` is the
+  raw-slug escape hatch and wins over its `tier`.
   `resolveLlmModelTiers({ base, modelTiers, defaultTier })` merges the host's declaration over its own base map and
   fails loud when the default tier is missing; `resolveLlmModelTier` fails loud on an unknown key. Every reader names
   the default tier through `resolveLlmDefaultModelTierKey` (trimmed; blank or unset ⇒ `fast`). A tier value is a slug
@@ -23,7 +24,8 @@ environment variable and no file: `/node` does that, and a browser host passes t
   The field and key checks themselves are `@dereekb/model`'s `parseArktypeFieldsWithMessages` and `assertObjectKeys`
   (typed by its `ArktypeFieldRules`); a host's own extension keys call them so they report in the same format.
 - **The file.** `parseLlmModelConfigFile({ raw, source, schema })` validates a `models.json`-shaped object: named
-  `providers`, `profiles` (complete tier maps), per-slug `models` facts, `active`, and the unread `notes` / `$schema`.
+  `providers`, `profiles` (partial tier maps: any subset of tier keys, laid over the host's base by
+  `resolveLlmModelTiers`), per-slug `models` facts, `active`, and the unread `notes` / `$schema`.
   An unknown key, an illegal value or a malformed tier throws an error naming the file and the entry, so a typo
   reddens startup instead of billing the model you meant to leave. A provider names the env var holding its key
   (`apiKeyEnv`), never the key. An unknown top-level key lists the allowed ones in the one key order,
@@ -35,7 +37,12 @@ environment variable and no file: `/node` does that, and a browser host passes t
   entry }`). `flattenLlmModelConfigFile(file)` is the reverse: the plain on-disk object, keys in the constant's order,
   profiles flattened, and `providers` written as completion entries, then owned entries, then patches.
 - **Schema and extensions.** `makeLlmModelConfigSchema({ label, transports, meterings, decisionRoutes,
-  implicitProviders, retiredKeys, extension })` sets the legal values and the error label. An extension adds provider
+  implicitProviders, retiredKeys, extension })` sets the legal values and the error label. `implicitProviders` names
+  the providers a `models[slug].provider` may bind to without the file declaring them: the host's env-default
+  instances, which `/node` mints from the environment (`DEFAULT_LLM_ENV_NAMES.providers`: `openai`, `openrouter`).
+  Without it, binding a slug to one of them throws at the overlay, naming the slug and the declared providers.
+  Declaring the provider in the file instead replaces the env default, endpoint included.
+  `readLlmModelConfigLists(adapters)` does not supply it. An extension adds provider
   and model keys with their parsers, transports it owns (providers that serve no completions), patch entries (an entry
   with no transport, base URL or key var that extends the built-in provider of the same name) and metering sources. A
   retired key fails with the remedy you register. The entry and per-slug types are derived from arktype declarations
@@ -48,7 +55,8 @@ environment variable and no file: `/node` does that, and a browser host passes t
   `metering` is not one: an extension's provider may bill an account too.
 - **Overlay.** `overlayLlmModelConfigFile({ base, file, source, schema })` lays a host's file over its built-ins. A
   provider, profile or per-slug entry the file names replaces the built-in whole — a half-replaced provider would bill
-  one account at another's endpoint — and every `models[slug].provider` is then checked against the merged providers.
+  one account at another's endpoint — and every `models[slug].provider` is then checked against the merged providers and the schema's
+  `implicitProviders`.
   A patch's `undefined` field and a host-built overlay's `undefined` slug keep the base's value.
 - **Resolution.** `resolveLlmModelProfile({ file, override, schema })` picks the active profile: the override wins,
   an off value (`off` / `none` in any case, `LLM_OFF_VALUES` / `isLlmOffValue`) or a blank `active` selects nothing,
@@ -84,6 +92,50 @@ const profile = resolveLlmModelProfile({ file: effective, override: requestedPro
 const { tiers, defaultTier } = resolveLlmModelTiers({ base: BUILT_IN_TIERS, modelTiers: profile?.tiers });
 const { providers, gaps } = resolveLlmProviderConfigs({ providers: effective.providers, apiKeyOf: ({ entry }) => keys[entry.apiKeyEnv] });
 ```
+
+## models.json reference
+
+**Top level**, in `LLM_MODEL_CONFIG_FILE_KEYS` order. An unknown key throws, and there is no `tiers` or `routing` key;
+routing is its own block ([Model routing](#model-routing)).
+
+| Key | Meaning |
+|---|---|
+| `$schema`, `notes` | Never read; kept on write. |
+| `active` | The profile to use. Blank, `off` or `none` selects none. `/node`'s `LLM_MODEL_PROFILE` overrides it. |
+| `providers` | Named provider entries. |
+| `profiles` | Named partial tier maps. |
+| `models` | Per-slug facts. |
+
+**`providers.<id>`:**
+
+| Key | Meaning |
+|---|---|
+| `transport` | A registered completion transport. Absent, it is the schema's `defaultTransport`, the first of `transports`. |
+| `baseUrl` | Absent, it is the transport adapter's `defaultBaseUrl`. |
+| `apiKeyEnv` | **Required.** The variable NAME holding the key, never the key. |
+| `reasoningOff`, `tokenLimitParam`, `usageAccounting` | `openai` transport wire knobs (`LLM_REASONING_OFF_ENCODINGS`, `max_tokens` / `max_completion_tokens`, `usage: { include: true }`). `/openrouter` ignores them. |
+| `metering` | The account it bills (a registered metering, or `none`). Absent, the metering adapter that recognizes `baseUrl` decides. |
+| `decision` | The decision route it serves (a registered route, or `none`). Absent, it is the route a decision adapter serves for its transport. |
+
+Then the extension's keys. An entry of a transport the extension owns lands in `extensionProviders`; an entry with no
+transport, base URL or key var is a patch (`providerPatches`).
+
+**`profiles.<name>`.** A flat `{ "<tier>": "<slug>" | { "model", "maxOutputTokens"?, "reasoning"? } }`, holding any
+subset of tiers and laid over the host's base.
+
+**`models.<slug>`:**
+
+| Key | Meaning |
+|---|---|
+| `provider` | Binds the slug to a provider: one the file declares, or one in the schema's `implicitProviders`. |
+| `reasoningOff` | The slug's own encoding, which wins over the provider's. |
+| `vision` | The slug accepts images. Default off. |
+| `promptAddendum` | Text for the `model-addendum` slot, placed only by `makeLlmModelAddendumPromptContributor`. |
+
+Then the extension's per-slug keys.
+
+**`makeLlmModelConfigSchema` options:** `label`, `transports`, `defaultTransport`, `meterings`, `decisionRoutes`,
+`implicitProviders`, `retiredKeys` (`file` / `provider` / `model` / `profile`) and `extension`.
 
 ## Model routing
 

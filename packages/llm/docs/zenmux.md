@@ -7,9 +7,12 @@ basis, quota status, per-call bills, the credential probe) and the decision rout
 plain `fetch`, so it needs no SDK, and never reads the environment: the host passes every key in. ZenMux chat is
 `/openai`'s transport pointed at ZenMux, so the `openai` SDK's own environment reads apply to it ([openai](openai.md)).
 
-- **Three credentials.** The SUBSCRIPTION inference key covers chat, decisions and the probe. The PAY-AS-YOU-GO
-  inference key covers bills, and reads every call's bill, the subscription's included. The MANAGEMENT API key
-  covers quota status; both inference keys get `403 Invalid API key` there.
+- **Three credentials.** Both inference keys, the SUBSCRIPTION key and the PAY-AS-YOU-GO key, serve chat and
+  decisions, and either passes the credential probe.
+  - **Bill reads** need the pay-as-you-go key: `management/generation` refuses the subscription key, and the
+    pay-as-you-go key reads every call's bill, the subscription's included. Pass it as `billApiKey`.
+  - **Quota status** (`subscription/detail`, `payg/balance`, `flow_rate`) needs the MANAGEMENT API key. Both
+    inference keys get `403 Invalid API key` there.
 - **Cost basis.** A synchronous `cost` is the pre-discount LIST amount (`LLM_ZENMUX_SYNC_COST_BASIS = 'list'`), an upper
   bound: some slugs bill a discount. A provider's cost basis is
   `resolveLlmProviderAccount(…).costBasis` with these adapters registered — a declared `metering` wins, else the URL

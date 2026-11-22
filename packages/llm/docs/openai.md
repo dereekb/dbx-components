@@ -13,20 +13,26 @@ vLLM — over the optional `openai` peer.
 - The cap rides under `tokenLimitParam` (`max_tokens` or `max_completion_tokens`); `usage: { include: true }` is an
   opt-in (`usageAccounting`); a volunteered `usage.cost` is read either way and stamped with `costBasis` when set.
 - Images ride only for slugs `visionByModel` marks; `attachmentsSent` on the result says what rode.
-- There is no built-in model: set `defaultModel` or pass `request.model`, else the call fails loud. Behind a dispatcher
-  every request names its model and cap, so `defaultModel` only serves direct strategy calls. A configured
+- There is no built-in model: set `defaultModel` or pass `request.model`, else the call fails loud. Behind
+  `makeLlmDispatcher` every request names its model and cap, so `defaultModel` only serves direct strategy calls. A
+  direct call, or one through another dispatcher, falls back to `defaultModel`, and to the configured
+  `maxOutputTokens` (else 8,192), when the request names none. A configured
   `maxOutputTokens` is also declared as the strategy's `defaultMaxOutputTokens`, which a dispatcher sends when no
   route, descriptor or tier names a cap; an unconfigured strategy declares none, so the dispatcher's
   `defaultMaxOutputTokens` governs it.
-- Defaults: the cap of a direct call is `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and the abort window is a 60 s floor
-  (`DEFAULT_LLM_COMPLETION_TIMEOUT_MS`) scaled up with the call's budget by core's `resolveLlmCompletionCallTimeoutMs({ timeoutMs, maxOutputTokens })`. An older or
-  small-context model needs its `maxOutputTokens` set.
+- Defaults: the cap of a request that names none is the configured `maxOutputTokens`, else
+  `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192). The abort window comes from `resolveLlmCompletionCallTimeoutMs({
+  timeoutMs, maxOutputTokens })` over the cap actually sent. It is the larger of `timeoutMs` (default
+  `DEFAULT_LLM_COMPLETION_TIMEOUT_MS`, 60 s) and the cap at `LLM_COMPLETION_TOKENS_PER_SEC` (30 tokens a second),
+  at most `LLM_COMPLETION_MAX_CALL_TIMEOUT_MS` (600 s). At the default cap that is about 273 s. The 60 s floor
+  governs only caps up to 1,800 tokens, and the retry ladder's `LLM_RETRY_OUTPUT_BUDGET_CEILING` (32,768) reaches the
+  ceiling. An older or small-context model needs its `maxOutputTokens` set.
 - Seams: `client` (an `LlmOpenAiChatClient` — a fake, or your own SDK client) and `probeFetch`. Every request sends
   `maxRetries: 0` (the dispatcher owns retries), which outranks the client's own setting, so neither the real client
   nor an injected one retries inside the SDK. The real client is built lazily with the key, the base URL, and
   `organization` / `project` set to `null`, so it never reads `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_ORG_ID` or
   `OPENAI_PROJECT_ID`. In a browser pass `dangerouslyAllowBrowser: true` or inject a client — with user-held keys
-  only.
+  only ([Browser hosts](browser.md)).
 - What the SDK still reads (Node only). `OPENAI_CUSTOM_HEADERS`: its `Name: value` lines become default headers on
   every request the client sends — to OpenRouter, ZenMux or a LAN gateway as much as to OpenAI — and no option of a
   key + base-URL client turns that read off. `OPENAI_LOG`: the SDK's log level (this client passes no `logLevel`);

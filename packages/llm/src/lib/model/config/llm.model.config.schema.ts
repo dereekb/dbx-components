@@ -109,7 +109,7 @@ export interface LlmCompletionProviderEntry extends Readonly<typeof llmCompletio
 export interface LlmModelSettings extends Readonly<typeof llmModelSettingsType.infer> {}
 
 /**
- * ONE named profile: the complete tier map it declares. The on-disk shape is FLAT (`{ "fast": "…", "strong": "…" }`);
+ * ONE named profile: the partial tier map it declares (any subset of tier keys, laid over the host's base). The on-disk shape is FLAT (`{ "fast": "…", "strong": "…" }`);
  * the parsed shape wraps the tiers so nothing downstream has to remember which keys are tiers. A writer flattens it
  * back with `flattenLlmModelProfile`.
  */
@@ -204,7 +204,7 @@ export interface LlmModelConfigFile<X extends LlmModelConfigTypes = LlmModelConf
    */
   readonly extensionProviders?: LlmExtensionProviderEntryMap<X>;
   /**
-   * The named profiles, each a complete tier map for one cost posture.
+   * The named profiles, each a partial tier map for one cost posture.
    */
   readonly profiles?: Readonly<Record<string, LlmModelProfile>>;
   /**

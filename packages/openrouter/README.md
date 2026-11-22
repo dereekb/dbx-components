@@ -9,6 +9,10 @@ side is therefore done here: prompt content and model config live in Firestore (
 MCP-editable rather than hidden in a dashboard), and asynchronous execution is an app-owned run-task
 queue drained by a sweeper the app mounts on a schedule it already runs.
 
+**Peers.** `@dereekb/llm` is a required peer, pinned to this package's own version like every `@dereekb/*` peer. The
+decision vocabulary (questions, answers, the `/systemone` body, the decision errors) is `@dereekb/llm/decision`'s: this
+package imports it, and re-exports it under its old, deprecated names. Install both at the same version.
+
 ## Entry points
 
 | Entry | Purpose |
@@ -185,7 +189,9 @@ The protocol-level decision names moved to `@dereekb/llm/decision` under neutral
 `OpenRouterDecision…` → `LlmDecision…`, `openRouter{Choice,Score,Noul}Question` → `llm{Choice,Score,Noul}Question`,
 `OPENROUTER_DECISION_…` → `LLM_DECISION_…`, `OpenRouterSystemOneModelId` / `isOpenRouterSystemOneModelId` →
 `LlmDecisionModelId` / `isLlmDecisionModelId` (the full table is in `@dereekb/llm`'s `docs/decision.md`, "Coming from
-`@dereekb/openrouter`").
+`@dereekb/openrouter`"). Two names break the pattern: `asOpenRouterDecisionConfidenceBand` →
+`toLlmDecisionConfidenceBand` and `isBlankOpenRouterDecisionEntry` → `isBlankLlmDecisionEntry`. The request types
+(`OpenRouterDecisionRequest`, `OpenRouterDecisionResult`, …) are not aliases.
 
 - Every old name is still exported from `@dereekb/openrouter` and `@dereekb/openrouter/decision`, marked
   `@deprecated`, as the SAME value, class or type — so `instanceof OpenRouterDecisionAnswerFaultError` and

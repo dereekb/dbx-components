@@ -14,7 +14,8 @@ so several instances of one transport can be registered side by side. Those two,
   attempts, validation errors, decode status and the reply repair. Host data rides `meta`: the library never reads it
   and strategies echo it. `toLlmThreadChatMessages` maps a replayed thread onto plain chat messages and
   `@dereekb/util`'s `toBase64DataUrl` builds an attachment's `data:` URL. The stock transports default to
-  `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and a `DEFAULT_LLM_COMPLETION_TIMEOUT_MS` (60 s) timeout floor. A strategy
+  `DEFAULT_LLM_MAX_OUTPUT_TOKENS` (8,192) and an abort window of at least `DEFAULT_LLM_COMPLETION_TIMEOUT_MS` (60 s)
+  that scales with the cap: about 273 s at 8,192 (`resolveLlmCompletionCallTimeoutMs`, see [openai](openai.md)). A strategy
   configured with a cap declares it as `LlmStrategy.defaultMaxOutputTokens`, which a dispatcher sends when no route,
   descriptor or tier names one (ahead of the dispatcher's own `defaultMaxOutputTokens`).
 - **Registry.** `makeLlmStrategyRegistry(seed)` serves either lane (`LlmStrategyRegistry<S>`; a registry of decision
@@ -63,4 +64,70 @@ import { evaluateLlmQuotaGate, readLlmProviderStatus } from '@dereekb/llm';
 
 const report = await readLlmProviderStatus({ strategies, required: ['gateway'] });
 const verdict = evaluateLlmQuotaGate({ report }); // { allowed, reason, usedFraction? }
+```
+
+## Writing a strategy
+
+A strategy of your own, such as a new gateway or an in-house model server, plugs into a dispatcher like the stock ones
+when it keeps this contract:
+
+- **Shape.** `id`, `describe`, `caching` (`none`, `breakpoint` or `auto-prefix`; telemetry only) and
+  `complete(request, options)`. Optionally `kind` (the transport, defaulting to `id`), `defaultMaxOutputTokens`,
+  `supportsReasoningParam`, `healthCheck`, `credentialProbe`, `providerStatus` / `providerStatusId` and `warm`.
+- **Send what the request names.** Behind a dispatcher, every request carries `model`, `maxOutputTokens` and
+  `reasoning` (`{ enabled: false }` unless something turns it on). Send the replayed `thread` before the prompt
+  (`toLlmThreadChatMessages` maps it onto chat messages), or chained follow-ups lose their history. Send
+  `attachments` only if your wire takes images.
+- **Honor `options.signal`.** It merges the dispatcher's `cancellationSignal` and the request's `signal`. Abort the
+  send when it fires, and reject with its reason. Add your own deadline the same way;
+  `resolveLlmCompletionCallTimeoutMs` gives the stock window.
+- **Never retry inside.** The dispatcher owns resends. A strategy that retries multiplies the bill and hides the error
+  from the ladder.
+- **Throw errors the dispatcher can classify.** It runs `classifyLlmError` on what you throw:
+  - an `AbortError` or `TimeoutError` (by `name`) is a timeout
+  - a numeric `status` (or `response.status`) is `permanent` for 400–404, `transient` for 408, 429 and 5xx, and
+    `unknown` otherwise
+  - a socket failure (`ECONNRESET`, …, on the error or its `cause`) is `transient`
+  - anything else, such as a plain `Error` with no `status`, is `unknown`, which rejects as `LlmDispatchFaultError`
+    unless the host's `isRetryableUnknownError` approves it
+
+  So copy the HTTP status onto the error you throw, and the response headers onto `error.headers`, so the backoff can
+  honor `Retry-After`.
+- **Return the reply's facts.** `text`, `strategyId` (your `id`) and `capability` (echoed) are required. Add whatever
+  you know:
+  - `model`, the slug that served
+  - `finishReason`, the provider's own word: `length` / `max_tokens` marks a truncation, which the ladder re-asks with
+    a bigger budget, and only `stop`, `end_turn`, `stop_sequence` or none lets a malformed reply be repaired
+  - `usage`, folded with `toLlmUsage(raw, { costBasis })`
+  - `generationId`, the bill reader's key
+  - `latencyMs`, `provider`, and `meta` (echoed)
+- **`supportsReasoningParam: false`** suits a wire with no reasoning knob. The retry ladder then never takes the
+  `reasoning-off` / `reasoning-low` levers: a timeout resends the same bytes, and no bonus attempt is earned. The
+  request still carries `reasoning`, so keep it off your wire.
+
+Register it with `makeLlmStrategyRegistry([...])`, which keeps the last instance of an id. Or mint it from
+configuration through your own adapter ([Writing an adapter](adapters.md#writing-an-adapter)).
+
+```ts
+import { makeLlmStrategyRegistry, toLlmUsage, type LlmStrategy } from '@dereekb/llm';
+
+const inHouse: LlmStrategy = {
+  id: 'in-house',
+  describe: 'The in-house model server',
+  caching: 'none',
+  supportsReasoningParam: false,
+  complete: async (request, options) => {
+    const response = await fetch(`${baseUrl}/generate`, { method: 'POST', body: JSON.stringify({ model: request.model, prompt: request.prompt, max_tokens: request.maxOutputTokens }), signal: options?.signal });
+
+    if (!response.ok) {
+      // the status classifies it (429 / 5xx resend, 400–404 fault); the headers carry Retry-After to the backoff
+      throw Object.assign(new Error(`in-house answered ${response.status}`), { status: response.status, headers: response.headers });
+    }
+
+    const body = await response.json();
+    return { text: body.text, strategyId: 'in-house', capability: request.capability, model: request.model, finishReason: body.stop_reason, usage: toLlmUsage(body.usage) };
+  }
+};
+
+const strategies = makeLlmStrategyRegistry([inHouse]);
 ```

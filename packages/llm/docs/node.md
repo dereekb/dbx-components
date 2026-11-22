@@ -4,10 +4,11 @@ Entry: `@dereekb/llm/node` (Node only) · [← @dereekb/llm](../README.md)
 
 `/node` reads the machine — the model config file and the environment — and hands back the root entry's own types, so
 everything after the read is the same code a browser host runs. Every env var NAME is a parameter: the library knows
-conventional defaults, never a host's own prefix. Each function reads `process.env` unless you pass `env`, which is
-how a spec stays hermetic.
+conventional defaults, never a host's own prefix. Each function reads `process.env` unless you pass `env`, which
+replaces it for that call (nothing is merged). That is how a spec stays hermetic.
 
-- **Env names.** `DEFAULT_LLM_ENV_NAMES` lists what is read. Each field is a list in priority order: the first name
+- **Env names.** `DEFAULT_LLM_ENV_NAMES` lists the conventional names. `/node` reads all but `decisionProvider`, which
+  it only names. Each field is a list in priority order: the first name
   holding a non-blank value wins, the value is trimmed, and `[]` is never read (the way to switch a knob off). Build
   your own by spreading the defaults — `{ ...DEFAULT_LLM_ENV_NAMES, modelsFile: ['MY_APP_MODELS', 'LLM_MODELS_FILE'] }`
   — so a knob you do not mention keeps its default instead of going silent. `firstLlmEnvEntry` / `firstLlmEnvValue`
@@ -24,7 +25,7 @@ how a spec stays hermetic.
   | `tierModels` | `LLM_MODEL` (`fast`), `LLM_MODEL_STRONG` (`strong`) | One slug per tier; wins over the same key in `modelTiers`. |
   | `defaultTier` | `LLM_DEFAULT_TIER` | Which tier is the default. |
   | `decodeRetryTier` | `LLM_DECODE_RETRY_TIER` | Which tier a malformed reply retries on (`off` / `none`, any case, keeps the same model). |
-  | `decisionProvider` | `LLM_DECISION_PROVIDER` | The decision-lane provider pin (a provider id; the test lane throws on one that is not registered). |
+  | `decisionProvider` | `LLM_DECISION_PROVIDER` | A decision-lane provider pin, named but not read by `/node`. A host that picks its own decision backend reads it with `firstLlmEnvEntry`; `/test`'s live lane reads it too, and throws on a pin that is not registered. A dispatcher treats an unregistered pin differently: `decisions.strategyId` naming one silently removes `decide` ([Decision lane](dispatcher.md#retry-and-lanes)). |
   | `craftNotesDir` | `LLM_CRAFT_NOTES_DIR` | The machine craft-notes folder. |
 
   Whose names these are: `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENROUTER_API_KEY` and `OPENROUTER_BASE_URL` are the
@@ -47,18 +48,27 @@ how a spec stays hermetic.
   env override over the file's `active` (`overrideEnv` names the var that chose it). `resolveLlmModelTierEnv()`
   returns the env's tier map, default tier and decode-retry tier. Precedence is env over profile over the host's
   base tiers: layer them in that order when calling `resolveLlmModelTiers`.
-- **Providers.** `resolveLlmProvidersFromEnv({ file, schema, adapters })` — or `makeLlmStrategiesFromEnv`, which also
-  builds each strategy and takes `makeLlmProviderStrategies`' options (`defaultModel`, `maxOutputTokens`,
-  `maxOutputTokensByProvider`, `timeoutMs`, `visionByModel`, `reasoningOffByModel`, `fetch`) — returns the keyed
-  providers, the `gaps`, and the default. An env default is minted only when
-  its transport has a registered completion adapter. A declared provider is keyed by its own `apiKeyEnv`, and it
-  replaces an env default of the same id even when unkeyed — it is never silently re-pointed at another key. The
-  default is the explicit selection, else the first keyed non-fallback provider, else the fallback, keyed or not, so a
-  missing key fails loud at the call. That rule is `resolveLlmDefaultProviderId({ explicitProviderId, providers,
-  fallbackProviderIds })`, pure, for a host that re-applies it to providers it resolved itself. An explicit selection (`LLM_PROVIDER`) that names neither an env default with a
-  registered adapter (case-insensitively) nor a declared completion provider (exactly) throws, naming the variable and
-  the selectable ids — a typo never silently routes to the inferred default. `gaps` lists every declared provider without a key; scope it to the slugs a run
-  can reach with `filterLlmReachableProviderGaps`.
+- **Providers.** `resolveLlmProvidersFromEnv({ file, schema, adapters })` returns the keyed `providers`, the `gaps`
+  and the `defaultProviderId`. `makeLlmStrategiesFromEnv` also builds a strategy for each keyed provider
+  (`strategies`, `ids`), and takes `makeLlmProviderStrategies`' options (`defaultModel`, `maxOutputTokens`,
+  `maxOutputTokensByProvider`, `timeoutMs`, `visionByModel`, `reasoningOffByModel`, `fetch`).
+  - **Env defaults** (`openai`, `openrouter`) are minted only when their transport has a registered completion
+    adapter, and only keyed ones get a strategy.
+  - **Declared providers** are keyed by their own `apiKeyEnv`. One that shares an env default's id replaces it, even
+    when unkeyed: it is never silently re-pointed at another key. Unkeyed, it is a gap.
+  - **The default** is the explicit selection (`LLM_PROVIDER`), else the first keyed non-fallback provider, else the
+    fallback (`openrouter`), keyed or not. So it can name a provider with no strategy: when nothing is keyed, or when
+    `LLM_PROVIDER` names an unkeyed one. A dispatch routed there throws `no LLM strategy registered for '…'`; nothing
+    fails earlier, at the provider. Guard with `strategies.has(defaultProviderId)`
+    ([A complete Node host](#a-complete-node-host)). The rule is `resolveLlmDefaultProviderId({ explicitProviderId,
+    providers, fallbackProviderIds })`: pure, for a host that re-applies it to providers it resolved itself.
+  - **An explicit selection** that names neither an env default with a registered adapter (case-insensitively) nor a
+    declared completion provider (exactly) throws, naming the variable and the selectable ids. A typo never silently
+    routes to the inferred default.
+  - **Gaps** list every declared provider without a key. Scope them to the slugs a run can reach with
+    `filterLlmReachableProviderGaps`.
+  - **Stored keys.** `fallbackKeys` supplies keys by the variable they stand in for (from a settings file, say). It is
+    read only when the environment leaves that variable blank, for env defaults and declared providers alike.
 - **Craft notes.** `resolveLlmCraftNotesDir({ defaultDir })` answers the folder the env names, else yours.
   `loadLlmCraftNotes({ dir, tier, sites, warn })` drops and warns about a bad note, never throws, and reads an absent
   folder as no notes. `compileLlmCraftNotes` / `writeLlmCraftNotesModule` compile a committed folder into a
@@ -109,12 +119,13 @@ The code:
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { DEFAULT_LLM_MAX_OUTPUT_TOKENS, llmModelProviderBindings, llmModelReasoningOffEncodings, llmModelVisionCapabilities, makeLlmAdapterRegistry, makeLlmDispatcher, makeLlmModelConfigSchema, readLlmModelConfigLists, resolveLlmModelTier, resolveLlmModelTiers } from '@dereekb/llm';
-import { loadEffectiveLlmModelConfigFile, makeLlmStrategiesFromEnv, resolveLlmModelProfileFromEnv, resolveLlmModelTierEnv } from '@dereekb/llm/node';
+import { DEFAULT_LLM_ENV_NAMES, loadEffectiveLlmModelConfigFile, makeLlmStrategiesFromEnv, resolveLlmModelProfileFromEnv, resolveLlmModelTierEnv } from '@dereekb/llm/node';
 import { LLM_OPENAI_ADAPTERS } from '@dereekb/llm/openai';
 import { LLM_OPENROUTER_ADAPTERS } from '@dereekb/llm/openrouter';
 
 const adapters = makeLlmAdapterRegistry([...LLM_OPENAI_ADAPTERS, ...LLM_OPENROUTER_ADAPTERS]);
-const schema = makeLlmModelConfigSchema({ ...readLlmModelConfigLists(adapters), label: 'my-app models' });
+// implicitProviders: models.json may bind a slug to the env defaults (openai, openrouter) without declaring them
+const schema = makeLlmModelConfigSchema({ ...readLlmModelConfigLists(adapters), implicitProviders: DEFAULT_LLM_ENV_NAMES.providers.map((provider) => provider.id), label: 'my-app models' });
 
 // LLM_MODELS_FILE, else ~/.my-app/models.json, else the base tiers alone.
 const loaded = loadEffectiveLlmModelConfigFile({ schema, defaultPath: join(homedir(), '.my-app', 'models.json') });
@@ -134,8 +145,10 @@ const { strategies, defaultProviderId, gaps } = makeLlmStrategiesFromEnv({
   visionByModel: llmModelVisionCapabilities(loaded.file)
 });
 
-if (defaultProviderId == null) {
-  throw new Error('No LLM provider is configured.');
+// The default may name a provider with no key, and so no strategy: the OpenRouter fallback when nothing is keyed,
+// or an unkeyed LLM_PROVIDER pick.
+if (defaultProviderId == null || !strategies.has(defaultProviderId)) {
+  throw new Error(`No key is set for the default LLM provider '${defaultProviderId ?? '(none)'}'.`);
 }
 
 const dispatcher = makeLlmDispatcher({
@@ -152,7 +165,9 @@ const dispatcher = makeLlmDispatcher({
 ```
 
 With the environment above, the strategies are `local` and `openrouter` (no `openai`: `OPENAI_API_KEY` is unset), and
-`openrouter` is the default because `LLM_PROVIDER` names it. `fast` dispatches `local/small` on `local` (the file's
+`openrouter` is the default because `LLM_PROVIDER` names it. With no key set at all, `defaultProviderId` is still
+`openrouter`, the fallback, but no strategy is built for it. Without the guard, every dispatch would throw `no LLM
+strategy registered for 'openrouter'`; with it, startup fails instead. `fast` dispatches `local/small` on `local` (the file's
 `models` binding); `strong` dispatches `vendor/large` through OpenRouter, the default provider. `gaps` lists declared
 providers whose key is missing; scope it to the models a run can reach with `filterLlmReachableProviderGaps` before
 failing a run on it.
@@ -196,8 +211,13 @@ A factory provider needs nothing from Nest but its standard `useFactory` shape:
 ```
 
 - The Nest modules read values as they are, while `/node` trims them and treats a blank value as unset.
-- A host that defines values through `load` factories passes them as `env`, a plain record:
-  `env: { OPENROUTER_API_KEY: config.get('OPENROUTER_API_KEY') }`.
+- `env` replaces `process.env`, so a host that defines values through `load` factories spreads the environment under
+  them: `env: { ...process.env, OPENROUTER_API_KEY: config.get('OPENROUTER_API_KEY') }`. A record holding only the
+  `load` values hides every other variable from that call: the other providers' keys and `LLM_PROVIDER`. Where the
+  same record reaches `loadEffectiveLlmModelConfigFile` or the tier readers, it also hides `LLM_MODELS_FILE` and the
+  other `LLM_*` knobs. To supply keys alone, pass `fallbackKeys` to `resolveLlmProvidersFromEnv` or
+  `makeLlmStrategiesFromEnv`: stored keys named by the variable they stand in for, read only when the environment
+  leaves that variable blank.
 
 Keys from elsewhere (a secret manager, a user's stored key) skip the environment: build an `LlmProviderConfig` and
 hand it to the root's `makeLlmProviderStrategies`. `apiKeyEnv` only names where a key would come from; the value sent

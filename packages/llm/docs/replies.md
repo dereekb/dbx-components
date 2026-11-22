@@ -55,18 +55,22 @@ descriptor also carries the two schema projections the request and the prompt re
   free. `makeLlmSemanticCritic` fails open with `critique-unusable` / `critique-error` breadcrumbs. `composeLlmCritics`
   runs critics in order and stops at the first rejection. The judge sees the goal, optional evidence, the subject's live
   context and the reply (both fenced as data), never the subject's instructions. `LlmCritiqueParams.signal` carries the
-  subject's cancellation signal, and the semantic critic puts it on the judge request. A critiqued capability costs
-  `1 + attempts` calls. Three recursion guards: the judge request carries no critic, the compile refuses the judge, and
+  subject's cancellation signal, and the semantic critic puts it on the judge request. Every attempt that passes `validate` is
+  judged, and the judge request is itself validated with the default budget (`DEFAULT_LLM_DISPATCH_MAX_ATTEMPTS`, 2).
+  So a critiqued capability costs at least 2 calls and, in the worst case, about 3 × its `maxAttempts`, plus any bonus
+  attempt or fast fix. Three recursion guards: the judge request carries no critic, the compile refuses the judge, and
   the dispatcher clamps `maxAttempts >= 1`.
 - **Built-in capabilities.** `LLM_CRITIQUE_REPLY_DESCRIPTOR` / `LLM_REPAIR_REPLY_JSON_DESCRIPTOR` and their default
   templates `LLM_CRITIQUE_REPLY_TEMPLATE` / `LLM_REPAIR_REPLY_JSON_TEMPLATE`. Register the descriptors in your
   `descriptorOf`, add the templates as your lowest tier, and override with a higher tier or your own resolver. Spread a
-  descriptor to add your tags, tier or traits.
+  descriptor to add your tags, tier or traits. Missing, nothing throws, but both fail open and degrade: there is no
+  output contract or must-resolve clause, the judge loses `response_format`, the caps fall to the defaults, and the
+  instructions slot is empty.
 - **Swallow sites.** `llm/reply-envelope.decode`, `llm/reply-repair.rebuilt-parse`, `llm/reply-repair.fast-fix` and
   `llm/critique-reply.judge`, all in `LLM_SWALLOW_SITES`.
 
 ```ts
-import { compileLlmCritiquePolicy, defineLlmCapability, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, LLM_REPAIR_REPLY_JSON_DESCRIPTOR, LLM_REPAIR_REPLY_JSON_TEMPLATE, resolveLlmCritiqueFields, readLlmReplyValue, makeLlmSchemaValueValidator, type LlmCritiqueBinding } from '@dereekb/llm';
+import { compileLlmCritiquePolicy, defineLlmCapability, LLM_CRITIQUE_REPLY_CAPABILITY, LLM_CRITIQUE_REPLY_DESCRIPTOR, LLM_CRITIQUE_REPLY_TEMPLATE, LLM_REPAIR_REPLY_JSON_CAPABILITY, LLM_REPAIR_REPLY_JSON_DESCRIPTOR, LLM_REPAIR_REPLY_JSON_TEMPLATE, resolveLlmCritiqueFields, readLlmReplyValue, makeLlmSchemaValueValidator, type LlmCapabilityDescriptor, type LlmCritiqueBinding } from '@dereekb/llm';
 import { type } from 'arktype';
 
 const summarySchema = type({ summary: type('string').describe('two sentences, plain words') });
@@ -74,11 +78,15 @@ const SUMMARIZE = defineLlmCapability({ capability: 'summarize', tags: ['copy'],
   const out = summarySchema(value);
   return out instanceof type.errors ? undefined : out;
 } });
-const DESCRIPTORS = [SUMMARIZE, LLM_CRITIQUE_REPLY_DESCRIPTOR, { ...LLM_REPAIR_REPLY_JSON_DESCRIPTOR, tier: 'fast' }];
+const DESCRIPTORS: Readonly<Record<string, LlmCapabilityDescriptor>> = {
+  summarize: SUMMARIZE,
+  [LLM_CRITIQUE_REPLY_CAPABILITY]: LLM_CRITIQUE_REPLY_DESCRIPTOR,
+  [LLM_REPAIR_REPLY_JSON_CAPABILITY]: { ...LLM_REPAIR_REPLY_JSON_DESCRIPTOR, tier: 'fast' }
+}; // descriptorOf: (capability) => DESCRIPTORS[capability]
 const templates = { source: 'llm', templates: [LLM_CRITIQUE_REPLY_TEMPLATE, LLM_REPAIR_REPLY_JSON_TEMPLATE] }; // the lowest tier
 
 const binding: LlmCritiqueBinding = {
-  policy: compileLlmCritiquePolicy({ critique: { rules: [{ tags: ['copy'], tier: 'fast', maxAttempts: 3 }] }, capabilities: DESCRIPTORS }),
+  policy: compileLlmCritiquePolicy({ critique: { rules: [{ tags: ['copy'], tier: 'fast', maxAttempts: 3 }] }, capabilities: Object.values(DESCRIPTORS) }),
   dispatch: (request) => dispatcher.dispatch(request)
 };
 

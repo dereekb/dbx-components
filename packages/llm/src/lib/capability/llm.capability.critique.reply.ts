@@ -12,15 +12,16 @@
  * argue its own case.
  *
  * **Off by default, and off is free.** {@link resolveLlmCritiqueFields} returns `{}` unless the HOST attached a rule for the
- * capability, so with no policy every prompt, dispatch count and billed call is unchanged. With a policy, a critiqued
- * capability costs `1 + attempts` calls where it cost `1`.
+ * capability, so with no policy every prompt, dispatch count and billed call is unchanged. With a policy, every attempt
+ * that passes `validate` adds one judge dispatch, itself validated with the default budget (2 attempts), so a critiqued
+ * capability costs about 3 × `maxAttempts` calls in the worst case.
  *
  * **Recursion guard (three independent layers).**
  *
  * 1. STRUCTURAL: {@link critiqueLlmReply} builds the judge request with no `critique`, so a judge call is never judged.
  * 2. COMPILE-TIME: `compileLlmCritiquePolicy` throws on a rule naming the judge and excludes it from tag matching.
- * 3. RUNTIME: the dispatcher clamps the subject's `maxAttempts >= 1`, so the worst case is `maxAttempts` judge calls per
- *    subject dispatch — bounded and known before the call.
+ * 3. RUNTIME: the dispatcher clamps the subject's `maxAttempts >= 1`, so the worst case is `maxAttempts` judge
+ *    dispatches per subject dispatch, each its own bounded retry — bounded and known before the call.
  */
 
 import { readErrorMessage, filterMaybeArrayValues, isNotBlankString, type Maybe } from '@dereekb/util';

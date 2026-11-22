@@ -21,7 +21,7 @@ description: "@dereekb/llm in dbx-components — the framework-free, provider-ag
 - `packages/llm/README.md` — the quick start, the entry table, and one `## Entries` section per entry (purpose,
   browser-safe, peers, main exports, guide).
 - `packages/llm/docs/*.md` — the long-form guides (strategy, model-config, adapters, prompt, craft, replies,
-  dispatcher, records, decision, openai, openrouter, zenmux, node, test, utilities). Read the guide before changing
+  dispatcher, records, decision, openai, openrouter, zenmux, node, browser, test, utilities). Read the guide before changing
   the code it covers.
 - `/craft` is OPT-IN: the root does not export it, and no core module imports it.
 - npm reads only the root manifest's peers: `@dereekb/util`, `@dereekb/model`, `arktype`, and the optional `openai`.
@@ -33,6 +33,7 @@ description: "@dereekb/llm in dbx-components — the framework-free, provider-ag
 - **A Node host from env + `models.json` to a dispatcher:** `docs/node.md` `## A complete Node host`, pinned by
   `packages/llm/test/src/lib/llm.test.node.host.example.spec.ts`.
 - **A Nest host:** `docs/node.md` `## Nest hosts`.
+- **A browser host:** `docs/browser.md`.
 
 Change an example and its spec together; each spec mirrors its doc statement for statement.
 

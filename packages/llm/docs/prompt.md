@@ -10,8 +10,9 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
 - **Capabilities.** An `LlmCapabilityDescriptor` is one capability's reply contract: its key, its reply protocol (`json`,
   `json-envelope` or `line`; `resolveLlmReplyProtocol` applies request, then descriptor, then the host default), its
   routing and output controls (it fits the routing compile and the model precedence as-is), the arktype schema and
-  parser, the schema projections the output contract and `response_format` read, a frames policy keyed by slot id, and
-  `traits` — the host's own flags, which the library never reads.
+  parser, the schema projections the output contract and `response_format` read, and two fields the library carries but
+  never reads: `frames`, a frames policy keyed by slot id for the host's own frame contributors, and `traits`, the
+  host's own flags.
 - **Dispatch.** `LlmDispatchRequest` is what a capability hands a dispatcher (the live-context renderer, overrides, a
   validator, a critic, a site, the parent call context, `meta`, an abort `signal`). `LlmDispatcher` dispatches it or
   prepares an `LlmPrompt`, which executes once and chains follow-ups onto the same thread (`ExecutedLlmPrompt`), and
@@ -38,6 +39,9 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   bytes. The tiebreak compares keys by UTF-16 code unit (`@dereekb/util` `compareStringsByCodeUnit`), never the host's
   locale, so every host sends the same bytes (`Beta` before `alpha`). Craft-note selection, usage rows and the bill
   reconciliation order by code unit too. `llmChainedFollowUpBody` re-sends only what changed since the thread's last turn.
+  A block is volatile unless it says `volatile: false`. That is a stability claim, not a cache guarantee: the cache
+  prefix ends at the first volatile segment (`splitLlmPromptCacheSegments`), so a stable block lands on the prefix
+  only when everything before it is stable too. Order the live context slow to fast.
 - **Templates.** An `LlmPromptTemplateResolver` returns a dispatch's templates per role (`reply-protocol`,
   `instructions`, `context`, the last split at `{{liveContext}}`) with their `source`, plus a by-key lookup for
   contributors. `makeLlmTieredPromptTemplateResolver` is the library's: tiers lowest first, the last definition of a key
@@ -64,13 +68,17 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   (`DEFAULT_LLM_PROMPT_ASSEMBLY_TEXTS`); a host passes its own exact text through `texts`, and one call its own footer
   through `contractFooter`.
 - **Sites.** `mergeLlmPromptSite` merges two sites, the narrower winning (its `kind` replaces; facts, inputs and supply
-  merge key by key). `withLlmPromptSite({ dispatcher, site })` returns a dispatcher whose every request,
-  dispatched or prepared, carries the site — the request's own site winning, a later wrapper narrower than an earlier
-  one. It never changes a byte; a contributor reading the site does.
+  merge key by key). `withLlmPromptSite({ dispatcher, site })` returns a dispatcher whose `dispatch`,
+  `preparePrompt` and `resumePrompt` requests carry the site — the request's own site winning, a later wrapper
+  narrower than an earlier one. `decide` passes through unchanged, because a decision request has no site. It never
+  changes a byte; a contributor reading the site does.
 - **Prompt handles.** `makeLlmPromptFactory({ runPromptRequest })` builds `LlmPrompt`s that execute once (a rejected
-  execution is cached too) and chain follow-ups onto the same thread. A recorded reply is capped at 8,000 characters
-  (`threadTurnMaxChars`), and a reply the run marks `degenerate` is recorded as a placeholder
-  (`degenerateThreadPlaceholder`), so no later follow-up replays — and re-bills — a garbage turn.
+  execution is cached too) and chain follow-ups onto the same thread. The recorded `assistant` turn is the text the
+  run returned: the repaired text when a repair landed, cut at `threadTurnMaxChars`
+  (`DEFAULT_LLM_THREAD_TURN_MAX_CHARS`, 8,000) with `LLM_THREAD_TURN_TRUNCATION_MARKER` appended. Only a run that
+  marks its reply `degenerate` records `degenerateThreadPlaceholder` (`DEFAULT_LLM_DEGENERATE_THREAD_PLACEHOLDER`)
+  instead. `makeLlmDispatcher` marks a validated dispatch whose replies failed to decode and never recovered, so no
+  later follow-up replays (and re-bills) a garbage turn. A single-shot call's reply is always recorded as returned.
 - **Resuming.** The library stores nothing: the host saves a head's `thread` under its own message id, and the
   factory's `resume({ request, thread })` (`LlmDispatcher.resumePrompt`) rebuilds an `LlmPromptThreadHead` from it in a
   later process. Follow-ups chain onto that head exactly as onto the `ExecutedLlmPrompt` that recorded the thread, and
@@ -83,7 +91,10 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
   previous })` fires a root, or chains a follow-up onto `previous` whose message is the lead plus only the live blocks
   that changed since the thread last saw them (unchanged ones are named, not re-sent). The instance holds what each
   handle sent, weakly; two instances never share it. A resumed head has no held blocks, so the first item after it
-  sends its whole live context.
+  sends its whole live context. A follow-up takes only four things from the item's request: its live context (the
+  capability's own render, so no contributed blocks), `validate`, `maxAttempts` and `responseSchemaHint`. Its
+  capability, model or tier, site, attachments and critic are not used, and no contributor runs. The follow-up rides
+  the root's thread, so only chain items that share the root's capability and framing.
 - **Budget.** `estimateLlmTokens` is `ceil(length / 4)`; `estimateLlmRequestPromptTokens` estimates a whole request
   (prompt, replayed thread, response schema). `budgetLlmLiveContextBlocks` keeps a live context under a token budget
   (default 12,000, less `reservedPrefixTokens`) by shrinking, then dropping, the lowest-priority blocks — never a
@@ -91,11 +102,17 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
 - **Cache watch.** `makeLlmPromptCachePrefixWatch()` hashes each dispatch's cacheable prefix (16 hex chars of SHA-256)
   and compares it with the previous dispatch of the same capability and partition, naming the first segment — and its
   key — that moved, or the first one appended. It keeps digests, never prompt bytes. The dispatcher stamps the hash on
-  the call record as `cachePrefixHash` and reuses it for the decode-failure payload's `cachePrefixHash`.
+  the call record as `cachePrefixHash` and reuses it for the decode-failure payload's `cachePrefixHash`. It keeps the
+  baselines of the last `DEFAULT_LLM_PROMPT_CACHE_PREFIX_WATCH_MAX_PARTITIONS` (1,000) (capability, partition) pairs,
+  evicting the least recently used. Size it with `makeLlmPromptCachePrefixWatch({ maxPartitions })` (an
+  `LlmPromptCachePrefixWatchConfig`; a positive integer, else a `RangeError`). A partition seen again after eviction
+  reads as a first dispatch: its hash is still stamped, but it cannot file `prefix-changed`.
 - **Library contributors.** `makeLlmModelAddendumPromptContributor({ promptAddendumByModel })` places the resolved model's
   `promptAddendum` (from `llmModelPromptAddenda(config)`) in the `model-addendum` slot; `llmModelAddendumSegment` mints
   the same segment, and `restampLlmModelAddendum` swaps a captured prompt's addendum for another model's, placing it
   where the layout puts the addendum slot (before the first captured segment whose slot comes later, else last).
+  This contributor is the only way a slug's `promptAddendum` reaches a prompt: register it in the dispatcher's
+  `contributors`.
   `makeLlmAnchoredBlockPromptContributor({ id, reason, blockOf })` places one block a scope supplied among the capability's
   live blocks, at its anchor. The craft contributor has its own guide, [Craft notes](craft.md).
 
@@ -201,11 +218,11 @@ interface RunRequest extends LlmDispatchRequest {
 // Registered with the dispatcher's contributors.
 const glossary = makeLlmAnchoredBlockPromptContributor<RunRequest>({ id: 'glossary', reason: 'the run supplied a glossary', blockOf: ({ request }) => request.site?.supply?.glossary });
 
-const scoped = withLlmPromptSite<RunRequest>({ dispatcher, site: { supply: { glossary: { text: 'Glossary: SKU = stock-keeping unit.', anchor: { after: 'heading' }, volatile: false } } } });
+const scoped = withLlmPromptSite<RunRequest>({ dispatcher, site: { supply: { glossary: { text: 'Glossary: SKU = stock-keeping unit.', anchor: { after: 'heading' }, volatile: false } } } }); // anchored after the stable heading, so it joins the cache prefix
 const chain = makeLlmPromptChain<RunRequest>();
 
 const first = await chain.dispatch({ dispatcher: scoped, request: itemRequest(items[0]) });
-// Replays `first`'s thread, then sends the lead plus only the live blocks that changed ("Unchanged …" names the rest).
+// Replays `first`'s thread, then sends the lead plus only the live blocks that changed. The site's glossary rode `first`'s prompt and is not re-sent.
 const second = await chain.dispatch({ dispatcher: scoped, request: itemRequest(items[1]), previous: first });
 ```
 
@@ -216,7 +233,7 @@ import { budgetLlmLiveContextBlocks, LLM_PROMPT_PREFIX_RESERVE_TOKENS } from '@d
 
 const budgeted = budgetLlmLiveContextBlocks({
   blocks: [
-    { key: 'heading', text: '## Live context', priority: 9, required: true, volatile: false },
+    { key: 'heading', text: '## Live context', priority: 9, required: true, volatile: false }, // the heading leads, so it stays on the prefix
     { key: 'history', text: historyText, priority: 1, shrink: [recentHistoryText] }
   ],
   reservedPrefixTokens: LLM_PROMPT_PREFIX_RESERVE_TOKENS
@@ -241,9 +258,10 @@ message's `thread` and resume from it. What a message needs stored:
   }
   ```
 
-  A `user` turn holds the final prompt that produced the accepted reply (a retry's correction included). An `assistant`
-  turn holds the reply, capped at `threadTurnMaxChars` (8,000 by default), or `degenerateThreadPlaceholder` when the
-  reply never decoded. It is strings throughout, so it stores in JSON or Firestore as-is. Each message's thread is the
+  A `user` turn holds the final prompt sent (a retry's correction included). An `assistant` turn holds the reply as
+  the run returned it (repaired when a repair landed), cut at `threadTurnMaxChars` (8,000 by default, ` […truncated
+  for replay]` appended). On a validated dispatch whose replies failed to decode and never recovered, it holds
+  `degenerateThreadPlaceholder` instead. It is strings throughout, so it stores in JSON or Firestore as-is. Each message's thread is the
   whole conversation up to that message, so any stored message can be resumed.
 - **What rebuilds the root request** — its capability, any model or tier override, and the host fields. Follow-ups
   inherit these, so the resumed request must route as the original did; a different model forfeits the warm cache. The

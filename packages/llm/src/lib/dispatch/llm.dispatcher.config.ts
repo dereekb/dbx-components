@@ -113,7 +113,8 @@ export interface LlmDispatchRecorder<R extends LlmDispatchRequest = LlmDispatchR
    */
   recordCallStart?(record: LlmCallStartRecord<H>): void;
   /**
-   * Record one completed call — one per execution, root or follow-up, and one per answered decision.
+   * Record one completed call — one per execution, root or follow-up, and one per decision, answered or failed (a
+   * failed decision's record is `dropped`).
    *
    * @param record - The call record.
    */

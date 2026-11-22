@@ -52,8 +52,12 @@ could need in one map.
   value types are checked too: a non-number `noul`, `score` or distribution entry is `value-out-of-range`.
   `laxAnswerTypes: true` gives an answer that arrived with NO `type` its declared question's type first (a present
   `type` is never overwritten).
-- `requireLlmDecisionAnswers(config)` is the throwing read: the answers, or `LlmDecisionAnswerFaultError` with every
-  fault. The System One transport and the scripted decision strategy both call it.
+- `requireLlmDecisionAnswers(config)` is the throwing read: it returns the answers, or throws
+  `LlmDecisionAnswerFaultError` with every fault. Pass `billing` (an `LlmDecisionReplyBilling`, which
+  `llmDecisionReplyBilling` builds from a wire reply) and the error carries the faulted reply's `model`, `usage`,
+  `generationId` and `provider`. That way a billed reply that faulted still reaches the ledger: the dispatcher's
+  decision lane folds them onto the failed row. The System One transport passes it; the scripted decision strategy
+  does not.
 - `toLlmDecisionConfidenceBand`, `llmDecisionChoiceRanking`, `mapLlmDecisionChoiceRows` and
   `readLlmChoiceCertainty` (sure / nested / split / diffuse / unread, with site-owned floors) read a Choice's answer.
 
@@ -91,10 +95,10 @@ could need in one map.
     `LlmDecisionTransportError` with the native error as its `cause`; a non-2xx carries `status`, the raw `body` and
     the response `headers` (never persisted; the dispatcher's default backoff reads `Retry-After` off them);
     a 2xx whose body is not a JSON object is a transport error with `status` and `body`; an answer fault throws
-    `LlmDecisionAnswerFaultError`; a missing key throws a status-less (never retried) transport error.
+    `LlmDecisionAnswerFaultError` carrying the reply's bill; a missing key throws a status-less (never retried) transport error.
   - `healthCheck` is network-free. An injected `decisionFetch` makes a keyless fake (ready, no key needed). The global
     `fetch` is read at call time.
-- `defineLlmDecision(descriptor)` declares a decision over one typed input: `state(input)` and `questions(input)`.
+- `defineLlmDecision(descriptor)` returns an `LlmDecision<I, Q, D>`: a decision over one typed input: `state(input)` and `questions(input)`.
   Validation is lazy — `asRequest({ input, model })` validates and throws `LlmDecisionDeclarationError` naming the
   decision — and `decide({ strategy, input, model, options })` runs it.
   - Its third type parameter `D` is the descriptor's type, returned on `LlmDecision.descriptor` by identity. `D` is
@@ -107,7 +111,9 @@ could need in one map.
   overrides, the parent `callContext` and the `signal` — and adds the declared `decision`, its `input` and an optional
   `stamp`. A descriptor's own `model` / `tier` are `Pick<LlmCapabilityModelRef, 'tier' | 'model'>`. A host whose
   decision requests carry more (a scene, a tick) names those fields as the dispatcher's `E`: `decide` then takes
-  `LlmDecisionDispatchRequest<I, Q> & E`, and the decision lane's hooks read them with no cast.
+  `LlmDecisionDispatchRequest<I, Q> & E`, and the decision lane's hooks read them with no cast. A failed `decide` is
+  recorded (`dropped`) and rejects with the original error
+  ([Outcomes](dispatcher.md#outcomes-what-resolves-and-what-throws)).
 
 ```ts
 import { llmChoiceQuestion, llmDecisionRequestBody, llmNoulQuestion, readLlmDecisionAnswers } from '@dereekb/llm/decision';
@@ -148,17 +154,33 @@ Stored run-task error codes are unchanged. `@dereekb/openrouter` imports this vo
 
 | `@dereekb/openrouter` | `@dereekb/llm` |
 |---|---|
-| `OpenRouterDecision…` | `LlmDecision…` |
-| `openRouterDecision…` (option names, ranking, state paths, wire question) | `llmDecision…` |
+| `OpenRouterDecision…` (the vocabulary types and the two error classes; not the five request types listed under "What stays") | `LlmDecision…` |
+| `openRouterDecision{ChoiceOptionNames,ChoiceRanking,StatePaths,WireQuestion}` | `llmDecision…` |
 | `openRouter{Choice,Score,Noul}Question` | `llm{Choice,Score,Noul}Question` |
 | `OPENROUTER_DECISION_…` | `LLM_DECISION_…` |
-| `{is,as,map,validate,read}OpenRouterDecision…` | `{is,as,map,validate,read}LlmDecision…` |
+| `{map,validate,read}OpenRouterDecision…`, with `MapOpenRouterDecisionChoiceRowsConfig` / `ReadOpenRouterDecisionAnswersConfig` | `{map,validate,read}LlmDecision…`, with `MapLlmDecisionChoiceRowsConfig` / `ReadLlmDecisionAnswersConfig` |
+| `asOpenRouterDecisionConfidenceBand` | `toLlmDecisionConfidenceBand` |
+| `isBlankOpenRouterDecisionEntry` | `isBlankLlmDecisionEntry` |
 | `OpenRouterStorableDecisionState` | `LlmStorableDecisionState` |
 | `OpenRouterSystemOneModelId` / `isOpenRouterSystemOneModelId` / `OPENROUTER_SYSTEM_ONE_MODEL_NAMESPACE` | `LlmDecisionModelId` / `isLlmDecisionModelId` / `LLM_DECISION_MODEL_NAMESPACE` |
 
-What stays in `@dereekb/openrouter`: `openRouterDecisionRequest`, `openRouterDecisionRequestBody` (the SDK's
-`DecisionsRequest`, with OpenRouter's session id and trace), `splitOpenRouterDecisionModelConfig`,
-`validateOpenRouterDecisionRequest`, `openRouterRunUsageFromDecisionsUsage`, the `OPENROUTER_JEV_*` ids,
-`DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID` and the `openRouterDecision` transport, which keeps its own SDK transport.
-`@dereekb/llm/openrouter`'s decision strategy (`makeLlmOpenRouterDecisionStrategy`) is a hook set over the core System
-One transport and never imports `@dereekb/openrouter`.
+### Moving the transport
+
+The names above are aliases. The OpenRouter transport itself is not, and it stays in `@dereekb/openrouter`,
+undeprecated, for hosts that keep the SDK. A host moving decisions onto llm swaps three calls:
+
+| `@dereekb/openrouter` | `@dereekb/llm` | What changes |
+|---|---|---|
+| `openRouterDecision(…)` | `makeLlmOpenRouterDecisionStrategy({ apiKey })` (`/openrouter`), then `strategy.decide(request)`, or a dispatcher's `decide` (records, resends, routing) | No SDK. Errors are `LlmDecisionTransportError` or the abort reason, and the result is `{ model, answers, usage?, provider?, generationId? }`, with one generation id. A direct `strategy.decide` validates neither the model nor the questions, so validate first with `defineLlmDecision` (`asRequest` / `decide`) or `validateLlmDecisionQuestions`. |
+| `openRouterDecisionRequestBody(…)` | `llmDecisionRequestBody({ model, state, questions })` | Sends exactly those three keys. `provider`, `user`, `session_id` and `trace` are dropped (ZenMux refuses them), so attribution lives on your own call record, keyed by `generationId`. |
+| `openRouterRunUsageFromDecisionsUsage(usage)` | `llmUsageFromDecisionUsage(usage, { costBasis })` | Returns an `LlmUsage` (`promptTokens`, `completionTokens`, `totalTokens`, `cost?`), not `OpenRouterRunUsage`. |
+
+What stays in `@dereekb/openrouter`, none of it deprecated: `openRouterDecisionRequest`, `openRouterDecisionRequestBody`
+(the SDK's `DecisionsRequest`: llm's body plus `provider`, `user`, `session_id` and `trace`),
+`splitOpenRouterDecisionModelConfig`, `validateOpenRouterDecisionRequest`, `openRouterRunUsageFromDecisionsUsage`, the
+`OPENROUTER_JEV_*` ids, `DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID`, the five request types (`OpenRouterDecisionSessionId`,
+`OpenRouterDecisionRequest`, `OpenRouterDecisionRequestParams`, `OpenRouterDecisionResult`, `OpenRouterDecisionParams`)
+and the `openRouterDecision` transport, which keeps its own SDK transport. To move off it, see
+[Moving the transport](#moving-the-transport). `@dereekb/llm/openrouter`'s decision strategy
+(`makeLlmOpenRouterDecisionStrategy`) is a hook set over the core System One transport and never imports
+`@dereekb/openrouter`.

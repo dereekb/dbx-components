@@ -33,11 +33,17 @@ are matched against the request's site, are optionally judged by one decision ca
   dispatch `request`, the site `kind`, the `asked` notes and the `inputs`), so one judge can gate per call. It makes at
   most one call per dispatch, under the request's capability, and a fault or a closed gate answers nothing (each note
   takes its `unserved` posture). The call record is stamped `{ craft: { asked, kept } }` under decision
-  `CraftNoteSelect`.
+  `CraftNoteSelect`. It asks through the dispatcher's `decide`, which exists only when the dispatcher has a `decisions`
+  block ([Decision lane](dispatcher.md#retry-and-lanes)). It names no model, so it runs on `decisions.defaultModel`.
+  Without `decide`, every call is unavailable (`onUnavailable` fires), and each judged note takes its `unserved`
+  posture: `omit` by default, so the note is cut.
 - **Contributor.** `makeLlmCraftPromptContributor({ sites, tiers, guard, judge, headings, slot, enabled })` asks its
   `judge` about the judged notes (no judge: each takes its `unserved` posture), gives each group one heading, puts the
   stable group on the cache prefix and the judged group after it as volatile, and records every cut on the call's
   `supplements`. A per-request tier that fails to parse logs one `craft-note-invalid` breadcrumb per file.
+  `guard(input)` answering `true` CUTS every match (cut reason `guard`): it says where craft may NOT go. The
+  contributor reads the request's `site`. A request with no site, or one with no `kind`, gets no craft, so set `site`
+  on the request or scope the dispatcher with `withLlmPromptSite`.
 - **Building blocks.** For an explain view or an authoring tool: `mergeLlmCraftNoteTiers`, `resolveLlmCraftCandidates`
   then `settleLlmCraftNotes` (or `selectLlmCraftNotes` with known verdicts), `toLlmCraftContributions`,
   `readLlmCraftNoteGroup` and `isLlmCraftNoteKept` (the one keep rule: a verdict at or above the note's floor).
@@ -60,6 +66,7 @@ Name the fabric and the cut first. Never describe a logo the brief did not ask f
 The registry, the tiers, the judge and a judged site:
 
 ```ts
+import { makeLlmDispatcher, makeLlmStrategyRegistry } from '@dereekb/llm';
 import { makeLlmCraftPromptContributor, makeLlmCraftJudge, makeLlmCraftNoteRowReader, makeLlmCraftSiteRegistry } from '@dereekb/llm/craft';
 
 const sites = makeLlmCraftSiteRegistry({
@@ -76,11 +83,13 @@ const judge = makeLlmCraftJudge<ShopRequest>({ sites, dispatcher: () => dispatch
 const craft = makeLlmCraftPromptContributor<ShopRequest, ShopDescriptor>({
   sites,
   tiers: [BUILTIN_CRAFT_NOTES, machine.notes, ({ request }) => readRows(request.craftRows)],
-  guard: ({ descriptor }) => descriptor?.traits?.customerFacing === true,
+  guard: ({ descriptor }) => descriptor?.traits?.customerFacing !== true, // `true` CUTS: craft reaches customer-facing capabilities only
   judge
 });
 
-const dispatcher = makeLlmDispatcher({ …, contributors: [craft] });
+// the judge asks through `decide`, which needs the `decisions` block; without it every judged note takes its `unserved` posture
+const dispatcher = makeLlmDispatcher({ …, contributors: [craft], decisions: { strategies: makeLlmStrategyRegistry([decisionStrategy]), defaultModel: 'typesafe/jev-1.14' } });
 
-const site = { kind: 'product-page', facts: { category: 'apparel', brand: 'acme' }, inputs: { brief } };
+// the site rides the request (or scope the dispatcher with `withLlmPromptSite`); with no site, no craft is placed
+const result = await dispatcher.dispatch({ capability: 'describe-product', renderLiveContext, site: { kind: 'product-page', facts: { category: 'apparel', brand: 'acme' }, inputs: { brief } } });
 ```

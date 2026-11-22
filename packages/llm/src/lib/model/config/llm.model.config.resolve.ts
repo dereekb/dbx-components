@@ -215,7 +215,7 @@ export function llmModelVisionCapabilities(file: Maybe<LlmModelSettingsSource>):
 }
 
 /**
- * The per-model PROMPT ADDENDUM map the dispatcher takes ({@link mapLlmModelSettings}).
+ * The per-model PROMPT ADDENDUM map `makeLlmModelAddendumPromptContributor` takes ({@link mapLlmModelSettings}).
  *
  * @param file - The file (absent ⇒ none).
  * @returns The slug → addendum map, or `undefined`.

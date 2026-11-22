@@ -19,7 +19,7 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   the same `hash` the tape strategy uses), and answers `undefined` for a capture-off row, a decision row or a
   non-object. It reads a row written with `toLlmCallLogPayload(record, { keepIo: true })`; a row without I/O has no
   prompt or text and reads as `undefined`.
-- **Scripted completions.** `makeLlmScriptedStrategy` answers each call from `respond(request, call)` (synchronous or
+- **Scripted completions.** `makeLlmScriptedStrategy` answers each call from `respond(request, call)` (an `LlmScriptedRespondFunction`; synchronous or
   async; a resolved `undefined` falls through the same way, a rejection rejects the call), else
   `byCapability[capability]` (a reply or a list with its own counter), else `replies` (in order). A list repeats its
   last entry once spent; an empty list is no reply, and a call nothing answers throws, naming the id, capability and
@@ -30,13 +30,16 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   async runner wraps directly: `respond: async (request) => run(request.prompt, request.model)`.
 - **Scripted decisions.** `makeLlmScriptedDecisionStrategy({ script })` (a synchronous or async script) reads the
   script's answers through
-  `requireLlmDecisionAnswers`, so an under-answered or malformed script is refused with `LlmDecisionAnswerFaultError`
-  exactly as a live transport would; usage is a zero-cost reading. Build answers with this entry's
+  `requireLlmDecisionAnswers`, so an under-answered or malformed script is refused with `LlmDecisionAnswerFaultError`.
+  It reads strictly, as OpenRouter's transport does: it never sets `laxAnswerTypes`, so a type-less answer faults
+  where ZenMux's would take its question's type. Its fault carries no bill (`model`, `usage`, `generationId` and
+  `provider` are unset). Usage is a zero-cost reading. Build answers with this entry's
   `makeLlmDecisionChoiceAnswer` / `makeLlmDecisionScoreAnswer` / `makeLlmDecisionNoulAnswer`, which are well-formed by
   construction, so a script states only which option won and how surely.
-- **Fetch seams.** `makeLlmFetchFake(respond)` is a `ConfiguredFetch` fake for any fetch-seam spec: it records each
-  request (`url`, and an `init` with `method`, a plain `headers` record, `body`, `signal`) and answers with a real
-  `Response` (`llmFetchFakeResponse({ status, body, headers })`); `respond` is an answer, a function, or `'hang'`.
+- **Fetch seams.** `makeLlmFetchFake(respond)` returns `{ fetch, requests }`. `fetch` is a `ConfiguredFetch` fake for
+  any fetch-seam spec, and `requests` records each request (`url`, and an `init` with `method`, a plain `headers`
+  record, `body`, `signal`); it answers with a real `Response` (`llmFetchFakeResponse({ status, body, headers })`).
+  `respond` is an answer, a `Response`, a function, or `'hang'`.
   `readLlmFetchFakeHeader(request, name)` reads a recorded header in any case.
 - **Chat client.** `makeLlmOpenAiChatClientFake(config)` is a fake OpenAI-compatible chat client for the `/openai` and
   `/openrouter` strategy specs: it records each body and its request options and answers one canned completion (the
@@ -87,7 +90,8 @@ scripts make no network call, and the lane's helpers answer `undefined` while it
   stamps both verdicts. A skip flag deletes that half's stale verdict instead. Every switch is parsed with
   `isEnvFlagEnabled` from `@dereekb/util` (`1` / `true`, trimmed, any case). Every lane value — the switches, the
   stamped verdicts and details, and the quota ceiling — is read through `/node`'s `firstLlmEnvValue`: trimmed, and a
-  blank variable is unset. In this repo `LLM_LIVE_SPECS` is an Nx test input (`liveSpecFlags` in `nx.json`), so toggling it never replays a cached run; a host repo declares its own. The verdict
+  blank variable is unset. Declare the unlock variable as an input of your test task (in an Nx workspace, an
+  `{ "env": "LLM_LIVE_SPECS" }` input), so toggling it never replays a cached run. The verdict
   codecs (`llmCredentialVerdictFromEnv`, `toLlmQuotaVerdictEnv`, …) are exported for hosts that wire their own; the
   ceiling parser `parseLlmQuotaMaxUsed` lives in the root (`@dereekb/llm`), beside `evaluateLlmQuotaGate`.
 - **A/B regression gate.** The gate lives in `@dereekb/util`: `abRegressionVerdict({ controlHits, controlTrials,

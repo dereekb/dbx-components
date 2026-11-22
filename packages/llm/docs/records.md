@@ -11,7 +11,8 @@ What a dispatcher records about each call, and the seams a host observes it thro
   `classifyFetchError` with `LLM_ERROR_CLASSIFICATION_CONFIG`, the `openai` SDK's class sets),
   `isRetryableLlmErrorClassification` (the one resend rule both lanes apply), `formatLlmErrorSummary` (one bounded log line
   naming what was thrown) and `LlmDispatchFaultError` / `isLlmDispatchFaultError` (the structured rejection of a send
-  error the policy does not resend). The generic predicates (`isFetchAbortError`, `isFetchNetworkError`,
+  error the policy does not resend; when a call rejects with it:
+  [Outcomes](dispatcher.md#outcomes-what-resolves-and-what-throws)). The generic predicates (`isFetchAbortError`, `isFetchNetworkError`,
   `classifyFetchError`) live in `@dereekb/util/fetch`.
 - **Decode failures.** The seven `LlmDecodeFailureClass`es, `classifyLlmDecodeFailure` (the failure family) and
   `classifyLlmReplyOutcome` (what the reply looked like), the finish-reason predicates (`isLlmLengthCappedFinish`,
@@ -19,12 +20,20 @@ What a dispatcher records about each call, and the seams a host observes it thro
   (`LLM_TIMEOUT_FINISH_REASON`, `LLM_TRANSPORT_FINISH_REASON`, `LLM_UNRETRYABLE_FINISH_REASON`, together
   `LLM_SEND_FAILURE_FINISH_REASONS`) and the bounded excerpt helpers. Every failed send, on either lane, files a call
   row carrying one of the three, so a ledger counts send failures with `isLlmSendFailureFinishReason(row.finishReason)`
-  — not by pairing start rows with call rows, which misses `__unretryable__`. The decode-failure payload's `cachePrefixHash` is the same 16-hex `llmPromptCacheHash` the call
-  record carries, so the two join on one key: on a root dispatch it is the cache watch's hash of the stable prefix;
-  a chained follow-up has no prefix, so it carries the hash of the whole prompt it sent.
+  — not by pairing start rows with call rows, which misses `__unretryable__`. On a root dispatch, the decode-failure payload's `cachePrefixHash` is the same 16-hex
+  `llmPromptCacheHash` of the stable prefix that the call record carries, so the two join on it. A chained follow-up
+  has no prefix:
+  - its call record carries no `cachePrefixHash`
+  - its decode-failure payload carries the hash of the whole prompt it sent
+
+  So follow-up rows do not join on it. Pair them by `capability`, `model` and `tier` plus your own `recordFieldsOf`
+  fields, or read them together off `onDispatchComplete`, which marks a follow-up `followUp: true`. A decision record
+  carries no `cachePrefixHash`.
 - **Retry lever.** `chooseLlmRetryLever` picks the ONE thing the next attempt changes (budget, model, reasoning off /
   low, structured output off, or nothing, with the reason); `applyLlmRetryLever` applies it.
-- **Call records.** `LlmCallRecord`, `LlmCallStartRecord`, `LlmDecodeFailureRecord` and their event-type tags. A host's
+- **Call records.** `LlmCallRecord`, `LlmCallStartRecord`, `LlmDecodeFailureRecord` and their event-type tags:
+  `LLM_CALL_EVENT_TYPE` (`'llm_call'`), `LLM_CALL_START_EVENT_TYPE` (`'llm_call_start'`) and
+  `LLM_DECODE_FAILURE_EVENT_TYPE` (`'llm_decode_failure'`). A host's
   own fields sit at the top level: pass them as `H`. `llmCallTelemetry` projects the per-call telemetry block. Every
   root dispatch's call record carries `cachePrefixHash` (the cache watch's hash of its stable prefix) at the top level,
   whether or not the call context times; `phases` keeps only the timing and the `promptChars` / `cachePrefixChars`
@@ -100,7 +109,7 @@ What a host persists for each call, the readers that read it back, and the math 
   | `strategyId`, `strategyKind`, `model`, `provider`, `usage`, `latencyMs`, `generationId`, `finishReason`, `repair` | `llmCallTelemetry(record.result)` | always |
   | `tier` | `record.tier` | always |
   | `schemaEnforced`, `attempts`, `decodeStatus`, `decodeOutcome`, `lengthCapped` | `record.result` | always |
-  | `lever` | `record.result.valueJson` (the accepted reply value) | `keepIo` |
+  | `lever` | `record.result.valueJson`: the accepted reply value, JSON-encoded. It is absent on a dropped or declined decode. The key keeps the name existing rows carry, and has nothing to do with the retry lever (`failedAttempts[].retry`, the `retry-lever` diag). | `keepIo` |
   | `validationErrors` | `record.result` | always |
   | `subject`, `decision` | the record's own fields | always |
   | `supplements` | `record.supplements` | only when non-empty |
