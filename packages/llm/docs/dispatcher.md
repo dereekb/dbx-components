@@ -46,7 +46,8 @@ correction / backoff vocabulary with its constants.
   ends (accepted, `dropped` or rejected) is in [Outcomes](#outcomes-what-resolves-and-what-throws).
 - **Follow-ups.** `preparePrompt(request)` returns an `LlmPrompt` whose `execute()` runs once and whose `followUp(…)`
   chains onto the same thread; `dispatch(request)` equals `preparePrompt(request).execute()` unwrapped. A validated
-  dispatch whose replies failed to decode and never recovered replays as `degenerateThreadPlaceholder`. Every other
+  dispatch whose replies failed to decode and never recovered replays as `degenerateThreadPlaceholder`; a later
+  accepted reply, a decline included, recovers it and the decode-failure row reads `recovered: true`. Every other
   reply replays as returned, cut at `threadTurnMaxChars` ([Prompt handles](prompt.md)). `makeLlmPromptChain` works over it unchanged: the root renders its
   live context once, and each follow-up sends only the lead and the changed blocks.
 - **Resuming.** `resumePrompt({ request, thread })` rebuilds a chain head from a stored `thread`, so a follow-up can run

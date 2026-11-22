@@ -6040,6 +6040,91 @@
       ]
     },
     {
+      "slug": "limit-map",
+      "name": "limitMap",
+      "kind": "function",
+      "category": "map",
+      "module": "@dereekb/util",
+      "subpath": "map/map.limit",
+      "signature": "limitMap(map: M, config: LimitMapConfig<K, V>): M",
+      "description": "Trims a map to its limit, ONCE: deletes its oldest entries, in iteration order, until `size <= limit`.\n\nThe one-shot sibling of {@link limitArray}, and the eviction loop {@link LimitedMap} runs after every insert.",
+      "params": [
+        {
+          "name": "map",
+          "type": "M",
+          "description": "- The map to trim, in place.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "LimitMapConfig<K, V>",
+          "description": "- The limit, and the callback that receives each evicted entry.",
+          "optional": false
+        }
+      ],
+      "returns": "The same map.",
+      "tags": [
+        "map",
+        "limit",
+        "cap",
+        "trim",
+        "evict",
+        "truncate",
+        "size",
+        "oldest",
+        "limitmap"
+      ],
+      "example": "const map = new Map([['a', 1], ['b', 2], ['c', 3]]);\nlimitMap(map, { limit: 2 }); // Map { 'b' => 2, 'c' => 3 }",
+      "relatedSlugs": [
+        "limited-map",
+        "limit-set",
+        "limit-array"
+      ]
+    },
+    {
+      "slug": "limited-map",
+      "name": "LimitedMap",
+      "kind": "class",
+      "category": "map",
+      "module": "@dereekb/util",
+      "subpath": "map/map.limit",
+      "signature": "class LimitedMap",
+      "description": "A `Map` that never holds more than `limit` entries: an insert that takes it past its limit evicts the oldest entry.\n\nWith `order: 'recent'` (the default) it is an LRU cache — {@link LimitedMap.get} of a present key and a re-`set` of an\nexisting key move it to the end. With `order: 'insertion'` nothing refreshes an entry (FIFO). `has` never changes\nthe order.\n\nOnly `set` and `get` are overridden; `delete`, `clear`, `size`, `forEach` and the iterators are the native ones.",
+      "params": [
+        {
+          "name": "config",
+          "type": "LimitedMapConfig<K, V>",
+          "description": "",
+          "optional": false
+        },
+        {
+          "name": "entries",
+          "type": "Maybe<Iterable<readonly [K, V]>>",
+          "description": "",
+          "optional": true
+        }
+      ],
+      "returns": "LimitedMap",
+      "tags": [
+        "map",
+        "limit",
+        "cap",
+        "lru",
+        "cache",
+        "fifo",
+        "evict",
+        "bounded",
+        "size",
+        "limited",
+        "limitedmap"
+      ],
+      "example": "const cache = new LimitedMap<string, number>({ limit: 2 });\ncache.set('a', 1).set('b', 2);\ncache.get('a'); // refreshes 'a'\ncache.set('c', 3); // evicts 'b', the least recently used",
+      "relatedSlugs": [
+        "limit-map",
+        "limited-set"
+      ]
+    },
+    {
       "slug": "id-batch-factory",
       "name": "idBatchFactory",
       "kind": "factory",
@@ -11151,6 +11236,91 @@
       ]
     },
     {
+      "slug": "limit-set",
+      "name": "limitSet",
+      "kind": "function",
+      "category": "set",
+      "module": "@dereekb/util",
+      "subpath": "set/set.limit",
+      "signature": "limitSet(set: S, config: LimitSetConfig<T>): S",
+      "description": "Trims a set to its limit, ONCE: deletes its oldest values, in iteration order, until `size <= limit`.\n\nThe one-shot sibling of {@link limitArray}, and the eviction loop {@link LimitedSet} runs after every insert.",
+      "params": [
+        {
+          "name": "set",
+          "type": "S",
+          "description": "- The set to trim, in place.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "LimitSetConfig<T>",
+          "description": "- The limit, and the callback that receives each evicted value.",
+          "optional": false
+        }
+      ],
+      "returns": "The same set.",
+      "tags": [
+        "set",
+        "limit",
+        "cap",
+        "trim",
+        "evict",
+        "truncate",
+        "size",
+        "oldest",
+        "limitset"
+      ],
+      "example": "const set = new Set(['a', 'b', 'c']);\nlimitSet(set, { limit: 2 }); // Set { 'b', 'c' }",
+      "relatedSlugs": [
+        "limited-set",
+        "limit-map",
+        "limit-array"
+      ]
+    },
+    {
+      "slug": "limited-set",
+      "name": "LimitedSet",
+      "kind": "class",
+      "category": "set",
+      "module": "@dereekb/util",
+      "subpath": "set/set.limit",
+      "signature": "class LimitedSet",
+      "description": "A `Set` that never holds more than `limit` values: an add that takes it past its limit evicts the oldest value.\n\nWith `order: 'recent'` (the default) a re-`add` of an existing value moves it to the end (least-recently-used). With\n`order: 'insertion'` nothing refreshes a value (FIFO). `has` never changes the order.\n\nOnly `add` is overridden; `delete`, `clear`, `size`, `forEach` and the iterators are the native ones.",
+      "params": [
+        {
+          "name": "config",
+          "type": "LimitedSetConfig<T>",
+          "description": "",
+          "optional": false
+        },
+        {
+          "name": "values",
+          "type": "Maybe<Iterable<T>>",
+          "description": "",
+          "optional": true
+        }
+      ],
+      "returns": "LimitedSet",
+      "tags": [
+        "set",
+        "limit",
+        "cap",
+        "lru",
+        "fifo",
+        "evict",
+        "bounded",
+        "size",
+        "seen",
+        "limited",
+        "limitedset"
+      ],
+      "example": "const seen = new LimitedSet<string>({ limit: 2 });\nseen.add('a').add('b');\nseen.add('a'); // refreshes 'a'\nseen.add('c'); // evicts 'b', the least recently added",
+      "relatedSlugs": [
+        "limit-set",
+        "limited-map"
+      ]
+    },
+    {
       "slug": "is-selected-decision-function-factory",
       "name": "isSelectedDecisionFunctionFactory",
       "kind": "factory",
@@ -13242,6 +13412,40 @@
       "relatedSlugs": [
         "capitalize-first-letter",
         "lowercase-first-letter"
+      ]
+    },
+    {
+      "slug": "to-maybe-string",
+      "name": "toMaybeString",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/string",
+      "signature": "toMaybeString(value: unknown): string | undefined",
+      "description": "Converts a value to its `String()` form while keeping an absent value absent: `null` and `undefined` both become\n`undefined`. For reading a loosely typed field as an optional string: a CLI argument, a provider code that arrives as\na number, or a persisted row key that is a number on one build and a string on another.",
+      "params": [
+        {
+          "name": "value",
+          "type": "unknown",
+          "description": "- The value to convert.",
+          "optional": false
+        }
+      ],
+      "returns": "`String(value)`, or `undefined` when the value is `null` or `undefined`.",
+      "tags": [
+        "string",
+        "convert",
+        "coerce",
+        "maybe",
+        "nullish",
+        "optional",
+        "stringify",
+        "to",
+        "tomaybestring"
+      ],
+      "example": "toMaybeString(429); // '429'\ntoMaybeString(null); // undefined",
+      "relatedSlugs": [
+        "is-not-null-or-empty-string"
       ]
     },
     {

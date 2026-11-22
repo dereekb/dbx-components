@@ -112,14 +112,15 @@ export function mergeLlmPromptSite<S extends object = object>(outer: Maybe<LlmPr
  *
  * @typeParam R - The host's request type.
  * @typeParam X - The host's dispatch result type.
+ * @typeParam E - The host's decision-request fields that the dispatcher's `decide` takes beside the library request.
  */
-export interface WithLlmPromptSiteConfig<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult> {
+export interface WithLlmPromptSiteConfig<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult, E extends object = object> {
   /**
    * The scope's dispatcher — the one every request of the scope would otherwise go through. Built as a plain object
    * (every library and host factory builds one): the wrapper spreads it, so a class instance's prototype methods are
    * not carried.
    */
-  readonly dispatcher: LlmDispatcher<R, X>;
+  readonly dispatcher: LlmDispatcher<R, X, E>;
   /**
    * The site every request of the scope carries — a host's typed supply fits.
    */
@@ -131,7 +132,8 @@ export interface WithLlmPromptSiteConfig<R extends LlmDispatchRequest = LlmDispa
  * workflow's `{ supply: { glossary } }`). The three request-taking members are wrapped ({@link LlmDispatcher.dispatch},
  * {@link LlmDispatcher.preparePrompt}, through which a chain root goes, and {@link LlmDispatcher.resumePrompt}, whose
  * root request follow-ups inherit), so no call site is edited and every call of the scope carries the site with no
- * signature change. The other members (`decide`, `capabilityVision`) ride the spread unchanged.
+ * signature change. The other members (`decide`, `capabilityVision`) ride the spread unchanged, so `decide` keeps the
+ * dispatcher's host decision-request fields `E`.
  *
  * Wrappers compose: a dispatcher wrapped LATER is the narrower scope, so its keys win over an earlier wrapper's, and a
  * request's own site wins over both ({@link mergeLlmPromptSite}). It stamps the site and NEVER rewrites a byte; a
@@ -142,6 +144,7 @@ export interface WithLlmPromptSiteConfig<R extends LlmDispatchRequest = LlmDispa
  *
  * @typeParam R - The host's request type.
  * @typeParam X - The host's dispatch result type.
+ * @typeParam E - The host's decision-request fields that `decide` takes beside the library request.
  *
  * @example
  * ```ts
@@ -151,7 +154,7 @@ export interface WithLlmPromptSiteConfig<R extends LlmDispatchRequest = LlmDispa
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function withLlmPromptSite<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult>(config: WithLlmPromptSiteConfig<R, X>): LlmDispatcher<R, X> {
+export function withLlmPromptSite<R extends LlmDispatchRequest = LlmDispatchRequest, X extends LlmDispatchResult = LlmDispatchResult, E extends object = object>(config: WithLlmPromptSiteConfig<R, X, E>): LlmDispatcher<R, X, E> {
   const { dispatcher, site } = config;
   const stamp = (request: R): R => ({ ...request, site: (mergeLlmPromptSite(site, request.site) ?? site) as NonNullable<R['site']> });
 

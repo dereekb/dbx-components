@@ -70,15 +70,16 @@ scopes, prompt handles and chains, a live-context token budget, a cache-prefix w
 - **Sites.** `mergeLlmPromptSite` merges two sites, the narrower winning (its `kind` replaces; facts, inputs and supply
   merge key by key). `withLlmPromptSite({ dispatcher, site })` returns a dispatcher whose `dispatch`,
   `preparePrompt` and `resumePrompt` requests carry the site — the request's own site winning, a later wrapper
-  narrower than an earlier one. `decide` passes through unchanged, because a decision request has no site. It never
+  narrower than an earlier one. `decide` passes through unchanged, because a decision request has no site; the wrapper
+  keeps the dispatcher's `LlmDispatcher<R, X, E>` type, so `decide` still takes the host's decision fields. It never
   changes a byte; a contributor reading the site does.
 - **Prompt handles.** `makeLlmPromptFactory({ runPromptRequest })` builds `LlmPrompt`s that execute once (a rejected
   execution is cached too) and chain follow-ups onto the same thread. The recorded `assistant` turn is the text the
   run returned: the repaired text when a repair landed, cut at `threadTurnMaxChars`
   (`DEFAULT_LLM_THREAD_TURN_MAX_CHARS`, 8,000) with `LLM_THREAD_TURN_TRUNCATION_MARKER` appended. Only a run that
   marks its reply `degenerate` records `degenerateThreadPlaceholder` (`DEFAULT_LLM_DEGENERATE_THREAD_PLACEHOLDER`)
-  instead. `makeLlmDispatcher` marks a validated dispatch whose replies failed to decode and never recovered, so no
-  later follow-up replays (and re-bills) a garbage turn. A single-shot call's reply is always recorded as returned.
+  instead. `makeLlmDispatcher` marks a validated dispatch whose replies failed to decode and never recovered (a later
+  accepted reply, a decline included, recovers it), so no later follow-up replays (and re-bills) a garbage turn. A single-shot call's reply is always recorded as returned.
 - **Resuming.** The library stores nothing: the host saves a head's `thread` under its own message id, and the
   factory's `resume({ request, thread })` (`LlmDispatcher.resumePrompt`) rebuilds an `LlmPromptThreadHead` from it in a
   later process. Follow-ups chain onto that head exactly as onto the `ExecutedLlmPrompt` that recorded the thread, and
@@ -260,8 +261,8 @@ message's `thread` and resume from it. What a message needs stored:
 
   A `user` turn holds the final prompt sent (a retry's correction included). An `assistant` turn holds the reply as
   the run returned it (repaired when a repair landed), cut at `threadTurnMaxChars` (8,000 by default, ` […truncated
-  for replay]` appended). On a validated dispatch whose replies failed to decode and never recovered, it holds
-  `degenerateThreadPlaceholder` instead. It is strings throughout, so it stores in JSON or Firestore as-is. Each message's thread is the
+  for replay]` appended). On a validated dispatch whose replies failed to decode and never recovered (no later
+  attempt was accepted, as a value or a decline), it holds `degenerateThreadPlaceholder` instead. It is strings throughout, so it stores in JSON or Firestore as-is. Each message's thread is the
   whole conversation up to that message, so any stored message can be resumed.
 - **What rebuilds the root request** — its capability, any model or tier override, and the host fields. Follow-ups
   inherit these, so the resumed request must route as the original did; a different model forfeits the warm cache. The

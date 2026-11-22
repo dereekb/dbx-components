@@ -744,11 +744,9 @@ async function runLlmDispatchReplyStep(config: LlmDispatchAttemptsConfig, loop: 
   if (reading.kind === 'value') {
     verdict = await runLlmDispatchValueStep(config, loop, { ...step, ...judged, value: reading.value });
   } else if (reading.kind === 'declined' || (config.protocol === 'line' && isDegenerateLlmReplyReading(reading))) {
-    // a decline (or a `line` reply that is not JSON) is an ANSWER, never a decode failure
-    if (repair != null) {
-      loop.recovered = true;
-    }
-
+    // a decline (or a `line` reply that is not JSON) is an ANSWER, never a decode failure — and, like an accepted
+    // value, it recovers any earlier attempt's decode failure
+    loop.recovered = repair != null || loop.ledger.decodeFailures.length > 0;
     loop.accepted = true;
     verdict = { next: 'settle', decode: repair == null ? undefined : { kind: 'repaired', summary: repair } };
   } else {

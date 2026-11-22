@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
+import { defineLlmDecision, type LlmDecisionDispatchRequest } from '../decision/llm.decision.descriptor';
+import { llmNoulQuestion, type LlmDecisionAnswers, type LlmDecisionQuestions } from '../decision/llm.decision.question';
+import { type LlmDecisionResult } from '../decision/llm.decision.strategy';
 import { type LlmDispatchRequest } from '../dispatch/llm.dispatch.request';
 import { type LlmDispatcher } from '../dispatch/llm.dispatcher';
+import { type LlmDispatchResult } from '../strategy/llm.strategy';
 import { mergeLlmPromptSite, type LlmPromptSite, withLlmPromptSite } from './llm.prompt.site';
 import { makeLlmPromptFactory } from './llm.prompt.thread';
 
@@ -74,6 +78,20 @@ function recordingDispatcherOf() {
   return { dispatcher, seen };
 }
 
+/**
+ * The host's extra decision-request fields — the dispatcher's `E`.
+ */
+interface HostDecisionFields {
+  readonly tenant?: string;
+}
+
+const ANY_FIT = defineLlmDecision({
+  decision: 'AnyFit',
+  describe: 'does any row fit the phrase',
+  state: (input: { readonly phrase: string }) => ({ phrase: input.phrase }),
+  questions: () => ({ any: llmNoulQuestion('does any row fit?') })
+});
+
 const request = (site?: LlmPromptSite<HostSupply>): HostRequest => ({ capability: 'summarize', renderLiveContext: () => [], ...(site == null ? {} : { site }) });
 
 describe('withLlmPromptSite()', () => {
@@ -145,5 +163,25 @@ describe('withLlmPromptSite()', () => {
     await withLlmPromptSite({ dispatcher, site }).dispatch(request());
 
     expect(seen[0]?.site).toEqual(site);
+  });
+
+  it("keeps the dispatcher's host decision-request fields on decide", async () => {
+    const { dispatcher: base } = recordingDispatcherOf();
+    const decided: (LlmDecisionDispatchRequest & HostDecisionFields)[] = [];
+    const dispatcher: LlmDispatcher<HostRequest, LlmDispatchResult, HostDecisionFields> = {
+      ...base,
+      decide: async <I, Q extends LlmDecisionQuestions>(decisionRequest: LlmDecisionDispatchRequest<I, Q> & HostDecisionFields): Promise<LlmDecisionResult<Q>> => {
+        decided.push(decisionRequest as unknown as LlmDecisionDispatchRequest & HostDecisionFields);
+        return { model: 'decide-model', answers: {} as LlmDecisionAnswers<Q> };
+      }
+    };
+    const scoped = withLlmPromptSite({ dispatcher, site: { kind: 'report' } });
+
+    expectTypeOf(scoped).toEqualTypeOf<LlmDispatcher<HostRequest, LlmDispatchResult, HostDecisionFields>>();
+
+    // the host field compiles only while the wrapper keeps E — the excess-property check refuses it otherwise
+    await scoped.decide?.({ capability: 'summarize', decision: ANY_FIT, input: { phrase: 'p' }, tenant: 't1' });
+
+    expect(decided.map((entry) => entry.tenant)).toEqual(['t1']);
   });
 });

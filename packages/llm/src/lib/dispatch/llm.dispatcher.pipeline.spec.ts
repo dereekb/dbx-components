@@ -639,6 +639,18 @@ describe('makeLlmDispatcher()', () => {
 
       expect(executed.thread[1]).toEqual({ role: 'assistant', content: '{"answer":"ok"}' });
     });
+
+    it('should replay an accepted decline that follows a decode failure verbatim and record the failure as recovered', async () => {
+      const decline = '{"answerable":false,"rationale":"cannot"}';
+      const { decodeFailures, recorder } = recording();
+      const { dispatcher, requests } = setup({ replies: [MANGLED, decline], recorder });
+      const executed = await dispatcher.preparePrompt(request({ capability: 'EnvelopeCap', validate: VALID })).execute();
+
+      expect(requests).toHaveLength(2);
+      expect(executed.thread[1]).toEqual({ role: 'assistant', content: decline });
+      expect(decodeFailures).toHaveLength(1);
+      expect(decodeFailures[0].payload).toMatchObject({ attempts: 2, recovered: true, failures: [expect.objectContaining({ attempt: 1 })] });
+    });
   });
 
   describe('aborts and transport', () => {
