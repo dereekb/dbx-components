@@ -9,6 +9,7 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/packages/util"],
+      "inputs": ["production", "^production", { "input": "production", "projects": ["util-test", "util-fetch", "util-oidc", "util-eslint"] }],
       "options": {
         "color": true,
         "command": "node tools/scripts/finalize-esm-exports.mjs dist/packages/util"

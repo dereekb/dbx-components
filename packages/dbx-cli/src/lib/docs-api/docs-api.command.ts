@@ -1,5 +1,5 @@
 import type { Argv, CommandModule } from 'yargs';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, toMaybeString } from '@dereekb/util';
 import { DEFAULT_DOCS_SEARCH_LIMIT, MAX_DOCS_SEARCH_LIMIT } from '@dereekb/firebase';
 import { type CliContext, requireCliContext } from '../context/cli.context';
 import { wrapCommandHandler } from '../util/handler';
@@ -104,7 +104,7 @@ export function buildDocsApiCommand(options?: Maybe<BuildDocsApiCommandOptions>)
     handler: wrapCommandHandler(async (argv: any) => {
       const input = clientInput();
       const id = String(argv.id);
-      const section: Maybe<string> = argv.section == null ? undefined : String(argv.section);
+      const section: Maybe<string> = toMaybeString(argv.section);
       const result = await readDocOverHttp({ ...input, id, section });
 
       if (docsApiWantsJson(argv)) {

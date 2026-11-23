@@ -76,11 +76,11 @@ export interface ArrayToObjectConfig<T, K extends PrimativeKey = PrimativeKey, V
  * @dbxUtilTags array, object, record, index, key, lookup, duplicate, unique, registry
  * @dbxUtilRelated is-unique-keyed-function, key-value-map-factory
  */
-export function arrayToObject<T, V, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => V): Record<K, V>;
-export function arrayToObject<T, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => T): Record<K, T>;
-export function arrayToObject<T, K extends PrimativeKey = PrimativeKey>(values: T[], keyFn: ReadKeyFunction<T, K>): Record<K, T>;
-export function arrayToObject<T, K extends PrimativeKey = PrimativeKey, V = T>(values: T[], config: ArrayToObjectConfig<T, K, V>): Record<K, V>;
-export function arrayToObject<T, V, K extends PrimativeKey = PrimativeKey>(values: T[], keyFnOrConfig: ReadKeyFunction<T, K> | ArrayToObjectConfig<T, K, V>, valueFn?: (t: T) => V): Record<K, V> {
+export function arrayToObject<T, V, K extends PrimativeKey = PrimativeKey>(values: ReadonlyArray<T>, keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => V): Record<K, V>;
+export function arrayToObject<T, K extends PrimativeKey = PrimativeKey>(values: ReadonlyArray<T>, keyFn: ReadKeyFunction<T, K>, valueFn: (t: T) => T): Record<K, T>;
+export function arrayToObject<T, K extends PrimativeKey = PrimativeKey>(values: ReadonlyArray<T>, keyFn: ReadKeyFunction<T, K>): Record<K, T>;
+export function arrayToObject<T, K extends PrimativeKey = PrimativeKey, V = T>(values: ReadonlyArray<T>, config: ArrayToObjectConfig<T, K, V>): Record<K, V>;
+export function arrayToObject<T, V, K extends PrimativeKey = PrimativeKey>(values: ReadonlyArray<T>, keyFnOrConfig: ReadKeyFunction<T, K> | ArrayToObjectConfig<T, K, V>, valueFn?: (t: T) => V): Record<K, V> {
   const config: ArrayToObjectConfig<T, K, V> = typeof keyFnOrConfig === 'function' ? { readKey: keyFnOrConfig, readValue: valueFn } : keyFnOrConfig;
   const { readKey, readValue, throwOnDuplicateKey } = config;
   const record = {} as Record<K, V>;

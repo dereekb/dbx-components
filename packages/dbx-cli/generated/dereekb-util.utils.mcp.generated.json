@@ -224,6 +224,40 @@
       ]
     },
     {
+      "slug": "is-env-flag-enabled",
+      "name": "isEnvFlagEnabled",
+      "kind": "function",
+      "category": "boolean",
+      "module": "@dereekb/util",
+      "subpath": "boolean",
+      "signature": "isEnvFlagEnabled(value: Maybe<string>): boolean",
+      "description": "Whether an environment flag is on: `1` or `true`, trimmed and case-insensitive. Anything else — `0`, `yes`, blank,\nabsent — is off.\n\nNot {@link stringToBoolean}: a flag that gates billed or destructive work (a live-spec lane) must be opted into\ndeliberately, so `yes` / `y` / `t` stay off and the conventional `1` is on.",
+      "params": [
+        {
+          "name": "value",
+          "type": "Maybe<string>",
+          "description": "- The raw environment value.",
+          "optional": false
+        }
+      ],
+      "returns": "`true` when the flag is on.",
+      "tags": [
+        "boolean",
+        "string",
+        "env",
+        "flag",
+        "parse",
+        "gate",
+        "is",
+        "enabled",
+        "isenvflagenabled"
+      ],
+      "example": "isEnvFlagEnabled(' TRUE '); // true\nisEnvFlagEnabled('1');      // true\nisEnvFlagEnabled('yes');    // false\nisEnvFlagEnabled(undefined); // false",
+      "relatedSlugs": [
+        "string-to-boolean"
+      ]
+    },
+    {
       "slug": "true-or-false-string",
       "name": "trueOrFalseString",
       "kind": "function",
@@ -657,6 +691,79 @@
       "example": "hashStringToNumber('Michelle B'); // stable integer, same every call\nhashStringToNumber('Michelle B') % 12; // deterministic bucket index 0-11",
       "relatedSlugs": [
         "decode-hashed-values"
+      ]
+    },
+    {
+      "slug": "sha256-hex",
+      "name": "sha256Hex",
+      "kind": "function",
+      "category": "hash",
+      "module": "@dereekb/util",
+      "subpath": "hash",
+      "signature": "sha256Hex(text: string): HexString",
+      "description": "SHA-256 of a string's UTF-8 bytes as 64 lowercase hex characters — synchronous and dependency-free, so it runs\nunchanged in browsers, workers and Node.\n\nByte-identical to node:crypto `createHash('sha256').update(text, 'utf8').digest('hex')` for EVERY JS string: the\ntext is encoded with `TextEncoder` (the WHATWG UTF-8 rules Node also applies), so a lone surrogate encodes as U+FFFD\n(`EF BF BD`) instead of throwing. Use {@link sha256HexPrefix} for a short digest.",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "description": "- The text to hash.",
+          "optional": false
+        }
+      ],
+      "returns": "The lowercase hex digest.",
+      "tags": [
+        "hash",
+        "sha256",
+        "digest",
+        "hex",
+        "sync",
+        "crypto",
+        "fingerprint",
+        "sha256hex"
+      ],
+      "example": "sha256Hex('abc'); // 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'",
+      "relatedSlugs": [
+        "sha256-hex-prefix",
+        "hash-string-to-number"
+      ]
+    },
+    {
+      "slug": "sha256-hex-prefix",
+      "name": "sha256HexPrefix",
+      "kind": "function",
+      "category": "hash",
+      "module": "@dereekb/util",
+      "subpath": "hash",
+      "signature": "sha256HexPrefix(text: string, length: number): HexString",
+      "description": "The first `length` characters of {@link sha256Hex} — a short, stable fingerprint of a string's UTF-8 bytes.",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "description": "- The text to hash.",
+          "optional": false
+        },
+        {
+          "name": "length",
+          "type": "number",
+          "description": "- How many leading hex characters to keep (at most 64).",
+          "optional": false
+        }
+      ],
+      "returns": "The lowercase hex digest prefix.",
+      "tags": [
+        "hash",
+        "sha256",
+        "digest",
+        "hex",
+        "prefix",
+        "short",
+        "fingerprint",
+        "sha256hexprefix"
+      ],
+      "example": "sha256HexPrefix('abc', 8); // 'ba7816bf'",
+      "relatedSlugs": [
+        "sha256-hex"
       ]
     },
     {
@@ -1535,12 +1642,12 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array.map",
-      "signature": "arrayToObject(values: T[], keyFnOrConfig: ReadKeyFunction<T, K> | ArrayToObjectConfig<T, K, V>, valueFn?: (t: T) => V): Record<K, V>",
+      "signature": "arrayToObject(values: ReadonlyArray<T>, keyFnOrConfig: ReadKeyFunction<T, K> | ArrayToObjectConfig<T, K, V>, valueFn?: (t: T) => V): Record<K, V>",
       "description": "Maps the values of the input array to a Record object, keyed by the result of a key function.\nItems with undefined keys are omitted. Optionally transforms each value using a value function.\n\nAlso accepts an {@link ArrayToObjectConfig} as the second argument, which can throw when two values share a key instead of letting the last value win.",
       "params": [
         {
           "name": "values",
-          "type": "T[]",
+          "type": "ReadonlyArray<T>",
           "description": "- source array of items to map",
           "optional": false
         },
@@ -2064,12 +2171,12 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array",
-      "signature": "concatArrays(arrays?: Maybe<T[]>[]): T[]",
+      "signature": "concatArrays(arrays?: Maybe<ReadonlyArray<T>>[]): T[]",
       "description": "Concatenates the input arrays into a single array, filtering out nullish entries.",
       "params": [
         {
           "name": "arrays",
-          "type": "Maybe<T[]>[]",
+          "type": "Maybe<ReadonlyArray<T>>[]",
           "description": "- Arrays to concatenate; nullish entries are ignored.",
           "optional": true
         }
@@ -2381,12 +2488,12 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array.unique",
-      "signature": "concatArraysUnique(arrays?: Maybe<T[]>[]): T[]",
+      "signature": "concatArraysUnique(arrays?: Maybe<ReadonlyArray<T>>[]): T[]",
       "description": "Concatenates multiple arrays and returns only unique values.",
       "params": [
         {
           "name": "arrays",
-          "type": "Maybe<T[]>[]",
+          "type": "Maybe<ReadonlyArray<T>>[]",
           "description": "- Arrays to concatenate. Null/undefined arrays are ignored.",
           "optional": true
         }
@@ -2448,12 +2555,12 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array.unique",
-      "signature": "unique(values: T[], excludeInput?: FilterUniqueFunctionExcludeKeysInput<T, T>): T[]",
+      "signature": "unique(values: ReadonlyArray<T>, excludeInput?: FilterUniqueFunctionExcludeKeysInput<T, T>): T[]",
       "description": "Filters the input values and only returns unique values.",
       "params": [
         {
           "name": "values",
-          "type": "T[]",
+          "type": "ReadonlyArray<T>",
           "description": "- Array of primitive-key values to deduplicate.",
           "optional": false
         },
@@ -2644,12 +2751,12 @@
       "category": "array",
       "module": "@dereekb/util",
       "subpath": "array/array.value",
-      "signature": "filterMaybeArrayFunction(filterFn: Parameters<Array<Maybe<T>>['filter']>[0]): FilterMaybeArrayFunction<T>",
+      "signature": "filterMaybeArrayFunction(filterFn: (value: Maybe<T>, index: number, array: ReadonlyArray<Maybe<T>>) => unknown): FilterMaybeArrayFunction<T>",
       "description": "Creates a {@link FilterMaybeArrayFunction} that filters maybe values from an array using the provided filter function.",
       "params": [
         {
           "name": "filterFn",
-          "type": "Parameters<Array<Maybe<T>>['filter']>[0]",
+          "type": "(value: Maybe<T>, index: number, array: ReadonlyArray<Maybe<T>>) => unknown",
           "description": "- Filter predicate used to determine which values to keep.",
           "optional": false
         }
@@ -4997,6 +5104,70 @@
       ]
     },
     {
+      "slug": "read-error-message",
+      "name": "readErrorMessage",
+      "kind": "function",
+      "category": "error",
+      "module": "@dereekb/util",
+      "subpath": "error/error",
+      "signature": "readErrorMessage(error: unknown): string",
+      "description": "Reads a human-readable message from any thrown value, never throwing.\n\n- An `Error` (including `DOMException`) yields its `message`.\n- Any other non-null object whose `message` is a string (a {@link ReadableError}-like or cross-realm error) yields that message.\n- Anything else yields `String(error)`; when `String()` itself throws (a null-prototype object or a throwing `toString`),\n  it falls back to `Object.prototype.toString.call(error)`.\n\nThis is the `unknown → string` sibling of {@link messageFromError}, for catch blocks whose caught value is `unknown`.",
+      "params": [
+        {
+          "name": "error",
+          "type": "unknown",
+          "description": "- The caught value to read a message from.",
+          "optional": false
+        }
+      ],
+      "returns": "The message text; never null or undefined.",
+      "tags": [
+        "error",
+        "message",
+        "unknown",
+        "catch",
+        "text",
+        "string",
+        "read",
+        "readerrormessage"
+      ],
+      "example": "readErrorMessage(new Error('boom')); // 'boom'\nreadErrorMessage({ message: 'readable' }); // 'readable'\nreadErrorMessage('plain'); // 'plain'\nreadErrorMessage(undefined); // 'undefined'",
+      "relatedSlugs": [
+        "message-from-error"
+      ]
+    },
+    {
+      "slug": "error-class-names",
+      "name": "errorClassNames",
+      "kind": "function",
+      "category": "error",
+      "module": "@dereekb/util",
+      "subpath": "error/error",
+      "signature": "errorClassNames(error: unknown): string[]",
+      "description": "Every constructor NAME on a thrown value's prototype chain, leaf first, stopping at `Object.prototype` — a STRUCTURAL\nidentity for error classes that never set `.name` (the `openai` SDK's, whose every instance reads\n`.name === 'Error'`), matched without importing them.\n\nMatching an ANCESTOR's name makes a future subclass match by inheritance, the way `instanceof` would, with zero\nimports. The leaf name alone is not enough: a subclass such as `APIConnectionTimeoutError` extends\n`APIConnectionError`, and a leaf-only check lets the parent's other subclasses fall through.\n\nMinified bundles that mangle class names defeat it; a `.name` the class sets itself survives minification, so a\nclassifier usually checks `.name` too.",
+      "params": [
+        {
+          "name": "error",
+          "type": "unknown",
+          "description": "- The thrown value.",
+          "optional": false
+        }
+      ],
+      "returns": "The chain's constructor names, leaf first. Empty for a non-object or a null-prototype object.",
+      "tags": [
+        "error",
+        "class",
+        "name",
+        "prototype",
+        "instanceof",
+        "structural",
+        "constructor",
+        "names",
+        "errorclassnames"
+      ],
+      "example": "class HttpError extends Error {}\nclass RateLimitError extends HttpError {}\n\nerrorClassNames(new RateLimitError()); // ['RateLimitError', 'HttpError', 'Error']\nerrorClassNames('boom'); // []"
+    },
+    {
       "slug": "sanitize-file-name",
       "name": "sanitizeFileName",
       "kind": "function",
@@ -5869,6 +6040,91 @@
       ]
     },
     {
+      "slug": "limit-map",
+      "name": "limitMap",
+      "kind": "function",
+      "category": "map",
+      "module": "@dereekb/util",
+      "subpath": "map/map.limit",
+      "signature": "limitMap(map: M, config: LimitMapConfig<K, V>): M",
+      "description": "Trims a map to its limit, ONCE: deletes its oldest entries, in iteration order, until `size <= limit`.\n\nThe one-shot sibling of {@link limitArray}, and the eviction loop {@link LimitedMap} runs after every insert.",
+      "params": [
+        {
+          "name": "map",
+          "type": "M",
+          "description": "- The map to trim, in place.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "LimitMapConfig<K, V>",
+          "description": "- The limit, and the callback that receives each evicted entry.",
+          "optional": false
+        }
+      ],
+      "returns": "The same map.",
+      "tags": [
+        "map",
+        "limit",
+        "cap",
+        "trim",
+        "evict",
+        "truncate",
+        "size",
+        "oldest",
+        "limitmap"
+      ],
+      "example": "const map = new Map([['a', 1], ['b', 2], ['c', 3]]);\nlimitMap(map, { limit: 2 }); // Map { 'b' => 2, 'c' => 3 }",
+      "relatedSlugs": [
+        "limited-map",
+        "limit-set",
+        "limit-array"
+      ]
+    },
+    {
+      "slug": "limited-map",
+      "name": "LimitedMap",
+      "kind": "class",
+      "category": "map",
+      "module": "@dereekb/util",
+      "subpath": "map/map.limit",
+      "signature": "class LimitedMap",
+      "description": "A `Map` that never holds more than `limit` entries: an insert that takes it past its limit evicts the oldest entry.\n\nWith `order: 'recent'` (the default) it is an LRU cache — {@link LimitedMap.get} of a present key and a re-`set` of an\nexisting key move it to the end. With `order: 'insertion'` nothing refreshes an entry (FIFO). `has` never changes\nthe order.\n\nOnly `set` and `get` are overridden; `delete`, `clear`, `size`, `forEach` and the iterators are the native ones.",
+      "params": [
+        {
+          "name": "config",
+          "type": "LimitedMapConfig<K, V>",
+          "description": "",
+          "optional": false
+        },
+        {
+          "name": "entries",
+          "type": "Maybe<Iterable<readonly [K, V]>>",
+          "description": "",
+          "optional": true
+        }
+      ],
+      "returns": "LimitedMap",
+      "tags": [
+        "map",
+        "limit",
+        "cap",
+        "lru",
+        "cache",
+        "fifo",
+        "evict",
+        "bounded",
+        "size",
+        "limited",
+        "limitedmap"
+      ],
+      "example": "const cache = new LimitedMap<string, number>({ limit: 2 });\ncache.set('a', 1).set('b', 2);\ncache.get('a'); // refreshes 'a'\ncache.set('c', 3); // evicts 'b', the least recently used",
+      "relatedSlugs": [
+        "limit-map",
+        "limited-set"
+      ]
+    },
+    {
       "slug": "id-batch-factory",
       "name": "idBatchFactory",
       "kind": "factory",
@@ -6686,6 +6942,40 @@
       ]
     },
     {
+      "slug": "as-finite-number",
+      "name": "asFiniteNumber",
+      "kind": "function",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/number",
+      "signature": "asFiniteNumber(value: unknown): number | undefined",
+      "description": "Reads a value as a finite number, or reports it absent.\n\nA finite number passes; a non-blank string is parsed with `Number()` and passes only when the result is finite;\nanything else — absent, a blank string, `NaN`, `±Infinity`, `'Infinity'`, a non-numeric string, an object — is\n`undefined`, never `0`. Unlike {@link asNumber}, an unreadable value is never made up into a number.",
+      "params": [
+        {
+          "name": "value",
+          "type": "unknown",
+          "description": "- The raw value (off a wire, out of a stored record).",
+          "optional": false
+        }
+      ],
+      "returns": "The finite number, or `undefined` when the value is missing or not a finite number.",
+      "tags": [
+        "number",
+        "parse",
+        "finite",
+        "coerce",
+        "string",
+        "nan",
+        "infinity",
+        "as",
+        "asfinitenumber"
+      ],
+      "example": "asFiniteNumber(0.25); // 0.25\nasFiniteNumber('0.25'); // 0.25\nasFiniteNumber(' '); // undefined\nasFiniteNumber(Number.NaN); // undefined",
+      "relatedSlugs": [
+        "as-number"
+      ]
+    },
+    {
       "slug": "is-number-divisible-by",
       "name": "isNumberDivisibleBy",
       "kind": "function",
@@ -7304,6 +7594,191 @@
       ]
     },
     {
+      "slug": "binomial-coefficient",
+      "name": "binomialCoefficient",
+      "kind": "function",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/statistics",
+      "signature": "binomialCoefficient(n: number, k: number): number",
+      "description": "The binomial coefficient C(n, k), multiplicatively over `min(k, n − k)` steps (no factorials). Exact while the\nrunning product stays below 2^53; `Infinity` once the result passes `Number.MAX_VALUE` (C(1030, 515) does) — use\n{@link logBinomialCoefficient} there.",
+      "params": [
+        {
+          "name": "n",
+          "type": "number",
+          "description": "- The set size.",
+          "optional": false
+        },
+        {
+          "name": "k",
+          "type": "number",
+          "description": "- The number chosen.",
+          "optional": false
+        }
+      ],
+      "returns": "The number of combinations, or `0` when `k` is outside `[0, n]`.",
+      "tags": [
+        "number",
+        "statistics",
+        "math",
+        "combinatorics",
+        "binomial",
+        "choose",
+        "coefficient",
+        "binomialcoefficient"
+      ],
+      "example": "binomialCoefficient(13, 4); // 715\nbinomialCoefficient(5, 6); // 0",
+      "relatedSlugs": [
+        "log-binomial-coefficient"
+      ]
+    },
+    {
+      "slug": "log-binomial-coefficient",
+      "name": "logBinomialCoefficient",
+      "kind": "function",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/statistics",
+      "signature": "logBinomialCoefficient(n: number, k: number): number",
+      "description": "The natural logarithm of the binomial coefficient C(n, k): `Σ_{i=1..k'} [ln(n − k' + i) − ln(i)]` with\n`k' = min(k, n − k)`. Never overflows, so it is the building block for probabilities over large tables.",
+      "params": [
+        {
+          "name": "n",
+          "type": "number",
+          "description": "- The set size.",
+          "optional": false
+        },
+        {
+          "name": "k",
+          "type": "number",
+          "description": "- The number chosen.",
+          "optional": false
+        }
+      ],
+      "returns": "`ln C(n, k)`, or `-Infinity` when `k` is outside `[0, n]` (C(n, k) = 0).",
+      "tags": [
+        "number",
+        "statistics",
+        "math",
+        "combinatorics",
+        "binomial",
+        "choose",
+        "logarithm",
+        "overflow",
+        "log",
+        "coefficient",
+        "logbinomialcoefficient"
+      ],
+      "example": "logBinomialCoefficient(13, 4); // Math.log(715)\nlogBinomialCoefficient(1030, 515); // ≈ 710.247 (C itself overflows a double)",
+      "relatedSlugs": [
+        "binomial-coefficient"
+      ]
+    },
+    {
+      "slug": "fisher-exact-one-sided-upper-tail",
+      "name": "fisherExactOneSidedUpperTail",
+      "kind": "function",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/statistics",
+      "signature": "fisherExactOneSidedUpperTail(counts: AbTestCounts): PercentDecimal",
+      "description": "The ONE-SIDED Fisher exact p-value for the treatment arm scoring WORSE: the hypergeometric upper-tail probability\nP(X ≥ treatmentHits), X being the treatment arm's share of the table's hits with both margins fixed. Computed in log\nspace (one `ln P(X = treatmentHits)`, then the ratio recurrence up the tail), so large arms do not overflow. An empty\narm returns `1` rather than a rate over no denominator: an empty population is never a regression.",
+      "params": [
+        {
+          "name": "counts",
+          "type": "AbTestCounts",
+          "description": "- The 2x2 table.",
+          "optional": false
+        }
+      ],
+      "returns": "The upper-tail probability, in `[0, 1]`.",
+      "tags": [
+        "number",
+        "statistics",
+        "math",
+        "fisher",
+        "exact-test",
+        "hypergeometric",
+        "p-value",
+        "ab-test",
+        "exact",
+        "one",
+        "sided",
+        "upper",
+        "tail",
+        "fisherexactonesideduppertail"
+      ],
+      "example": "fisherExactOneSidedUpperTail({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 }); // ≈ 0.343 (245/715)",
+      "relatedSlugs": [
+        "ab-regression-verdict",
+        "log-binomial-coefficient"
+      ]
+    },
+    {
+      "slug": "default-ab-regression-alpha",
+      "name": "DEFAULT_AB_REGRESSION_ALPHA",
+      "kind": "const",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/statistics",
+      "signature": "const DEFAULT_AB_REGRESSION_ALPHA: PercentDecimal",
+      "description": "The alpha {@link abRegressionVerdict} defaults to. One-sided; discreteness at small table sizes makes the realised\nfalse-positive rate materially lower than the nominal number.",
+      "params": [],
+      "returns": "PercentDecimal",
+      "tags": [
+        "number",
+        "statistics",
+        "alpha",
+        "significance",
+        "ab-test",
+        "default",
+        "ab",
+        "regression",
+        "default_ab_regression_alpha"
+      ],
+      "example": "abRegressionVerdict({ ...counts, alpha: DEFAULT_AB_REGRESSION_ALPHA });",
+      "relatedSlugs": [
+        "ab-regression-verdict"
+      ]
+    },
+    {
+      "slug": "ab-regression-verdict",
+      "name": "abRegressionVerdict",
+      "kind": "function",
+      "category": "number",
+      "module": "@dereekb/util",
+      "subpath": "number/statistics",
+      "signature": "abRegressionVerdict(config: AbRegressionVerdictConfig): AbRegressionVerdict",
+      "description": "The gate itself: is the treatment arm SHOWN to be worse than the control at `alpha`. One-sided by design (see the\nmodule docblock) — it may falsify the claim that a change is harmless, and can never establish that it helped.",
+      "params": [
+        {
+          "name": "config",
+          "type": "AbRegressionVerdictConfig",
+          "description": "- The 2x2 table plus the significance bar.",
+          "optional": false
+        }
+      ],
+      "returns": "The p-value, the verdict, and both observed rates.",
+      "tags": [
+        "number",
+        "statistics",
+        "math",
+        "fisher",
+        "exact-test",
+        "p-value",
+        "ab-test",
+        "regression",
+        "gate",
+        "ab",
+        "verdict",
+        "abregressionverdict"
+      ],
+      "example": "const verdict = abRegressionVerdict({ controlHits: 1, controlTrials: 6, treatmentHits: 3, treatmentTrials: 7 });\n// verdict.p ≈ 0.343, verdict.regressed === false: not shown to regress",
+      "relatedSlugs": [
+        "fisher-exact-one-sided-upper-tail"
+      ]
+    },
+    {
       "slug": "transform-number-function",
       "name": "transformNumberFunction",
       "kind": "factory",
@@ -7666,6 +8141,40 @@
       "relatedSlugs": [
         "merge-objects",
         "override-in-object-function-factory"
+      ]
+    },
+    {
+      "slug": "filter-maybe-values",
+      "name": "filterMaybeValues",
+      "kind": "function",
+      "category": "object",
+      "module": "@dereekb/util",
+      "subpath": "object/object.filter.pojo",
+      "signature": "filterMaybeValues(obj: T): FilteredMaybeValues<T>",
+      "description": "Returns a copy of the input object with every `null` and `undefined` value removed, typed so that a nullable key\nbecomes optional and non-nullable.\n\nUse it to shape a projection whose source carries `Maybe` values (a wire reply, a parsed row) into an object whose\noptional fields must be absent rather than nullish, such as a persisted row or a host-stored record. It replaces a\nrun of `...(x == null ? {} : { x })` spreads with one plain literal, and the result fits an `x?: X` target without a\ncast, which {@link filterNullAndUndefinedValues} and {@link filterUndefinedValues} cannot offer since they return `T`.\n\nThe runtime is {@link filterNullAndUndefinedValues}: the filter is shallow (a nested `null` is kept), it keeps the\ninput's key order, it keeps other falsy values (`0`, `false`, `''`), and it never mutates the input.\n\nA value whose type is still a generic parameter at the call site cannot be judged nullable or not, so the result\ntype cannot settle its key. Filter only the concrete keys and spread the result:\n`{ model, answers, ...filterMaybeValues({ usage, provider }) }`.",
+      "params": [
+        {
+          "name": "obj",
+          "type": "T",
+          "description": "- The object to filter. Every key that must survive should have a non-nullable type, since only a nullable key may be dropped.",
+          "optional": false
+        }
+      ],
+      "returns": "A shallow copy of `obj` without its `null` and `undefined` values.",
+      "tags": [
+        "object",
+        "pojo",
+        "filter",
+        "maybe",
+        "nullish",
+        "projection",
+        "values",
+        "filtermaybevalues"
+      ],
+      "example": "interface Usage {\n  readonly promptTokens: number;\n  readonly cachedTokens?: number;\n}\n\nconst wire: { prompt_tokens: number; cached_tokens?: Maybe<number> } = { prompt_tokens: 12, cached_tokens: null };\n\nconst usage: Usage = filterMaybeValues({ promptTokens: wire.prompt_tokens, cachedTokens: wire.cached_tokens });\n// { promptTokens: 12 }\n\nfilterMaybeValues({ a: 0, b: false, c: '', d: null, e: undefined });\n// { a: 0, b: false, c: '' }",
+      "relatedSlugs": [
+        "filter-undefined-values",
+        "merge-objects"
       ]
     },
     {
@@ -9660,6 +10169,164 @@
       ]
     },
     {
+      "slug": "wait-for-ms-unless-aborted",
+      "name": "waitForMsUnlessAborted",
+      "kind": "function",
+      "category": "promise",
+      "module": "@dereekb/util",
+      "subpath": "promise/abort",
+      "signature": "waitForMsUnlessAborted(ms: Milliseconds, signal?: Maybe<AbortSignal>): Promise<void>",
+      "description": "Waits `ms`, waking EARLY (and never rejecting) when `signal` aborts.\n\nResolves at once when `ms` is not positive (0, negative or NaN) or the signal is already aborted. Each path tears the\nother down, so neither a fired timer nor an abort leaves a listener or timer behind.",
+      "params": [
+        {
+          "name": "ms",
+          "type": "Milliseconds",
+          "description": "- How long to wait.",
+          "optional": false
+        },
+        {
+          "name": "signal",
+          "type": "Maybe<AbortSignal>",
+          "description": "- Optional signal that ends the wait early.",
+          "optional": true
+        }
+      ],
+      "returns": "A promise that resolves after the wait or on abort, whichever comes first.",
+      "tags": [
+        "wait",
+        "delay",
+        "sleep",
+        "abort",
+        "signal",
+        "cancel",
+        "timeout",
+        "backoff",
+        "promise",
+        "for",
+        "ms",
+        "unless",
+        "aborted",
+        "waitformsunlessaborted"
+      ],
+      "example": "const controller = new AbortController();\nawait waitForMsUnlessAborted(1000, controller.signal); // resolves after 1s, or as soon as controller.abort() runs",
+      "relatedSlugs": [
+        "wait-for-ms",
+        "wait-for-promise-unless-aborted"
+      ]
+    },
+    {
+      "slug": "wait-for-promise-unless-aborted",
+      "name": "waitForPromiseUnlessAborted",
+      "kind": "function",
+      "category": "promise",
+      "module": "@dereekb/util",
+      "subpath": "promise/abort",
+      "signature": "waitForPromiseUnlessAborted(start: () => PromiseLike<T>, signal?: Maybe<AbortSignal>): Promise<Maybe<T>>",
+      "description": "Starts a promise and waits for it, ending early with `undefined` when `signal` aborts.\n\n- With no signal, it is `await start()`.\n- With an already-aborted signal, it resolves `undefined` without calling `start`.\n- Otherwise it races `start()` against the abort: an abort resolves `undefined`; a rejection from `start()` is rethrown\n  unless the signal has aborted by then, in which case it also resolves `undefined`. A late rejection is never left\n  unhandled, and the abort listener is always removed.",
+      "params": [
+        {
+          "name": "start",
+          "type": "() => PromiseLike<T>",
+          "description": "- Starts the work to wait for.",
+          "optional": false
+        },
+        {
+          "name": "signal",
+          "type": "Maybe<AbortSignal>",
+          "description": "- Optional signal that ends the wait early.",
+          "optional": true
+        }
+      ],
+      "returns": "The work's value, or `undefined` when the signal aborted first.",
+      "tags": [
+        "wait",
+        "abort",
+        "signal",
+        "cancel",
+        "race",
+        "promise",
+        "for",
+        "unless",
+        "aborted",
+        "waitforpromiseunlessaborted"
+      ],
+      "example": "const value = await waitForPromiseUnlessAborted(() => gate.waitUntilOpen(), signal);\n// value is undefined when signal aborted before the gate opened",
+      "relatedSlugs": [
+        "wait-for-ms-unless-aborted",
+        "merge-abort-signals"
+      ]
+    },
+    {
+      "slug": "merge-abort-signals",
+      "name": "mergeAbortSignals",
+      "kind": "function",
+      "category": "promise",
+      "module": "@dereekb/util",
+      "subpath": "promise/abort",
+      "signature": "mergeAbortSignals(signals: ReadonlyArray<Maybe<AbortSignal>>): Maybe<AbortSignal>",
+      "description": "Combines optional abort signals into one that aborts when any input aborts, with that input's `reason`.\n\n- Nullish entries are dropped; no signals returns `undefined` and exactly one returns that SAME instance.\n- Two or more use `AbortSignal.any` (in input order) when the runtime has it, else an `AbortController` fallback that\n  aborts with the first already-aborted input's reason, or on the first input to abort later.",
+      "params": [
+        {
+          "name": "signals",
+          "type": "ReadonlyArray<Maybe<AbortSignal>>",
+          "description": "- The signals to combine.",
+          "optional": false
+        }
+      ],
+      "returns": "The combined signal, or `undefined` when there are none.",
+      "tags": [
+        "abort",
+        "signal",
+        "merge",
+        "combine",
+        "any",
+        "cancel",
+        "promise",
+        "signals",
+        "mergeabortsignals"
+      ],
+      "example": "const signal = mergeAbortSignals([runSignal, request.signal]); // aborts when either aborts\nmergeAbortSignals([undefined, runSignal]) === runSignal; // true",
+      "relatedSlugs": [
+        "make-timeout-abort-signal",
+        "wait-for-promise-unless-aborted"
+      ]
+    },
+    {
+      "slug": "make-timeout-abort-signal",
+      "name": "makeTimeoutAbortSignal",
+      "kind": "function",
+      "category": "promise",
+      "module": "@dereekb/util",
+      "subpath": "promise/abort",
+      "signature": "makeTimeoutAbortSignal(config: MakeTimeoutAbortSignalConfig): AbortSignal",
+      "description": "Creates a signal that aborts with a `TimeoutError` `DOMException` after `timeout`, or earlier when the optional caller\nsignal aborts.\n\nUses `AbortSignal.timeout` when the runtime has it, else a `setTimeout`-driven controller (its timer is `unref()`ed\nwhere supported), then combines it with the caller signal through {@link mergeAbortSignals} (timeout first). Runtime\nAPIs are read at call time, and an error they throw propagates to the caller.",
+      "params": [
+        {
+          "name": "config",
+          "type": "MakeTimeoutAbortSignalConfig",
+          "description": "- The timeout and the optional caller signal.",
+          "optional": false
+        }
+      ],
+      "returns": "The signal to pass to the timed call.",
+      "tags": [
+        "abort",
+        "signal",
+        "timeout",
+        "fetch",
+        "cancel",
+        "deadline",
+        "promise",
+        "make",
+        "maketimeoutabortsignal"
+      ],
+      "example": "const response = await fetch(url, { signal: makeTimeoutAbortSignal({ timeout: 15_000, signal: callerSignal }) });",
+      "relatedSlugs": [
+        "merge-abort-signals",
+        "wait-for-ms-unless-aborted"
+      ]
+    },
+    {
       "slug": "exponential-backoff-delay",
       "name": "exponentialBackoffDelay",
       "kind": "function",
@@ -10534,6 +11201,126 @@
       ]
     },
     {
+      "slug": "create-keyed-registry",
+      "name": "createKeyedRegistry",
+      "kind": "factory",
+      "category": "set",
+      "module": "@dereekb/util",
+      "subpath": "set/set.keyed.registry",
+      "signature": "createKeyedRegistry(config: KeyedRegistryConfig<T, K>): KeyedRegistry<T, K>",
+      "description": "Creates a {@link KeyedRegistry}: an insertion-ordered, mutable registry of values keyed by `readKey`.\n\nLookups by a secondary property (e.g. \"every value of a kind\") are `values().filter(...)`; \"the last registered\" is\nits `.at(-1)`.",
+      "params": [
+        {
+          "name": "config",
+          "type": "KeyedRegistryConfig<T, K>",
+          "description": "- The key reader, the duplicate-key rule and the optional seed values.",
+          "optional": false
+        }
+      ],
+      "returns": "A new registry.",
+      "tags": [
+        "registry",
+        "keyed",
+        "map",
+        "set",
+        "register",
+        "lookup",
+        "duplicate",
+        "create",
+        "createkeyedregistry"
+      ],
+      "example": "const registry = createKeyedRegistry<{ id: string; kind: string }, string>({ readKey: (x) => x.id, seed: [{ id: 'a', kind: 'x' }] });\nregistry.register({ id: 'b', kind: 'y' }); // true\nregistry.get('a'); // { id: 'a', kind: 'x' }\nregistry.keys(); // ['a', 'b']\nregistry.values().filter((x) => x.kind === 'y'); // [{ id: 'b', kind: 'y' }]",
+      "relatedSlugs": [
+        "hash-set",
+        "array-to-object"
+      ]
+    },
+    {
+      "slug": "limit-set",
+      "name": "limitSet",
+      "kind": "function",
+      "category": "set",
+      "module": "@dereekb/util",
+      "subpath": "set/set.limit",
+      "signature": "limitSet(set: S, config: LimitSetConfig<T>): S",
+      "description": "Trims a set to its limit, ONCE: deletes its oldest values, in iteration order, until `size <= limit`.\n\nThe one-shot sibling of {@link limitArray}, and the eviction loop {@link LimitedSet} runs after every insert.",
+      "params": [
+        {
+          "name": "set",
+          "type": "S",
+          "description": "- The set to trim, in place.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "LimitSetConfig<T>",
+          "description": "- The limit, and the callback that receives each evicted value.",
+          "optional": false
+        }
+      ],
+      "returns": "The same set.",
+      "tags": [
+        "set",
+        "limit",
+        "cap",
+        "trim",
+        "evict",
+        "truncate",
+        "size",
+        "oldest",
+        "limitset"
+      ],
+      "example": "const set = new Set(['a', 'b', 'c']);\nlimitSet(set, { limit: 2 }); // Set { 'b', 'c' }",
+      "relatedSlugs": [
+        "limited-set",
+        "limit-map",
+        "limit-array"
+      ]
+    },
+    {
+      "slug": "limited-set",
+      "name": "LimitedSet",
+      "kind": "class",
+      "category": "set",
+      "module": "@dereekb/util",
+      "subpath": "set/set.limit",
+      "signature": "class LimitedSet",
+      "description": "A `Set` that never holds more than `limit` values: an add that takes it past its limit evicts the oldest value.\n\nWith `order: 'recent'` (the default) a re-`add` of an existing value moves it to the end (least-recently-used). With\n`order: 'insertion'` nothing refreshes a value (FIFO). `has` never changes the order.\n\nOnly `add` is overridden; `delete`, `clear`, `size`, `forEach` and the iterators are the native ones.",
+      "params": [
+        {
+          "name": "config",
+          "type": "LimitedSetConfig<T>",
+          "description": "",
+          "optional": false
+        },
+        {
+          "name": "values",
+          "type": "Maybe<Iterable<T>>",
+          "description": "",
+          "optional": true
+        }
+      ],
+      "returns": "LimitedSet",
+      "tags": [
+        "set",
+        "limit",
+        "cap",
+        "lru",
+        "fifo",
+        "evict",
+        "bounded",
+        "size",
+        "seen",
+        "limited",
+        "limitedset"
+      ],
+      "example": "const seen = new LimitedSet<string>({ limit: 2 });\nseen.add('a').add('b');\nseen.add('a'); // refreshes 'a'\nseen.add('c'); // evicts 'b', the least recently added",
+      "relatedSlugs": [
+        "limit-set",
+        "limited-map"
+      ]
+    },
+    {
       "slug": "is-selected-decision-function-factory",
       "name": "isSelectedDecisionFunctionFactory",
       "kind": "factory",
@@ -11198,6 +11985,81 @@
       ]
     },
     {
+      "slug": "split-markdown-frontmatter",
+      "name": "splitMarkdownFrontmatter",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/frontmatter",
+      "signature": "splitMarkdownFrontmatter(text: string): MarkdownFrontmatterSplit",
+      "description": "Splits a markdown text into its leading `---` frontmatter lines and its body.\n\nThe first line must be the opening fence and a later line the closing fence; each is `---` once trimmed. A BOM is\ndropped and `\\r\\n` / `\\r` line endings become `\\n`, in the body too. An unclosed block leaves the whole text as the body.",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "description": "- The whole markdown text.",
+          "optional": false
+        }
+      ],
+      "returns": "The frontmatter lines and the body.",
+      "tags": [
+        "markdown",
+        "frontmatter",
+        "split",
+        "fence",
+        "body",
+        "yaml",
+        "docs",
+        "string",
+        "splitmarkdownfrontmatter"
+      ],
+      "example": "splitMarkdownFrontmatter('---\\ntitle: Setup\\n---\\n# Setup');\n// { hasFrontmatter: true, unclosed: false, frontmatterLines: ['title: Setup'], body: '# Setup' }\nsplitMarkdownFrontmatter('# Setup'); // { hasFrontmatter: false, unclosed: false, frontmatterLines: [], body: '# Setup' }",
+      "relatedSlugs": [
+        "parse-markdown-frontmatter"
+      ]
+    },
+    {
+      "slug": "parse-markdown-frontmatter",
+      "name": "parseMarkdownFrontmatter",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/frontmatter",
+      "signature": "parseMarkdownFrontmatter(text: string, config?: Maybe<ParseMarkdownFrontmatterConfig>): MarkdownFrontmatter",
+      "description": "Parses the leading `---` frontmatter block of a markdown text.\n\nThe grammar is a small YAML subset: `key: scalar` (bare, double-quoted JSON, or single-quoted with `''` for `'`),\n`key: [flow, list]`, and a bare `key:` opening one level of indented `- item` rows (a list) or `key: value` rows (a\nmap), with `#` comments. No problem is reported for a text with no opening fence. An unclosed block reports one\nproblem at line 1 and leaves the whole text as the body. Each refused row is reported at its line and left out of the\nvalues: a malformed row, tab indentation, a duplicate key (the first is kept), an indented row with no block above\nit, a block mixing list and map rows, an empty list item, and an unterminated quote or list.",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "description": "- The whole markdown text.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<ParseMarkdownFrontmatterConfig>",
+          "description": "- Whether bare scalars are typed (default `true`).",
+          "optional": true
+        }
+      ],
+      "returns": "The values, their lines, the body and every problem.",
+      "tags": [
+        "markdown",
+        "frontmatter",
+        "parse",
+        "yaml",
+        "metadata",
+        "docs",
+        "note",
+        "string",
+        "parsemarkdownfrontmatter"
+      ],
+      "example": "const parsed = parseMarkdownFrontmatter([\n  '---',\n  'id: apparel-plain',\n  'title: Plain apparel pages',\n  'sites: [product-page]',\n  'where:',\n  '  category: [apparel]',\n  'ask: \"`brief` describes a garment with no logo.\"',\n  'tags:',\n  '  - apparel',\n  \"  - 'plain cut'\",\n  '---',\n  'Name the garment and the colour.'\n].join('\\n'));\n// parsed.values: { id: 'apparel-plain', title: 'Plain apparel pages', sites: ['product-page'],\n//   where: { category: ['apparel'] }, ask: '`brief` describes a garment with no logo.', tags: ['apparel', 'plain cut'] }\n// parsed.lines.get('where.category'): 6\n// parsed.body: 'Name the garment and the colour.'",
+      "relatedSlugs": [
+        "split-markdown-frontmatter",
+        "scan-json-string-literal"
+      ]
+    },
+    {
       "slug": "js-doc-inline-links-to-text",
       "name": "jsDocInlineLinksToText",
       "kind": "function",
@@ -11234,6 +12096,421 @@
       "relatedSlugs": [
         "first-sentence"
       ]
+    },
+    {
+      "slug": "repair-json-object-text",
+      "name": "repairJsonObjectText",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/json.repair",
+      "signature": "repairJsonObjectText(text: string, config?: Maybe<RepairJsonObjectTextConfig>): JsonRepairResult",
+      "description": "Scores a text that should have been one JSON object and, when it is a near miss, repairs it.\n\nThe repair fixes only slips that need no judgment: containers left open at EOF, trailing and missing commas, a missing or\nstray closer, raw control characters in strings, inner quotes (second pass), and a code fence or prose around the object.\nA repair is kept only when {@link checkJsonRepairFidelity} proves it invented and dropped nothing. A text that looks cut\noff is never repaired. A rebuilt text that does not parse is reported through the verdict, never thrown.",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "description": "- The text that should hold one JSON object.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<RepairJsonObjectTextConfig>",
+          "description": "- Optional settings; `coverageFromKey` limits the fidelity coverage region.",
+          "optional": true
+        }
+      ],
+      "returns": "The shape, plus the repair iff the verdict is `near-miss`.",
+      "tags": [
+        "json",
+        "repair",
+        "lenient",
+        "fix",
+        "object",
+        "llm",
+        "reply",
+        "parse",
+        "string",
+        "text",
+        "repairjsonobjecttext"
+      ],
+      "example": "repairJsonObjectText('{\"a\":1,\"b\":[1,2,],}').repaired?.value; // { a: 1, b: [1, 2] }\nrepairJsonObjectText('{\"a\":\"cut').shape.verdict; // 'truncated-looking'",
+      "relatedSlugs": [
+        "score-json-object-text",
+        "check-json-repair-fidelity",
+        "repair-json-object-or-undefined"
+      ]
+    },
+    {
+      "slug": "score-json-object-text",
+      "name": "scoreJsonObjectText",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/json.repair",
+      "signature": "scoreJsonObjectText(text: string, config?: Maybe<RepairJsonObjectTextConfig>): JsonRepairShape",
+      "description": "Scores a text that should have been one JSON object, without keeping the repair.",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "description": "- The text that should hold one JSON object.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<RepairJsonObjectTextConfig>",
+          "description": "- Optional settings; `coverageFromKey` limits the fidelity coverage region.",
+          "optional": true
+        }
+      ],
+      "returns": "The shape {@link repairJsonObjectText} computes.",
+      "tags": [
+        "json",
+        "repair",
+        "score",
+        "verdict",
+        "lenient",
+        "object",
+        "llm",
+        "reply",
+        "string",
+        "text",
+        "scorejsonobjecttext"
+      ],
+      "example": "scoreJsonObjectText('{\"a\":1,').verdict; // 'truncated-looking'\nscoreJsonObjectText('no json here').verdict; // 'not-json'",
+      "relatedSlugs": [
+        "repair-json-object-text"
+      ]
+    },
+    {
+      "slug": "repair-json-object-or-undefined",
+      "name": "repairJsonObjectOrUndefined",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/json.repair",
+      "signature": "repairJsonObjectOrUndefined(text: Maybe<string>, config?: Maybe<RepairJsonObjectTextConfig>): Maybe<Record<string, unknown>>",
+      "description": "Parses text into a JSON object, falling back to the deterministic repair when it does not parse.\n\nValid object JSON returns its parsed value. Otherwise the repair's value is returned when the text is a faithful near miss,\nand `undefined` when it is not. Its `(text) => value` shape lets it stand in wherever a plain JSON decoder is accepted, so\nrepair stays an explicit opt-in.",
+      "params": [
+        {
+          "name": "text",
+          "type": "Maybe<string>",
+          "description": "- The text that should hold one JSON object.",
+          "optional": false
+        },
+        {
+          "name": "config",
+          "type": "Maybe<RepairJsonObjectTextConfig>",
+          "description": "- Optional repair settings.",
+          "optional": true
+        }
+      ],
+      "returns": "The parsed or repaired object, or `undefined`.",
+      "tags": [
+        "json",
+        "repair",
+        "parse",
+        "lenient",
+        "object",
+        "decode",
+        "llm",
+        "reply",
+        "string",
+        "or",
+        "undefined",
+        "repairjsonobjectorundefined"
+      ],
+      "example": "repairJsonObjectOrUndefined('{\"a\":1'); // { a: 1 }\nrepairJsonObjectOrUndefined('{\"a\":\"cut'); // undefined",
+      "relatedSlugs": [
+        "repair-json-object-text",
+        "parse-json-object-or-undefined"
+      ]
+    },
+    {
+      "slug": "check-json-repair-fidelity",
+      "name": "checkJsonRepairFidelity",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/json.repair",
+      "signature": "checkJsonRepairFidelity(config: CheckJsonRepairFidelityConfig): JsonRepairFidelity",
+      "description": "Proves a repair invented and dropped nothing — the runtime gate on any repair of a JSON object text.\n\n- Nothing invented: every string leaf, object key and number of the repaired value appears in the original (strings\n  compared with whitespace, quotes and backslashes removed; numbers as numeric tokens).\n- Nothing dropped: at least {@link JSON_REPAIR_MIN_COVERAGE} of the original's content literals (string literals of at\n  least {@link JSON_REPAIR_CONTENT_LITERAL_MIN_CHARS} characters, taken over the value of `coverageFromKey` when it is set\n  and found — its balanced object, or the rest of the text when that value is unclosed or not an object)\n  appear in the repaired value.",
+      "params": [
+        {
+          "name": "config",
+          "type": "CheckJsonRepairFidelityConfig",
+          "description": "- The original text, the repaired value, and the optional coverage key.",
+          "optional": false
+        }
+      ],
+      "returns": "The fidelity verdict.",
+      "tags": [
+        "json",
+        "repair",
+        "fidelity",
+        "verify",
+        "coverage",
+        "llm",
+        "reply",
+        "string",
+        "check",
+        "checkjsonrepairfidelity"
+      ],
+      "example": "checkJsonRepairFidelity({ original: '{\"a\":1', repaired: { a: 1 } }).ok; // true\ncheckJsonRepairFidelity({ original: '{\"a\":1', repaired: { a: 2 } }).invented; // ['2']",
+      "relatedSlugs": [
+        "repair-json-object-text"
+      ]
+    },
+    {
+      "slug": "parse-json-or-undefined",
+      "name": "parseJsonOrUndefined",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/json",
+      "signature": "parseJsonOrUndefined(text: Maybe<string>): Maybe<T>",
+      "description": "Parses JSON text, returning `undefined` instead of throwing when the text is not JSON.\n\nEmpty, `null` and `undefined` input return `undefined`. A JSON `null` returns `null`. The value is not checked against `T`.",
+      "params": [
+        {
+          "name": "text",
+          "type": "Maybe<string>",
+          "description": "- The candidate JSON text.",
+          "optional": false
+        }
+      ],
+      "returns": "The parsed value, or `undefined` when the text is missing or not valid JSON.",
+      "tags": [
+        "json",
+        "parse",
+        "safe",
+        "lenient",
+        "decode",
+        "string",
+        "or",
+        "undefined",
+        "parsejsonorundefined"
+      ],
+      "example": "parseJsonOrUndefined<number[]>('[1,2]'); // [1, 2]\nparseJsonOrUndefined('{\"a\":'); // undefined",
+      "relatedSlugs": [
+        "parse-json-object-or-undefined",
+        "repair-json-object-or-undefined"
+      ]
+    },
+    {
+      "slug": "parse-json-object-or-undefined",
+      "name": "parseJsonObjectOrUndefined",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/json",
+      "signature": "parseJsonObjectOrUndefined(text: Maybe<string>): Maybe<Record<string, unknown>>",
+      "description": "Parses JSON text into a plain object, returning `undefined` instead of throwing.\n\nEmpty, `null`, `undefined` and malformed input return `undefined`, as does JSON that parses to an array, a primitive or `null`.",
+      "params": [
+        {
+          "name": "text",
+          "type": "Maybe<string>",
+          "description": "- The candidate JSON text.",
+          "optional": false
+        }
+      ],
+      "returns": "The parsed object, or `undefined` when the text is missing, malformed or not a JSON object.",
+      "tags": [
+        "json",
+        "parse",
+        "safe",
+        "lenient",
+        "object",
+        "decode",
+        "string",
+        "or",
+        "undefined",
+        "parsejsonobjectorundefined"
+      ],
+      "example": "parseJsonObjectOrUndefined('{\"a\":1}'); // { a: 1 }\nparseJsonObjectOrUndefined('[1]'); // undefined",
+      "relatedSlugs": [
+        "parse-json-or-undefined",
+        "read-json-object-from-text"
+      ]
+    },
+    {
+      "slug": "scan-json-string-literal",
+      "name": "scanJsonStringLiteral",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/json",
+      "signature": "scanJsonStringLiteral(config: ScanJsonStringLiteralConfig): JsonStringLiteralScan",
+      "description": "Scans one JSON string literal from its opening quote to its closing quote.\n\nA `\\` skips the next character, so an escaped quote or an escaped control character is neither a close nor an issue. A `\\`\nas the last character leaves the literal unclosed. Raw control characters are recorded as issues and do not end the scan.",
+      "params": [
+        {
+          "name": "config",
+          "type": "ScanJsonStringLiteralConfig",
+          "description": "- The text, the index of the opening quote, and the optional inner-quote predicate.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether the literal closed, where it ends, and the issues found inside it.",
+      "tags": [
+        "json",
+        "string",
+        "literal",
+        "scan",
+        "quote",
+        "escape",
+        "lenient",
+        "scanjsonstringliteral"
+      ],
+      "example": "scanJsonStringLiteral({ text: '{\"a\\\\\"b\":1}', start: 1 }); // { closed: true, end: 7, issues: [] }\nscanJsonStringLiteral({ text: '\"cut', start: 0 }); // { closed: false, end: 4, issues: [] }",
+      "relatedSlugs": [
+        "slice-balanced-json-object"
+      ]
+    },
+    {
+      "slug": "slice-balanced-json-object",
+      "name": "sliceBalancedJsonObject",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/json",
+      "signature": "sliceBalancedJsonObject(text: string, start: number): Maybe<string>",
+      "description": "Returns the balanced `{…}` slice that starts at an opening brace.\n\nBraces inside string literals do not count. Returns `undefined` when the object never closes; nothing here repairs a\nmissing brace.",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "description": "- The text holding the object.",
+          "optional": false
+        },
+        {
+          "name": "start",
+          "type": "number",
+          "description": "- The index of the opening `{`.",
+          "optional": false
+        }
+      ],
+      "returns": "The balanced slice, or `undefined` when the object never closes.",
+      "tags": [
+        "json",
+        "object",
+        "slice",
+        "balanced",
+        "brace",
+        "scan",
+        "lenient",
+        "string",
+        "slicebalancedjsonobject"
+      ],
+      "example": "sliceBalancedJsonObject('x {\"a\":\"}\"} }', 2); // '{\"a\":\"}\"}'\nsliceBalancedJsonObject('{\"a\":1', 0); // undefined",
+      "relatedSlugs": [
+        "scan-json-string-literal",
+        "read-json-object-from-text"
+      ]
+    },
+    {
+      "slug": "read-json-object-from-text",
+      "name": "readJsonObjectFromText",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/json",
+      "signature": "readJsonObjectFromText(text: string): JsonObjectInText",
+      "description": "Finds and parses the JSON object inside surrounding text, such as prose or a code fence around a model reply.\n\nThe read is layered so the second pass only adds readings:\n\n1. The greedy slice (first `{` to last `}`). When it parses to an object, that object wins.\n2. Otherwise each top-level `{…}` object in order (its balanced slice, then the next `{` after that slice). The first that\n   parses to an object wins. An object that never closes ends the scan, because everything after it is nested inside it,\n   so a truncated object never resolves to an inner object that happened to close.",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "description": "- The text holding the object.",
+          "optional": false
+        }
+      ],
+      "returns": "Whether an object-like block was found, the parsed object, and the first parse failure when none parsed.",
+      "tags": [
+        "json",
+        "object",
+        "parse",
+        "extract",
+        "lenient",
+        "prose",
+        "fence",
+        "llm",
+        "reply",
+        "string",
+        "read",
+        "from",
+        "text",
+        "readjsonobjectfromtext"
+      ],
+      "example": "readJsonObjectFromText('Here: {\"a\":1}}'); // { found: true, value: { a: 1 } }\nreadJsonObjectFromText('{\"a\":'); // { found: false }",
+      "relatedSlugs": [
+        "slice-balanced-json-object",
+        "parse-json-object-or-undefined"
+      ]
+    },
+    {
+      "slug": "strip-markdown-code-fence",
+      "name": "stripMarkdownCodeFence",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/markdown",
+      "signature": "stripMarkdownCodeFence(text: string): string",
+      "description": "Removes one wrapping markdown code fence from text, such as a model reply wrapped in ```` ```json ```` despite being\nasked for bare output.\n\nWhen the TRIMMED text is exactly one fenced block, returns its body (not trimmed). Any info string is allowed after the\nopening fence (` ```json5 `, ` ```ts title=\"x\" `), and the newline before the closing fence is optional. Otherwise\nreturns `text` unchanged (not trimmed).",
+      "params": [
+        {
+          "name": "text",
+          "type": "string",
+          "description": "- The text that may be wrapped in a code fence.",
+          "optional": false
+        }
+      ],
+      "returns": "The fenced body, or the input unchanged.",
+      "tags": [
+        "markdown",
+        "code",
+        "fence",
+        "strip",
+        "unwrap",
+        "json",
+        "llm",
+        "reply",
+        "string",
+        "stripmarkdowncodefence"
+      ],
+      "example": "stripMarkdownCodeFence('```json\\n{\"a\":1}\\n```'); // '{\"a\":1}'\nstripMarkdownCodeFence('plain text'); // 'plain text'",
+      "relatedSlugs": [
+        "cut-string"
+      ]
+    },
+    {
+      "slug": "to-base64-data-url",
+      "name": "toBase64DataUrl",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/mimetype",
+      "signature": "toBase64DataUrl(config: Base64DataUrlConfig): DataUrlString",
+      "description": "Builds the inline `data:<mimeType>;base64,<dataBase64>` URL for already-encoded bytes. Always builds: an input that\nis already a data URL is not detected.",
+      "params": [
+        {
+          "name": "config",
+          "type": "Base64DataUrlConfig",
+          "description": "- The media type and the base64 bytes.",
+          "optional": false
+        }
+      ],
+      "returns": "The data URL.",
+      "tags": [
+        "string",
+        "mime",
+        "data-url",
+        "base64",
+        "url",
+        "to",
+        "data",
+        "tobase64dataurl"
+      ],
+      "example": "toBase64DataUrl({ mimeType: 'image/png', dataBase64: 'QUJD' }); // 'data:image/png;base64,QUJD'"
     },
     {
       "slug": "replace-strings-function",
@@ -11831,7 +13108,7 @@
       "module": "@dereekb/util",
       "subpath": "string/sort",
       "signature": "const compareStrings: number",
-      "description": "Pre-configured comparator that sorts strings in ascending alphabetical order using `localeCompare`.\n\nUse this directly with `Array.sort()` / `Array.toSorted()` instead of inlining\n`(a, b) => a.localeCompare(b)` everywhere, and to satisfy the no-default-sort\nlint rule for string arrays.",
+      "description": "Pre-configured comparator that sorts strings in ascending alphabetical order using `localeCompare`.\n\nUse this directly with `Array.sort()` / `Array.toSorted()` instead of inlining\n`(a, b) => a.localeCompare(b)` everywhere, and to satisfy the no-default-sort\nlint rule for string arrays.\n\nThe order follows the host's ICU locale, so two hosts can order the same strings differently\n(case, accents, punctuation). When the order feeds bytes that must match across hosts — a prompt,\na persisted row, a cache key — use {@link compareStringsByCodeUnit} instead.",
       "params": [
         {
           "name": "a",
@@ -11859,7 +13136,50 @@
       "example": "['b', 'a', 'c'].sort(compareStrings); // ['a', 'b', 'c']",
       "relatedSlugs": [
         "compare-strings-numeric",
+        "compare-strings-by-code-unit",
         "sort-by-string-function"
+      ]
+    },
+    {
+      "slug": "compare-strings-by-code-unit",
+      "name": "compareStringsByCodeUnit",
+      "kind": "const",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/sort",
+      "signature": "const compareStringsByCodeUnit: number",
+      "description": "Pre-configured comparator that sorts strings in ascending UTF-16 code-unit order (the `<` / `>` order),\nnever a locale.\n\nThe result is the same on every host and runtime, so use it whenever the order feeds bytes that must\nbe deterministic: prompt text, a cache prefix, a persisted or rendered row, a file order. Uppercase\nsorts before lowercase, and accented letters sort after every ASCII letter.",
+      "params": [
+        {
+          "name": "a",
+          "type": "string",
+          "description": "- The first string to compare.",
+          "optional": false
+        },
+        {
+          "name": "b",
+          "type": "string",
+          "description": "- The second string to compare.",
+          "optional": false
+        }
+      ],
+      "returns": "`-1` when `a` sorts before `b`, `1` when after, `0` when equal.",
+      "tags": [
+        "string",
+        "sort",
+        "compare",
+        "code-unit",
+        "ordinal",
+        "deterministic",
+        "strings",
+        "by",
+        "code",
+        "unit",
+        "comparestringsbycodeunit"
+      ],
+      "example": "['b', 'B', 'a'].sort(compareStringsByCodeUnit); // ['B', 'a', 'b']",
+      "relatedSlugs": [
+        "compare-strings"
       ]
     },
     {
@@ -11943,12 +13263,12 @@
       "category": "string",
       "module": "@dereekb/util",
       "subpath": "string/string",
-      "signature": "joinStrings(input: Maybe<ArrayOrValue<Maybe<string>>>, joiner?: string, trim?: boolean): Maybe<string>",
+      "signature": "joinStrings(input: Maybe<ReadonlyArrayOrValue<Maybe<string>>>, joiner?: string, trim?: boolean): Maybe<string>",
       "description": "Joins an array of strings into a single string. Trims and omits empty values.",
       "params": [
         {
           "name": "input",
-          "type": "Maybe<ArrayOrValue<Maybe<string>>>",
+          "type": "Maybe<ReadonlyArrayOrValue<Maybe<string>>>",
           "description": "string or array of strings",
           "optional": false
         },
@@ -11980,6 +13300,40 @@
         "split-join-remainder",
         "join-strings-instance",
         "string-split-join-instance"
+      ]
+    },
+    {
+      "slug": "join-key-value-pairs",
+      "name": "joinKeyValuePairs",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/string",
+      "signature": "joinKeyValuePairs(pairs: ReadonlyArray<readonly [string, Maybe<string | number>]>): string",
+      "description": "Joins `[key, value]` pairs into one `key: value; …` row, in order. A pair whose value is `null`, `undefined` or `''`\nis dropped (a `0` is kept), so a conditional pair stays one entry in the list.",
+      "params": [
+        {
+          "name": "pairs",
+          "type": "ReadonlyArray<readonly [string, Maybe<string | number>]>",
+          "description": "- The `[key, value]` pairs, in print order.",
+          "optional": false
+        }
+      ],
+      "returns": "The row, or `''` when every pair is dropped.",
+      "tags": [
+        "string",
+        "join",
+        "key-value",
+        "row",
+        "format",
+        "key",
+        "value",
+        "pairs",
+        "joinkeyvaluepairs"
+      ],
+      "example": "joinKeyValuePairs([['size', 'large'], ['count', 0], ['color', undefined]]); // 'size: large; count: 0'",
+      "relatedSlugs": [
+        "join-strings"
       ]
     },
     {
@@ -12058,6 +13412,40 @@
       "relatedSlugs": [
         "capitalize-first-letter",
         "lowercase-first-letter"
+      ]
+    },
+    {
+      "slug": "to-maybe-string",
+      "name": "toMaybeString",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/string",
+      "signature": "toMaybeString(value: unknown): string | undefined",
+      "description": "Converts a value to its `String()` form while keeping an absent value absent: `null` and `undefined` both become\n`undefined`. For reading a loosely typed field as an optional string: a CLI argument, a provider code that arrives as\na number, or a persisted row key that is a number on one build and a string on another.",
+      "params": [
+        {
+          "name": "value",
+          "type": "unknown",
+          "description": "- The value to convert.",
+          "optional": false
+        }
+      ],
+      "returns": "`String(value)`, or `undefined` when the value is `null` or `undefined`.",
+      "tags": [
+        "string",
+        "convert",
+        "coerce",
+        "maybe",
+        "nullish",
+        "optional",
+        "stringify",
+        "to",
+        "tomaybestring"
+      ],
+      "example": "toMaybeString(429); // '429'\ntoMaybeString(null); // undefined",
+      "relatedSlugs": [
+        "is-not-null-or-empty-string"
       ]
     },
     {
@@ -12308,7 +13696,7 @@
         {
           "name": "endText",
           "type": "Maybe<string>",
-          "description": "- Text to append when truncated; defaults to \"...\".",
+          "description": "- Text to append when truncated; defaults to \"...\" when undefined. Pass null to append nothing.",
           "optional": true
         }
       ],
@@ -12746,6 +14134,44 @@
       "relatedSlugs": [
         "add-to-split-string-tree",
         "find-best-split-string-tree-match"
+      ]
+    },
+    {
+      "slug": "is-website-url-on-domain",
+      "name": "isWebsiteUrlOnDomain",
+      "kind": "function",
+      "category": "string",
+      "module": "@dereekb/util",
+      "subpath": "string/url",
+      "signature": "isWebsiteUrlOnDomain(url: Maybe<string>, domain: WebsiteDomain): boolean",
+      "description": "Whether a URL's hostname is the given domain or one of its subdomains.\n\nParsed with `new URL` rather than substring-matched, so a look-alike host (`zenmux.ai.example.com`, `notzenmux.ai`) does\nnot qualify while a subdomain (`eu.zenmux.ai`) does. Port and path are ignored and the comparison is case-insensitive.\nA blank, schemeless or malformed value is simply false, never a throw.",
+      "params": [
+        {
+          "name": "url",
+          "type": "Maybe<string>",
+          "description": "- The URL to check, including its scheme.",
+          "optional": false
+        },
+        {
+          "name": "domain",
+          "type": "WebsiteDomain",
+          "description": "- The domain, such as `zenmux.ai`.",
+          "optional": false
+        }
+      ],
+      "returns": "True when the URL's hostname is the domain or a subdomain of it.",
+      "tags": [
+        "url",
+        "domain",
+        "host",
+        "hostname",
+        "subdomain",
+        "check",
+        "website",
+        "string",
+        "is",
+        "on",
+        "iswebsiteurlondomain"
       ]
     },
     {

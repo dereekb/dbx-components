@@ -5,7 +5,8 @@ import { handleZohoRecruitErrorFetch, interceptZohoRecruit200StatusWithErrorResp
 import { type ZohoAccountsContextRef } from '../accounts/accounts.config';
 import { zohoAccessTokenStringFactory } from '../accounts/accounts';
 import { type ZohoRateLimitedFetchHandlerConfig, zohoRateLimitedFetchHandler } from '../zoho.limit';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { DEFAULT_ZOHO_FETCH_TIMEOUT } from '../zoho.config';
 
 /**
  * Top-level Zoho Recruit client instance, providing access to the authenticated {@link ZohoRecruitContext}.
@@ -23,13 +24,22 @@ export interface ZohoRecruitFactoryConfig extends ZohoAccountsContextRef {
   readonly rateLimiterConfig?: Maybe<ZohoRateLimitedFetchHandlerConfig>;
   /**
    * Custom fetch factory for creating the underlying HTTP client.
-   * Defaults to a standard fetch service with OAuth Bearer token headers and a 20-second timeout.
+   * Defaults to a standard fetch service with OAuth Bearer token headers and the `timeout` below.
    */
   readonly fetchFactory?: ZohoRecruitFetchFactory;
   /**
    * Custom error logging function invoked when Zoho API errors are encountered.
    */
   readonly logZohoServerErrorFunction?: LogZohoServerErrorFunction;
+  /**
+   * Timeout in milliseconds for each request the default fetch sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * Ignored when a `fetchFactory` is provided.
+   *
+   * Defaults to {@link DEFAULT_ZOHO_FETCH_TIMEOUT} (20 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 /**
@@ -81,7 +91,7 @@ export function zohoRecruitFactory(factoryConfig: ZohoRecruitFactoryConfig): Zoh
           }
         }),
         fetchHandler,
-        timeout: 20 * 1000, // 20 second timeout
+        timeout: factoryConfig.timeout ?? DEFAULT_ZOHO_FETCH_TIMEOUT,
         requireOkResponse: true, // enforce ok response
         useTimeout: true // use timeout
       })

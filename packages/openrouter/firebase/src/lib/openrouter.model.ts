@@ -1,9 +1,7 @@
+import { type LlmDecisionAnswers, type LlmDecisionQuestions, type LlmStorableDecisionState } from '@dereekb/llm/decision';
 import { type GrantedReadRole, type GrantedUpdateRole } from '@dereekb/model';
 import { MS_IN_DAY, type Maybe, type Milliseconds } from '@dereekb/util';
 import {
-  type OpenRouterDecisionAnswers,
-  type OpenRouterDecisionQuestions,
-  type OpenRouterStorableDecisionState,
   type OpenRouterFileAnnotation,
   type OpenRouterFileReference,
   type OpenRouterGenerationId,
@@ -364,7 +362,7 @@ export interface OpenRouterPromptVersion {
    *
    * @dbxModelVariable questions
    */
-  q?: Maybe<OpenRouterDecisionQuestions>;
+  q?: Maybe<LlmDecisionQuestions>;
   /**
    * Whether the version is locked against further edits.
    *
@@ -452,7 +450,7 @@ export const openRouterPromptVersionConverter = snapshotConverterFunctions<OpenR
     i: optionalFirestoreString(),
     m: optionalFirestoreArray<OpenRouterPromptVersionMessage>({ dontStoreIfEmpty: true }),
     c: optionalFirestoreJsonStringField<OpenRouterModelConfig>(),
-    q: optionalFirestoreJsonStringField<OpenRouterDecisionQuestions>(),
+    q: optionalFirestoreJsonStringField<LlmDecisionQuestions>(),
     nt: optionalFirestoreString(),
     by: optionalFirestoreString(),
     lk: optionalFirestoreBoolean(),
@@ -767,7 +765,7 @@ export interface OpenRouterRunTask {
    *
    * @dbxModelVariable state
    */
-  st?: Maybe<OpenRouterStorableDecisionState>;
+  st?: Maybe<LlmStorableDecisionState>;
   /**
    * Questions declared by the caller for THIS run, merged over the version's own stored questions.
    *
@@ -776,7 +774,7 @@ export interface OpenRouterRunTask {
    *
    * @dbxModelVariable questions
    */
-  q?: Maybe<OpenRouterDecisionQuestions>;
+  q?: Maybe<LlmDecisionQuestions>;
   /**
    * Files to attach, as GCS object paths — never signed URLs. See {@link OpenRouterFileReference} for why.
    *
@@ -817,11 +815,11 @@ export interface OpenRouterRunTask {
    * shape of a loose object.
    *
    * Already membership-checked against the declared questions when it is written — see
-   * `readOpenRouterDecisionAnswers` — so a reader does not re-check one.
+   * `readLlmDecisionAnswers` — so a reader does not re-check one.
    *
    * @dbxModelVariable answers
    */
-  an?: Maybe<OpenRouterDecisionAnswers>;
+  an?: Maybe<LlmDecisionAnswers>;
   /**
    * Generation ids produced, for auditing via `getGeneration` / `listGenerationContent`.
    *
@@ -896,11 +894,11 @@ export const openRouterRunTaskConverter = snapshotConverterFunctions<OpenRouterR
     fp: optionalFirestoreArray<OpenRouterFileReference>({ dontStoreIfEmpty: true }),
     fa: optionalFirestoreArray<OpenRouterFileAnnotation>({ dontStoreIfEmpty: true }),
     co: optionalFirestoreJsonStringField<OpenRouterModelConfig>(),
-    st: optionalFirestoreJsonStringField<OpenRouterStorableDecisionState>(),
-    q: optionalFirestoreJsonStringField<OpenRouterDecisionQuestions>(),
+    st: optionalFirestoreJsonStringField<LlmStorableDecisionState>(),
+    q: optionalFirestoreJsonStringField<LlmDecisionQuestions>(),
     o: optionalFirestoreString(),
     j: optionalFirestoreJsonStringField<Record<string, unknown>>(),
-    an: optionalFirestoreJsonStringField<OpenRouterDecisionAnswers>(),
+    an: optionalFirestoreJsonStringField<LlmDecisionAnswers>(),
     gi: optionalFirestoreArray<OpenRouterGenerationId>({ filterUnique: true, dontStoreIfEmpty: true }),
     u: optionalFirestoreJsonStringField<OpenRouterRunUsage>(),
     e: optionalFirestoreJsonStringField<OpenRouterRunError>(),

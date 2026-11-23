@@ -1,11 +1,10 @@
+import { type LlmDecisionQuestions, type LlmDecisionState } from '@dereekb/llm/decision';
 import { type Maybe } from '@dereekb/util';
 import {
   type OpenRouterAttachedFileReference,
   type OpenRouterCallResult,
   type OpenRouterCore,
-  type OpenRouterDecisionQuestions,
   type OpenRouterDecisionResult,
-  type OpenRouterDecisionState,
   type OpenRouterInput,
   type OpenRouterModelConfig,
   type OpenRouterPromptKey,
@@ -104,11 +103,11 @@ export interface DecideForPromptParams {
   /**
    * The content to judge.
    */
-  readonly state: OpenRouterDecisionState;
+  readonly state: LlmDecisionState;
   /**
    * Questions declared for THIS call, merged over the version's stored questions by id.
    */
-  readonly questions?: Maybe<OpenRouterDecisionQuestions>;
+  readonly questions?: Maybe<LlmDecisionQuestions>;
   /**
    * Per-call config overrides.
    */

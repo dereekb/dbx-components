@@ -2,6 +2,11 @@ import { type PrimativeKey } from '../key';
 import { allowValueOnceFilter, filterUniqueValues, isUniqueKeyedFunction, unique } from './array.unique';
 
 describe('unique', () => {
+  it('should accept a readonly input array', () => {
+    const input: ReadonlyArray<string> = ['a', 'b', 'a'];
+    expect(unique(input)).toEqual(['a', 'b']);
+  });
+
   it('should return only unique values', () => {
     const values = [0, 1, 2, 3, 4];
 

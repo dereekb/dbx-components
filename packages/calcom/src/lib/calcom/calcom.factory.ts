@@ -5,8 +5,8 @@ import { handleCalcomErrorFetch } from './calcom.error.api';
 import { type CalcomOAuthContextRef, type CalcomRefreshTokenCredential } from '../oauth/oauth.config';
 import { calcomAccessTokenStringFactory } from '../oauth/oauth';
 import { type CalcomRateLimitedFetchHandlerConfig, calcomRateLimitedFetchHandler } from '../calcom.limit';
-import { type Maybe } from '@dereekb/util';
-import { CALCOM_API_URL, type CalcomConfig } from '../calcom.config';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { CALCOM_API_URL, type CalcomConfig, DEFAULT_CALCOM_FETCH_TIMEOUT } from '../calcom.config';
 
 export type Calcom = CalcomServerContextRef;
 
@@ -23,6 +23,16 @@ export interface CalcomFactoryConfig extends CalcomOAuthContextRef {
    * Custom log error function.
    */
   readonly logCalcomServerErrorFunction?: LogCalcomServerErrorFunction;
+  /**
+   * Timeout in milliseconds for each request the default fetch sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * It also times the public (unauthenticated) slots context, which no `fetchFactory` builds: a `fetchFactory`
+   * replaces only the default authenticated fetch, so the public context reads this timeout either way.
+   *
+   * Defaults to {@link DEFAULT_CALCOM_FETCH_TIMEOUT} (20 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 export type CalcomFactory = (config: CalcomConfig) => Calcom;
@@ -54,7 +64,7 @@ export function calcomFactory(factoryConfig: CalcomFactoryConfig): CalcomFactory
           }
         }),
         fetchHandler,
-        timeout: 20 * 1000, // 20 second timeout
+        timeout: factoryConfig.timeout ?? DEFAULT_CALCOM_FETCH_TIMEOUT,
         requireOkResponse: true, // enforce ok response
         useTimeout: true // use timeout
       })
@@ -80,7 +90,7 @@ export function calcomFactory(factoryConfig: CalcomFactoryConfig): CalcomFactory
           }
         },
         fetchHandler,
-        timeout: 20 * 1000,
+        timeout: factoryConfig.timeout ?? DEFAULT_CALCOM_FETCH_TIMEOUT,
         requireOkResponse: true,
         useTimeout: true
       });

@@ -16,7 +16,7 @@ import {
   microsoftGraphRequest,
   microsoftGraphSearchMessagesRequest
 } from '@dereekb/microsoft';
-import { type EmailAddress, type Maybe, type Milliseconds, type Seconds, MS_IN_SECOND } from '@dereekb/util';
+import { type EmailAddress, type Maybe, type Milliseconds, type Seconds, MS_IN_SECOND, toMaybeString } from '@dereekb/util';
 import type { Argv } from 'yargs';
 import { type MsGraphCliDryRunOutput, type MsGraphCliWriteResultsOutput, msGraphCliDryRunOutput, msGraphCliWriteResultsOutput, runMsGraphCliMessageWrites } from './mail.write';
 import { parseMsGraphCliDateOption } from './option';
@@ -273,14 +273,14 @@ export function readMsGraphCliCategoryOption(value: unknown): Maybe<string> {
  */
 export function readMsGraphCliMailSelection(argv: Record<string, unknown>): MsGraphCliMailSelection {
   return {
-    folder: argv['folder'] == null ? undefined : String(argv['folder']),
-    from: argv['from'] == null ? undefined : String(argv['from']),
+    folder: toMaybeString(argv['folder']),
+    from: toMaybeString(argv['from']),
     since: parseMsGraphCliDateOption('since', argv['since']),
     until: parseMsGraphCliDateOption('until', argv['until']),
     unread: argv['unread'] === true ? true : undefined,
     hasAttachments: argv['hasAttachments'] === true ? true : undefined,
     category: readMsGraphCliCategoryOption(argv['category']),
-    search: argv['search'] == null ? undefined : String(argv['search']),
+    search: toMaybeString(argv['search']),
     wholeFolder: argv['wholeFolder'] === true ? true : undefined,
     maxMessages: readMsGraphCliWholeNumberOption('max-messages', argv['maxMessages'], 1),
     maxSeconds: readMsGraphCliWholeNumberOption('max-seconds', argv['maxSeconds'], 0)

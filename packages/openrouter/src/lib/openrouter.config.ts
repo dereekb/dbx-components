@@ -1,5 +1,6 @@
+import { isLlmDecisionModelId } from '@dereekb/llm/decision';
 import { type Maybe, mergeObjects } from '@dereekb/util';
-import { type OpenRouterModelId, isOpenRouterSystemOneModelId } from './openrouter.type';
+import { type OpenRouterModelId } from './openrouter.type';
 
 /**
  * Reasoning effort accepted by OpenRouter's `reasoning.effort`.
@@ -274,9 +275,14 @@ export interface OpenRouterModelConfig {
   /**
    * Per-request wall-clock timeout in milliseconds.
    *
-   * The one bound on a single inference. Required in practice for the run-task sweeper: without it,
+   * `@dereekb/openrouter` sends each request once (`retries: { strategy: 'none' }` unless the caller passes
+   * `retries`), so this bounds the whole call. Required in practice for the run-task sweeper: without it,
    * one unusually slow call can overrun the sweep's time budget and delay every other workload
    * sharing the runner.
+   *
+   * Without a caller `signal` the SDK times the request with it. When the request options carry a `signal`, it
+   * becomes one deadline for the whole call instead (the request and, on a tool loop, every step); see
+   * `openRouterRequestOptionsWithTimeout`.
    */
   readonly requestTimeoutMs?: Maybe<number>;
   /**
@@ -306,7 +312,7 @@ export function mergeOpenRouterModelConfig(configs: Maybe<OpenRouterModelConfig>
 /**
  * Result of validating an {@link OpenRouterModelConfig}.
  *
- * Also the package's general validation shape — `validateOpenRouterDecisionQuestions` and
+ * Also the package's general validation shape — `validateLlmDecisionQuestions` and
  * `validateOpenRouterDecisionRequest` report through it too, so a caller publishing a prompt can gather
  * config problems and question problems into one surface rather than branching on which produced them.
  */
@@ -364,11 +370,11 @@ export function validateOpenRouterModelConfig(config: Maybe<OpenRouterModelConfi
     // a stored prompt version is refused when it is written, rather than failing in a sweep days later
     // with an error that names neither the prompt nor the reason.
     const declaredModels = [config.model, ...(config.models ?? [])].filter(Boolean) as OpenRouterModelId[];
-    const systemOneModels = declaredModels.filter((x) => isOpenRouterSystemOneModelId(x));
+    const systemOneModels = declaredModels.filter((x) => isLlmDecisionModelId(x));
 
     if (decision) {
       declaredModels
-        .filter((x) => !isOpenRouterSystemOneModelId(x))
+        .filter((x) => !isLlmDecisionModelId(x))
         .forEach((model) => {
           errors.push(`\`${model}\` is not a System One model, and only a System One model answers a decision. Name a \`typesafe/…\` model (see DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID).`);
         });

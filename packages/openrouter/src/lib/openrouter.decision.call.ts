@@ -6,13 +6,15 @@
  * that everything a decision is built from can be loaded without evaluating `@openrouter/sdk` — see the
  * `@dereekb/openrouter/decision` entry. A caller that owns its own transport (its own timeout, retry
  * policy or error shape) builds the body with `openRouterDecisionRequestBody` and reads the reply with
- * `readOpenRouterDecisionAnswers`, and never needs this file.
+ * `requireLlmDecisionAnswers` (as this file does; `readLlmDecisionAnswers` hands the faults back instead of throwing),
+ * and never needs this file.
  */
 
+import { type LlmDecisionAnswers, LlmDecisionDeclarationError, type LlmDecisionQuestions, llmDecisionReplyBilling, requireLlmDecisionAnswers } from '@dereekb/llm/decision';
 import { type Maybe } from '@dereekb/util';
-import { type OpenRouterDecisionRequest, OpenRouterDecisionAnswerFaultError, OpenRouterDecisionDeclarationError, openRouterDecisionRequestBody, openRouterRunUsageFromDecisionsUsage, readOpenRouterDecisionAnswers, splitOpenRouterDecisionModelConfig, validateOpenRouterDecisionRequest } from './openrouter.decision';
-import { type OpenRouterDecisionAnswer, type OpenRouterDecisionAnswers, type OpenRouterDecisionQuestions } from './openrouter.decision.question';
+import { type OpenRouterDecisionRequest, openRouterDecisionRequestBody, openRouterRunUsageFromDecisionsUsage, splitOpenRouterDecisionModelConfig, validateOpenRouterDecisionRequest } from './openrouter.decision';
 import { type DecisionsResponse, type OpenRouterCore, type RequestOptions, systemOneCreate } from './openrouter.sdk';
+import { openRouterRequestOptionsWithTimeout } from './openrouter.timeout';
 import { type OpenRouterGenerationId, type OpenRouterModelId, type OpenRouterRunUsage } from './openrouter.type';
 
 /**
@@ -23,11 +25,11 @@ import { type OpenRouterGenerationId, type OpenRouterModelId, type OpenRouterRun
  * second arm. There is no `outputText` or `error`: a decision has no prose output, and the route reports
  * a failure as a thrown transport error rather than as a field on a 200.
  */
-export interface OpenRouterDecisionResult<Q extends OpenRouterDecisionQuestions = OpenRouterDecisionQuestions> {
+export interface OpenRouterDecisionResult<Q extends LlmDecisionQuestions = LlmDecisionQuestions> {
   /**
    * The answers, membership-checked against the declared questions.
    */
-  readonly answers: OpenRouterDecisionAnswers<Q>;
+  readonly answers: LlmDecisionAnswers<Q>;
   /**
    * The model that actually served the decision — a VERSIONED slug even when an alias was asked for,
    * which is what makes an answer reproducible.
@@ -54,7 +56,7 @@ export interface OpenRouterDecisionResult<Q extends OpenRouterDecisionQuestions 
 /**
  * Params for {@link openRouterDecision}.
  */
-export interface OpenRouterDecisionParams<Q extends OpenRouterDecisionQuestions = OpenRouterDecisionQuestions> {
+export interface OpenRouterDecisionParams<Q extends LlmDecisionQuestions = LlmDecisionQuestions> {
   /**
    * The OpenRouter client.
    */
@@ -65,6 +67,8 @@ export interface OpenRouterDecisionParams<Q extends OpenRouterDecisionQuestions 
   readonly request: OpenRouterDecisionRequest<Q>;
   /**
    * Additional request options, merged under the config's `requestTimeoutMs`.
+   *
+   * A `signal` here does not cancel the timeout: the two are merged by {@link openRouterRequestOptionsWithTimeout}.
    */
   readonly options?: Maybe<RequestOptions>;
 }
@@ -79,31 +83,30 @@ export interface OpenRouterDecisionParams<Q extends OpenRouterDecisionQuestions 
  *
  * @param params - The client, request, and options.
  * @returns The normalized decision result.
- * @throws {OpenRouterDecisionDeclarationError} When the request cannot be asked as declared.
- * @throws {OpenRouterDecisionAnswerFaultError} When the reply did not answer the declared questions.
+ * @throws {LlmDecisionDeclarationError} When the request cannot be asked as declared.
+ * @throws {LlmDecisionAnswerFaultError} When the reply did not answer the declared questions — carrying the reply's
+ *   usage, model, provider and generation id, since the send was still billed.
  */
-export async function openRouterDecision<Q extends OpenRouterDecisionQuestions = OpenRouterDecisionQuestions>(params: OpenRouterDecisionParams<Q>): Promise<OpenRouterDecisionResult<Q>> {
+export async function openRouterDecision<Q extends LlmDecisionQuestions = LlmDecisionQuestions>(params: OpenRouterDecisionParams<Q>): Promise<OpenRouterDecisionResult<Q>> {
   const { client, request, options } = params;
   const validation = validateOpenRouterDecisionRequest(request);
 
   if (!validation.valid) {
-    throw new OpenRouterDecisionDeclarationError(validation.errors);
+    throw new LlmDecisionDeclarationError(validation.errors);
   }
 
   const { requestTimeoutMs } = splitOpenRouterDecisionModelConfig(request.config);
   const decisionsRequest = openRouterDecisionRequestBody(request);
-  const result = await systemOneCreate(client, { decisionsRequest }, { ...options, ...(requestTimeoutMs == null ? undefined : { timeoutMs: requestTimeoutMs }) });
+  const result = await systemOneCreate(client, { decisionsRequest }, openRouterRequestOptionsWithTimeout(options, requestTimeoutMs));
 
   if (!result.ok) {
     throw result.error;
   }
 
   const response = result.value;
-  const read = readOpenRouterDecisionAnswers({ questions: request.questions, raw: (response.answers ?? {}) as Readonly<Record<string, Maybe<OpenRouterDecisionAnswer>>> });
+  // the bill is read BEFORE the answers, so a reply that left its answer space throws a fault that still carries it
+  const billing = llmDecisionReplyBilling(response);
+  const answers = requireLlmDecisionAnswers({ questions: request.questions, raw: response.answers ?? {}, billing });
 
-  if (read.faults != null) {
-    throw new OpenRouterDecisionAnswerFaultError(read.faults);
-  }
-
-  return { answers: read.answers, model: response.model, provider: response.provider, generationIds: response.id ? [response.id] : [], usage: openRouterRunUsageFromDecisionsUsage(response.usage), response };
+  return { answers, model: response.model, provider: response.provider, generationIds: response.id ? [response.id] : [], usage: openRouterRunUsageFromDecisionsUsage(response.usage), response };
 }

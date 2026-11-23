@@ -12,14 +12,14 @@ import { cutString, type Maybe } from '@dereekb/util';
  * @dbxPipeSkillRefs dbx-value-pipes
  * @example
  * ```html
- * <span>{{ 'Hello World' | cutText:5 }}</span>
+ * <span>{{ 'Hello World' | cutText:8 }}</span>
  * <!-- Output: "Hello..." -->
  *
- * <span>{{ longText | cutText:20:'--' }}</span>
- * <!-- Output: "Some long text here--" -->
+ * <span>{{ 'Hello World' | cutText:8:'…' }}</span>
+ * <!-- Output: "Hello W…" -->
  * ```
- * @param maxLength Maximum allowed length before truncation.
- * @param endText Suffix appended when truncation occurs.
+ * @param maxLength Maximum allowed length before truncation, including the end text.
+ * @param endText Suffix appended when truncation occurs. Defaults to "..." when undefined; null appends nothing.
  */
 @Pipe({
   name: 'cutText',

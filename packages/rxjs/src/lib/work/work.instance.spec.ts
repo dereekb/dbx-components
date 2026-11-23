@@ -1,6 +1,6 @@
 import { SubscriptionObject } from './../subscription';
 import { beginLoading, errorResult, type LoadingState, successResult } from '@dereekb/rxjs';
-import { type Maybe, readableError } from '@dereekb/util';
+import { DEFAULT_READABLE_ERROR_CODE, type ErrorInput, type Maybe, readableError } from '@dereekb/util';
 import { filter, BehaviorSubject, first } from 'rxjs';
 import { WorkInstance } from './work.instance';
 import { callbackTest } from '@dereekb/util/test';
@@ -177,5 +177,41 @@ describe('WorkInstance', () => {
         expect(workInstance.isComplete).toBe(true);
       });
     });
+  });
+});
+
+describe('WorkInstance primitive rejections', () => {
+  let delegate: { startWorking: ReturnType<typeof vi.fn>; success: ReturnType<typeof vi.fn>; reject: ReturnType<typeof vi.fn> };
+  let workInstance: WorkInstance<number, string>;
+
+  beforeEach(() => {
+    delegate = {
+      startWorking: vi.fn(),
+      success: vi.fn(),
+      reject: vi.fn()
+    };
+
+    workInstance = new WorkInstance(1, delegate);
+  });
+
+  afterEach(() => {
+    workInstance.destroy();
+  });
+
+  it('reject() with a string should reach the delegate', () => {
+    workInstance.startWorking();
+    workInstance.reject('quota' as unknown as ErrorInput);
+
+    expect(delegate.reject).toHaveBeenCalledWith('quota');
+    expect(workInstance.isComplete).toBe(true);
+    expect(workInstance.result?.error).toMatchObject({ code: DEFAULT_READABLE_ERROR_CODE, message: 'quota' });
+  });
+
+  it('a promise rejected with a string should reach the delegate', async () => {
+    workInstance.startWorkingWithPromise(Promise.reject('quota'));
+
+    await vi.waitFor(() => expect(delegate.reject).toHaveBeenCalledWith('quota'));
+    expect(workInstance.isComplete).toBe(true);
+    expect(workInstance.result?.error).toMatchObject({ code: DEFAULT_READABLE_ERROR_CODE, message: 'quota' });
   });
 });

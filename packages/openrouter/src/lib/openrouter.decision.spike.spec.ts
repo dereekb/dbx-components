@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { llmChoiceQuestion, llmNoulQuestion, llmScoreQuestion } from '@dereekb/llm';
+import { expect, it } from 'vitest';
+import { describeIfEnvFlag } from '@dereekb/util/test';
 import { OpenRouterCore } from '@openrouter/sdk/core';
 import { openRouterDecisionRequest } from './openrouter.decision';
 import { openRouterDecision } from './openrouter.decision.call';
-import { openRouterChoiceQuestion, openRouterNoulQuestion, openRouterScoreQuestion } from './openrouter.decision.question';
 import { OPENROUTER_JEV_1_13_MODEL_ID } from './openrouter.type';
 
 /**
@@ -20,17 +21,17 @@ import { OPENROUTER_JEV_1_13_MODEL_ID } from './openrouter.type';
  *
  * ## Running
  *
- * Skipped unless `OPENROUTER_API_KEY` is set, because these make real calls. They are cheap: input is
- * billed at $0.042 per million tokens and output is free, so one run of this file costs a fraction of a
- * cent.
+ * Skipped unless `OPENROUTER_LIVE_SPECS` is `1` or `true`, because these make real calls with
+ * `OPENROUTER_API_KEY`. The key alone never enables them (see "Live probes" in the package README).
+ * They are cheap: input is billed at $0.042 per million tokens and output is free, so one run of this
+ * file costs a fraction of a cent.
  *
  * ```
- * OPENROUTER_API_KEY=sk-or-… npx nx test openrouter
- * OPENROUTER_TEST_DECISION_MODEL_ID=typesafe/jev-latest npx nx test openrouter
+ * OPENROUTER_LIVE_SPECS=1 npx nx test openrouter --skip-nx-cache
+ * OPENROUTER_LIVE_SPECS=1 OPENROUTER_TEST_DECISION_MODEL_ID=typesafe/jev-latest npx nx test openrouter --skip-nx-cache
  * ```
  */
 const OPENROUTER_API_KEY = process.env['OPENROUTER_API_KEY'];
-const CREDENTIALS_PRESENT = Boolean(OPENROUTER_API_KEY);
 
 const DECISION_MODEL = process.env['OPENROUTER_TEST_DECISION_MODEL_ID'] ?? OPENROUTER_JEV_1_13_MODEL_ID;
 
@@ -53,7 +54,7 @@ const PROBE_STATE = {
 };
 
 const PROBE_QUESTIONS = {
-  topic: openRouterChoiceQuestion(
+  topic: llmChoiceQuestion(
     { question: 'Which team should own `ticket`?', inspect: ['ticket.subject', 'ticket.body'] },
     {
       billing: { what: 'Charges, invoices, refunds, or subscriptions', not_for: 'Order tracking or account access', examples: ['I was charged twice'] },
@@ -61,11 +62,14 @@ const PROBE_QUESTIONS = {
       other: { what: 'Anything the other options do not cover' }
     }
   ),
-  urgency: openRouterScoreQuestion('How urgent is `ticket`?', [{ what: 'No deadline is mentioned and nothing is blocked' }, { what: 'Something is inconvenient but the sender can keep working' }, { what: 'The sender names a deadline within the week' }, { what: 'Money or access is blocked right now' }]),
-  refundRequested: openRouterNoulQuestion('`ticket` asks for money to be returned.', { true: 'the sender asks for a refund or reversal', false: 'the sender asks for anything else' })
+  urgency: llmScoreQuestion('How urgent is `ticket`?', [{ what: 'No deadline is mentioned and nothing is blocked' }, { what: 'Something is inconvenient but the sender can keep working' }, { what: 'The sender names a deadline within the week' }, { what: 'Money or access is blocked right now' }]),
+  refundRequested: llmNoulQuestion('`ticket` asks for money to be returned.', { true: 'the sender asks for a refund or reversal', false: 'the sender asks for anything else' })
 } as const;
 
-describe.skipIf(!CREDENTIALS_PRESENT)('System One live probes', () => {
+// Whether to run the live probes: `OPENROUTER_LIVE_SPECS` is `1` / `true` (trimmed, any case: `describeIfEnvFlag`
+// from `@dereekb/util/test`). Never inferred from the key, which Nx always loads from the workspace `.env.local` /
+// `.env` and an empty override cannot blank.
+describeIfEnvFlag('OPENROUTER_LIVE_SPECS')('System One live probes', () => {
   const client = new OpenRouterCore({ apiKey: OPENROUTER_API_KEY as string });
 
   it('should answer all three primitives in one call', async () => {

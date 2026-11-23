@@ -12,6 +12,15 @@ export type EmptyArray = never[];
  */
 export type ArrayOrValue<T> = T | T[];
 
+/**
+ * A value that is either a single item of type T or a readonly array of T items.
+ *
+ * Every {@link ArrayOrValue} is assignable to it, so helpers that only read their input accept this wider type.
+ * {@link ArrayOrValue} itself stays `T | T[]`: `Array.isArray` does not narrow `readonly T[]` out of the false branch,
+ * so `Array.isArray(x) ? x : [x]` call sites would break, and {@link convertToArray} returns its input array by reference.
+ */
+export type ReadonlyArrayOrValue<T> = T | ReadonlyArray<T>;
+
 // MARK: Functions
 /**
  * Converts the input value to an array containing itself, or returns itself if it is a non-empty array. Returns undefined if the input is nullish or results in an empty array.
@@ -152,7 +161,7 @@ export function valueAtIndex<T>(input: ArrayOrValue<T>, index: number): T {
  * @dbxUtilTags array, concat, concatenate, combine, flatten, merge
  * @dbxUtilRelated flatten-array, merge-arrays
  */
-export function concatArrays<T>(...arrays: Maybe<T[]>[]): T[] {
+export function concatArrays<T>(...arrays: Maybe<ReadonlyArray<T>>[]): T[] {
   return flattenArray(arrays.filter(Boolean) as T[][]);
 }
 

@@ -22,7 +22,7 @@ import {
   type UserExternalConnectionOAuthRefreshCredentialsInput,
   type UserExternalConnectionOAuthAuthorizeUrlInput
 } from '@dereekb/firebase-server/model';
-import { MS_IN_SECOND, type Maybe, type WebsiteUrl } from '@dereekb/util';
+import { MS_IN_SECOND, type Maybe, type WebsiteUrl, toMaybeString } from '@dereekb/util';
 import { ZohoUserExternalConnectionOAuthServiceConfig } from './zoho.oauth.connection.config';
 
 /**
@@ -103,7 +103,7 @@ export function zohoUserExternalConnectionCredentials(input: ZohoUserExternalCon
     issuedAt: new Date(now).toISOString(),
     expiresAt: expires_in == null ? undefined : new Date(now + expires_in * MS_IN_SECOND).toISOString(),
     scopes: zohoOAuthScopesFromScopeString(scope),
-    externalAccountId: zuid == null ? undefined : String(zuid),
+    externalAccountId: toMaybeString(zuid),
     label: userInfo?.Email ?? userInfo?.Display_Name ?? undefined,
     extra: {
       [ZOHO_EXTRA_API_DOMAIN_KEY]: api_domain,
@@ -196,7 +196,7 @@ export class ZohoUserExternalConnectionOAuthService extends AbstractUserExternal
     // re-resolved through the allowlist rather than used verbatim: the value originally arrived on a
     // browser redirect, and it is the POST target the client secret travels to.
     const storedAccountsServer = extra?.[ZOHO_EXTRA_ACCOUNTS_SERVER_KEY];
-    const accountsApiUrl = this.allowlistedAccountsApiUrl(storedAccountsServer == null ? undefined : String(storedAccountsServer)) ?? this.accountsApiUrl;
+    const accountsApiUrl = this.allowlistedAccountsApiUrl(toMaybeString(storedAccountsServer)) ?? this.accountsApiUrl;
 
     const response = await this.oauthApi.refreshUserAccessToken({ refreshToken, accountsApiUrl });
 
@@ -206,7 +206,7 @@ export class ZohoUserExternalConnectionOAuthService extends AbstractUserExternal
 
     // the response has no `refresh_token`, which the framework's merge retains — and `api_domain` may
     // legitimately differ from the one issued on connect, so it is taken from the response
-    return zohoUserExternalConnectionCredentials({ response, accountsApiUrl, location: location == null ? undefined : String(location) });
+    return zohoUserExternalConnectionCredentials({ response, accountsApiUrl, location: toMaybeString(location) });
   }
 
   /**

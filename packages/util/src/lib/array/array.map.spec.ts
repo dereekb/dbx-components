@@ -46,6 +46,11 @@ describe('arrayToMap', () => {
 });
 
 describe('arrayToObject', () => {
+  it('should accept a readonly input array', () => {
+    const input: ReadonlyArray<{ id: string }> = [{ id: 'a' }, { id: 'b' }];
+    expect(Object.keys(arrayToObject(input, (x) => x.id))).toEqual(['a', 'b']);
+  });
+
   it('should create a Record from array values using the key function', () => {
     const items: TestItem[] = [
       { id: 'a', value: 1 },

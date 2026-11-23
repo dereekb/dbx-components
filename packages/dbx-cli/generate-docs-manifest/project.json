@@ -17,7 +17,7 @@
         }
       ],
       "metadata": {
-        "description": "An explicit edge to dbx-cli:build-base, NOT `^build`. This entry point compiles into the parent's dist directory, which `dbx-cli:build-base` deletes and rewrites (rollup `deleteOutputPath: true`), so it cannot run before the parent -- but the edge has to be spelled out, because `^build` here would resolve to dbx-cli:build, which depends on this very target: a hard cycle. Either the children get `^build` or the parent aggregates them, never both; aggregating keeps one writer per dist directory.  It imports only the parent's own `src/lib/docs` sources (relative), so it needs no sibling edge."
+        "description": "An explicit edge to dbx-cli:build-base, NOT `^build`. This entry point compiles into the parent's dist directory, which `dbx-cli:build-base` deletes and rewrites (rollup `deleteOutputPath: true`), so it cannot run before the parent -- but the edge has to be spelled out, because `^build` here would resolve to dbx-cli:build, which depends on this very target: a hard cycle. Either the children get `^build` or the parent aggregates them, never both; aggregating keeps one writer per dist directory.  It imports the parent's own `src/lib/docs` sources (relative), which inline `@dereekb/util` source (its frontmatter reader), as `generate-mcp-manifest` does; it still needs no sibling edge."
       },
       "options": {
         "outputPath": "dist/packages/dbx-cli/generate-docs-manifest",

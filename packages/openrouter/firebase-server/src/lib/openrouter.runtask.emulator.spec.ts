@@ -1,11 +1,14 @@
+import { type IsRetryableUnknownErrorFunction } from '@dereekb/util/fetch';
+import { llmChoiceQuestion, type LlmDecisionQuestions, llmNoulQuestion } from '@dereekb/llm';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { describeIfEnvFlag } from '@dereekb/util/test';
 import * as z from 'zod/v4';
 import { firestoreModelKey } from '@dereekb/firebase';
 import { firebaseServerActionsContext } from '@dereekb/firebase-server';
 import { adminFirestoreFactory } from '@dereekb/firebase-server/test';
 import { MS_IN_HOUR, type Maybe } from '@dereekb/util';
 import { OpenRouterWebhookController, OpenRouterWebhookService } from '@dereekb/nestjs/openrouter';
-import { type OpenRouterCore, type OpenRouterDecisionQuestions, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type Tool, OPENROUTER_JEV_1_13_MODEL_ID, openRouterChoiceQuestion, openRouterFileSearchTool, openRouterGeneration, openRouterNoulQuestion, tool } from '@dereekb/openrouter';
+import { type OpenRouterCore, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type RequestOptions, type Tool, OPENROUTER_JEV_1_13_MODEL_ID, openRouterFileSearchTool, openRouterGeneration, tool } from '@dereekb/openrouter';
 import { OpenRouterCore as OpenRouterClient } from '@openrouter/sdk/core';
 import {
   OPENROUTER_RUN_TASK_MAX_AGE,
@@ -30,16 +33,15 @@ import { reconcileOpenRouterRunTaskFromBroadcast, openRouterRunTaskKeyFromBroadc
 const TEST_PROMPT_KEY = 'test-prompt';
 const TEST_MODEL_CONFIG: OpenRouterModelConfig = { model: 'openai/gpt-5.1', provider: { only: ['openai'], allowFallbacks: false, requireParameters: true } };
 const TEST_DECISION_MODEL_CONFIG: OpenRouterModelConfig = { model: OPENROUTER_JEV_1_13_MODEL_ID };
-const TEST_DECISION_QUESTIONS: OpenRouterDecisionQuestions = {
-  urgent: openRouterNoulQuestion('`ticket.body` needs action today.'),
-  team: openRouterChoiceQuestion('Which team should own `ticket`?', { billing: 'money', access: 'sign-in' })
+const TEST_DECISION_QUESTIONS: LlmDecisionQuestions = {
+  urgent: llmNoulQuestion('`ticket.body` needs action today.'),
+  team: llmChoiceQuestion('Which team should own `ticket`?', { billing: 'money', access: 'sign-in' })
 };
 const TEST_DECISION_STATE = { ticket: { body: 'I was charged twice and need a refund before Friday.' } };
 const TEST_DECISION_ANSWERS = { urgent: { type: 'noul', noul: 0.9 }, team: { type: 'choice', choice: 'billing', probabilities: { billing: 0.95, access: 0.05 } } };
 
 /**
- * Set to run the `live end-to-end` block against the real API. Every other block runs against a fake
- * client and needs no credentials.
+ * The key the `live end-to-end` block calls with.
  */
 const OPENROUTER_LIVE_API_KEY = process.env['OPENROUTER_API_KEY'];
 const LIVE_TEST_MODEL = process.env['OPENROUTER_TEST_MODEL_ID'] ?? 'nvidia/nemotron-nano-9b-v2:free';
@@ -129,11 +131,19 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       /**
        * Questions to publish on the version, making the prompt a DECISION prompt.
        */
-      readonly questions?: OpenRouterDecisionQuestions;
+      readonly questions?: LlmDecisionQuestions;
       /**
        * What the fake System One model should answer a DECISION request with.
        */
       readonly decisionReply?: FakeOpenRouterDecisionReply;
+      /**
+       * The fake client's own SDK retry policy. Unset keeps the fake's `{ strategy: 'none' }`.
+       */
+      readonly sdkRetryConfig?: Maybe<NonNullable<RequestOptions['retries']>>;
+      /**
+       * The host's call on an `unknown` failure.
+       */
+      readonly isRetryableUnknownError?: IsRetryableUnknownErrorFunction;
     }
 
     async function buildStack(config?: BuildStackConfig): Promise<TestStack> {
@@ -157,7 +167,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       await publish(promptDocument);
 
       const baseReply = config?.reply ?? { text: 'ok' };
-      const fake = fakeOpenRouterClient(config?.decisionReply == null ? baseReply : typeof baseReply === 'function' ? async (body, index) => ({ ...(await baseReply(body, index)), decision: config.decisionReply }) : { ...baseReply, decision: config.decisionReply });
+      const fake = fakeOpenRouterClient(config?.decisionReply == null ? baseReply : typeof baseReply === 'function' ? async (body, index) => ({ ...(await baseReply(body, index)), decision: config.decisionReply }) : { ...baseReply, decision: config.decisionReply }, { retryConfig: config?.sdkRetryConfig });
       const storage = fakeStorageContext();
       const terminal: OpenRouterRunTaskExecutionResult[] = [];
 
@@ -169,6 +179,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         fileAttachmentMode: config?.fileAttachmentMode,
         tools: config?.tools,
         maxAttempts: config?.maxAttempts,
+        isRetryableUnknownError: config?.isRetryableUnknownError,
         onTerminalState: async (_document, result) => {
           terminal.push(result);
         }
@@ -910,6 +921,30 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         expect(stack.fake.callCount).toBe(3);
         expect(task?.e?.message).toBe('nope');
       });
+
+      it('should fail an unknown failure at once when the host refuses it', async () => {
+        const stack = await buildStack({ maxAttempts: 3, reply: { throws: new Error('unrecognised') }, isRetryableUnknownError: () => false });
+
+        await stack.service.enqueueRunTask({ key: 'unknown_refused', promptKey: TEST_PROMPT_KEY, input: 'go' });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        const task = await stack.taskData('unknown_refused');
+        expect(task?.s).toBe(OpenRouterRunTaskState.FAILED);
+        expect(task?.at).toBe(1);
+        // the SDK wraps a thrown fetch error as its `UnexpectedClientError`, which the classifier reads as `unknown`
+        expect(task?.e?.message).toContain('unrecognised');
+      });
+
+      it('should requeue an unknown failure by default', async () => {
+        const stack = await buildStack({ maxAttempts: 3, reply: { throws: new Error('unrecognised') } });
+
+        await stack.service.enqueueRunTask({ key: 'unknown_default', promptKey: TEST_PROMPT_KEY, input: 'go' });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5, maxPages: 1 });
+
+        const task = await stack.taskData('unknown_default');
+        expect(task?.s).toBe(OpenRouterRunTaskState.QUEUED);
+        expect(task?.at).toBe(1);
+      });
     });
 
     describe('decision runs', () => {
@@ -936,7 +971,7 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
       it('should merge a run`s own questions over the version`s stored ones', async () => {
         const stack = await buildStack({ promptKey: 'decision-merge', questions: TEST_DECISION_QUESTIONS, decisionReply: { answers: { ...TEST_DECISION_ANSWERS, extra: { type: 'noul', noul: 0.1 } } } });
 
-        await stack.service.enqueueRunTask({ key: 'decide_merge', promptKey: 'decision-merge', state: TEST_DECISION_STATE, questions: { extra: openRouterNoulQuestion('`ticket.body` mentions a date.') } });
+        await stack.service.enqueueRunTask({ key: 'decide_merge', promptKey: 'decision-merge', state: TEST_DECISION_STATE, questions: { extra: llmNoulQuestion('`ticket.body` mentions a date.') } });
         await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
 
         expect(Object.keys(stack.fake.requests[0]['questions'] as object).sort()).toEqual(['extra', 'team', 'urgent']);
@@ -953,7 +988,26 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
 
         const task = await stack.taskData('decide_fault');
         expect(task?.s).toBe(OpenRouterRunTaskState.FAILED);
+        expect(task?.at).toBe(1);
+        expect(stack.fake.callCount).toBe(1);
         expect(task?.e?.message).toContain('choice-off-option');
+      });
+
+      it('should fail a decision run whose 200 reply the SDK cannot decode, without spending retries on it', async () => {
+        // No `usage`, which the SDK's decision response schema requires: the SDK throws a real ResponseValidationError
+        // for a 2xx it was billed for. Asking again would bill the same call for the same undecodable answer.
+        const stack = await buildStack({ promptKey: 'decision-undecodable', questions: TEST_DECISION_QUESTIONS, maxAttempts: 3, decisionReply: { rawBody: { id: 'gen_dec_0', model: 'typesafe/jev-1.13-20260917', answers: {} } } });
+
+        await stack.service.enqueueRunTask({ key: 'decide_undecodable', promptKey: 'decision-undecodable', state: TEST_DECISION_STATE });
+        await openRouterRunTaskSweep({ service: stack.service, pageSize: 5 });
+
+        const task = await stack.taskData('decide_undecodable');
+        expect(task?.s).toBe(OpenRouterRunTaskState.FAILED);
+        expect(task?.at).toBe(1);
+        expect(stack.fake.callCount).toBe(1);
+        // The stored code and message are what the run already stored for this error; only its classification moved.
+        expect(task?.e?.code).toBe('ResponseValidationError');
+        expect(task?.e?.message).toBe('Response validation failed');
       });
     });
 
@@ -992,6 +1046,27 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
         const task = await stack.taskData('immediate_retry');
         expect(task?.s).toBe(OpenRouterRunTaskState.COMPLETE);
         expect(task?.o).toBe('recovered');
+      });
+
+      it("should leave a 503 QUEUED even when the client's own SDK retry is on", async () => {
+        // The production client sets no retryConfig, so the SDK's default backoff would absorb the 503 inside this
+        // attempt and COMPLETE with two calls. The request's own `retries: none` keeps it one attempt, so the run
+        // task's classifier sees the 503 and the sweep owns the retry. A fast backoff fails a regression in ms.
+        const fastSdkBackoff: NonNullable<RequestOptions['retries']> = { strategy: 'backoff', backoff: { initialInterval: 1, maxInterval: 5, exponent: 1, maxElapsedTime: 200 }, retryConnectionErrors: true };
+        let callIndex = 0;
+        const stack = await buildStack({
+          maxAttempts: 3,
+          sdkRetryConfig: fastSdkBackoff,
+          reply: () => {
+            callIndex += 1;
+            return callIndex === 1 ? { status: 503 } : { text: 'recovered' };
+          }
+        });
+
+        const result = await stack.service.enqueueRunTask({ key: 'immediate_sdk_retry_on', promptKey: TEST_PROMPT_KEY, input: 'go', immediate: true });
+
+        expect(result.execution?.state).toBe(OpenRouterRunTaskState.QUEUED);
+        expect(stack.fake.callCount).toBe(1);
       });
 
       it('should fail a deterministic error on the first attempt rather than queueing it', async () => {
@@ -1198,7 +1273,12 @@ describe('OpenRouterRunTaskService (firestore emulator)', () => {
     });
 
     // MARK: End-to-end against the live API
-    describe.skipIf(!OPENROUTER_LIVE_API_KEY)('live end-to-end', () => {
+    // Whether the `live end-to-end` block runs against the real API: `OPENROUTER_LIVE_SPECS` is `1` / `true`
+    // (trimmed, any case: `describeIfEnvFlag` from `@dereekb/util/test`). Every other block runs against a fake
+    // client and needs no credentials. Never inferred from the key, which Nx always loads from the workspace
+    // `.env.local` / `.env` and an empty override cannot blank — the same gate the openrouter package's own live
+    // probes use.
+    describeIfEnvFlag('OPENROUTER_LIVE_SPECS')('live end-to-end', () => {
       it('should drain a real run and resolve its stored generation id', async () => {
         // The plan's end-to-end bullet, minus the one part this repo cannot reach: no app here consumes
         // the models, so there is no model API for the callModel MCP to drive. Everything else is the

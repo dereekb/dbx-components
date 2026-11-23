@@ -66,7 +66,7 @@ import {
   rollupNotificationHealthCheckResultStatus
 } from '@dereekb/firebase';
 import { assertSnapshotData } from '@dereekb/firebase-server';
-import { type EmailAddress, type E164PhoneNumber, type Maybe, filterMaybeArrayValues, takeFront, unique } from '@dereekb/util';
+import { type EmailAddress, type E164PhoneNumber, type Maybe, filterMaybeArrayValues, takeFront, unique, toMaybeString } from '@dereekb/util';
 import { isAfter } from 'date-fns';
 import { type NotificationServerActionsContext } from './notification.action.server';
 import { notificationUserHealthCheckAutofixNotAllowedError, notificationUserHealthCheckAutofixUnavailableError, notificationUserHealthCheckProbeThrottledError, notificationUserHealthCheckThrottledError, notificationUserHealthCheckVerifyThrottledError } from './notification.error';
@@ -287,7 +287,7 @@ export function notificationUserHealthCheckFactory(context: NotificationServerAc
           const methodResult: NotificationDeliveryHealthCheckResult = {
             me: method,
             s: rollupNotificationDeliveryHealthCheckResultStatus({ is: issues, pr: probe }),
-            tg: target == null ? undefined : String(target),
+            tg: toMaybeString(target),
             is: issues,
             pr: probe,
             // whether probing is supported is only knowable here, so it is reported for a client that

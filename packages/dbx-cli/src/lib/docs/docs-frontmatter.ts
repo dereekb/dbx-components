@@ -1,10 +1,12 @@
 /**
- * A minimal markdown frontmatter parser for the docs manifest.
+ * The docs manifest's frontmatter reader: `@dereekb/util` `parseMarkdownFrontmatter` with every value kept a string.
  *
- * Handles only what doc frontmatter needs — `key: scalar`, inline lists (`key: [a, b]`) and block lists
- * (`key:` followed by `- item` lines) — so the generator carries no `yaml` dependency. Anything else is
- * reported as a finding instead of being guessed at.
+ * Doc frontmatter needs only `key: scalar`, inline lists (`key: [a, b]`) and block lists (`key:` followed by `- item`
+ * lines), so the generator carries no `yaml` dependency. Anything else is reported as a finding instead of being guessed
+ * at.
  */
+
+import { parseMarkdownFrontmatter } from '@dereekb/util';
 
 /**
  * One parsed frontmatter value: a scalar string or a list of strings.
@@ -35,13 +37,11 @@ export interface DocsFrontmatterParseResult {
   readonly problems: readonly DocsFrontmatterProblem[];
 }
 
-const FRONTMATTER_DELIMITER = '---';
-const BYTE_ORDER_MARK = 0xfeff;
-const KEY_LINE_REGEX = /^([A-Za-z][\w-]*)\s*:\s*(.*)$/;
-const LIST_ITEM_REGEX = /^\s+-\s*(.*)$/;
-
 /**
- * Parses the leading `---` frontmatter block of a markdown document.
+ * Parses the leading `---` frontmatter block of a markdown document with `@dereekb/util` `parseMarkdownFrontmatter`
+ * (`typedScalars: false`, so every value stays a string).
+ *
+ * A bare `key:` with nothing under it reads as `[]`. A key holding nested `key: value` rows is left out and reported.
  *
  * @param content - The full markdown file content.
  * @returns The parsed values, the remaining body, and any unreadable lines.
@@ -52,73 +52,24 @@ const LIST_ITEM_REGEX = /^\s+-\s*(.*)$/;
  * ```
  */
 export function parseDocsFrontmatter(content: string): DocsFrontmatterParseResult {
-  const normalized = content.codePointAt(0) === BYTE_ORDER_MARK ? content.slice(1) : content;
-  const lines = normalized.split(/\r?\n/);
-  let result: DocsFrontmatterParseResult = { hasFrontmatter: false, values: {}, body: normalized, problems: [] };
+  const parsed = parseMarkdownFrontmatter(content, { typedScalars: false });
+  const values: Record<string, DocsFrontmatterValue> = {};
+  const problems: DocsFrontmatterProblem[] = [...parsed.problems];
 
-  if (lines[0]?.trim() === FRONTMATTER_DELIMITER) {
-    const closeIndex = lines.findIndex((line, i) => i > 0 && line.trim() === FRONTMATTER_DELIMITER);
-
-    if (closeIndex === -1) {
-      result = { ...result, problems: [{ line: 1, message: 'Frontmatter block is never closed with "---".' }] };
+  for (const [key, value] of Object.entries(parsed.values)) {
+    if (value == null) {
+      values[key] = [];
+    } else if (Array.isArray(value)) {
+      values[key] = value.map(String);
+    } else if (typeof value === 'object') {
+      problems.push({ line: parsed.lines.get(key) ?? 1, message: `"${key}" holds nested keys. Use "key: value", "key: [a, b]" or a "- item" list.` });
     } else {
-      const { values, problems } = parseDocsFrontmatterLines(lines.slice(1, closeIndex));
-      result = { hasFrontmatter: true, values, body: lines.slice(closeIndex + 1).join('\n'), problems };
+      values[key] = String(value);
     }
   }
 
-  return result;
-}
-
-/**
- * Parses the lines between the frontmatter delimiters. Line numbers in problems are 1-based file lines (the opening
- * delimiter is line 1).
- *
- * @param lines - The frontmatter lines, without the delimiters.
- * @returns The parsed values and any unreadable lines.
- */
-function parseDocsFrontmatterLines(lines: readonly string[]): Pick<DocsFrontmatterParseResult, 'values' | 'problems'> {
-  const values: Record<string, DocsFrontmatterValue> = {};
-  const problems: DocsFrontmatterProblem[] = [];
-  let listKey: string | undefined;
-
-  lines.forEach((line, i) => {
-    const lineNumber = i + 2;
-    const trimmed = line.trim();
-    const listItem = LIST_ITEM_REGEX.exec(line);
-    const keyLine = KEY_LINE_REGEX.exec(line);
-
-    const isBlankOrComment = trimmed.length === 0 || trimmed.startsWith('#');
-
-    if (isBlankOrComment) {
-      return;
-    }
-
-    if (listItem != null && listKey != null) {
-      const current = values[listKey];
-      values[listKey] = [...(Array.isArray(current) ? current : []), unquoteDocsFrontmatterScalar(listItem[1])];
-    } else if (keyLine == null) {
-      problems.push({ line: lineNumber, message: `Unreadable frontmatter line "${trimmed}". Use "key: value", "key: [a, b]" or a "- item" list.` });
-      listKey = undefined;
-    } else {
-      const [, key, rawValue] = keyLine;
-      const valueText = rawValue.trim();
-      listKey = undefined;
-
-      if (valueText.length === 0) {
-        values[key] = [];
-        listKey = key;
-      } else if (!valueText.startsWith('[')) {
-        values[key] = unquoteDocsFrontmatterScalar(valueText);
-      } else if (valueText.endsWith(']')) {
-        values[key] = splitDocsFrontmatterInlineList(valueText.slice(1, -1));
-      } else {
-        problems.push({ line: lineNumber, message: `Inline list for "${key}" is missing its closing "]".` });
-      }
-    }
-  });
-
-  return { values, problems };
+  problems.sort((a, b) => a.line - b.line);
+  return { hasFrontmatter: parsed.hasFrontmatter, values, body: parsed.body, problems };
 }
 
 /**
@@ -131,7 +82,7 @@ export function readDocsFrontmatterList(value: DocsFrontmatterValue | undefined)
   let result: string[] | undefined;
 
   if (typeof value === 'string') {
-    result = splitDocsFrontmatterInlineList(value);
+    result = splitDocsFrontmatterList(value);
   } else if (value != null) {
     result = value.map((x) => x.trim()).filter((x) => x.length > 0);
   }
@@ -139,16 +90,9 @@ export function readDocsFrontmatterList(value: DocsFrontmatterValue | undefined)
   return result;
 }
 
-function splitDocsFrontmatterInlineList(text: string): string[] {
+function splitDocsFrontmatterList(text: string): string[] {
   return text
     .split(',')
-    .map(unquoteDocsFrontmatterScalar)
+    .map((x) => x.trim())
     .filter((x) => x.length > 0);
-}
-
-function unquoteDocsFrontmatterScalar(text: string): string {
-  const trimmed = text.trim();
-  const quote = trimmed[0];
-  const isQuoted = trimmed.length >= 2 && (quote === '"' || quote === "'") && trimmed.endsWith(quote);
-  return isQuoted ? trimmed.slice(1, -1) : trimmed;
 }
