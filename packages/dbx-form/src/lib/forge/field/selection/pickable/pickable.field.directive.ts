@@ -1,6 +1,6 @@
 import { computed, Directive, effect, input, type InputSignal, type OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { type Maybe, type PrimativeKey, filterUniqueValues, convertMaybeToArray, filterEmptyArrayValues, type ArrayOrValue, type Configurable } from '@dereekb/util';
+import { type Maybe, type PrimativeKey, filterUniqueValues, convertMaybeToArray, filterEmptyArrayValues, hasDifferentValues, type ArrayOrValue, type Configurable } from '@dereekb/util';
 import { type LoadingState, successResult, startWithBeginLoading, mapLoadingStateResults } from '@dereekb/rxjs';
 import { BehaviorSubject, combineLatest, debounceTime, distinctUntilChanged, first, map, mergeMap, of, shareReplay, startWith, switchMap, type Observable } from 'rxjs';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
@@ -55,7 +55,10 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
   });
 
   readonly hintSignal = computed(() => this.props()?.hint);
-  readonly multiSelectSignal = computed(() => this.props()?.multiSelect ?? true);
+  /**
+   * Whether more than one value can be picked.
+   */
+  readonly multiSelectSignal = computed(() => !this._pickOnlyOne);
   readonly isDisabled = dbxForgeFieldDisabled();
   readonly readonlySignal = computed(() => {
     const fieldGetter = this.field();
@@ -66,7 +69,6 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
     const readonly = this.readonlySignal();
     return this.isDisabled() || readonly;
   });
-  readonly showSelectAllButtonSignal = computed(() => this.props()?.showSelectAllButton ?? false);
   readonly showTextFilterSignal = computed(() => {
     const props = this.props();
     return this.props()?.showTextFilter ?? Boolean(props?.filterValues);
@@ -104,6 +106,15 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
     const asArrayValue = p?.asArrayValue ?? true;
     const multiSelect = p?.multiSelect ?? true;
     return asArrayValue === false || multiSelect === false;
+  }
+
+  /**
+   * The most values that can be picked, if there is a limit. A field that keeps one value replaces its pick, so it has none.
+   *
+   * @returns The pick limit, or undefined when there is none.
+   */
+  private get _maxPicks(): Maybe<number> {
+    return this._pickOnlyOne ? undefined : this.props()?.maxPicks;
   }
 
   private _hashForValue(): PickableValueFieldHashFunction<T, H> {
@@ -186,6 +197,13 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
         items = sortItems(items);
       }
 
+      const maxPicks = this._maxPicks;
+
+      if (maxPicks != null && selectedHashSet.size >= maxPicks) {
+        // a selected item is never disabled here, so a pick can always be taken back
+        items = items.map((x) => (x.selected ? x : { ...x, disabled: true }));
+      }
+
       return items;
     }),
     shareReplay(1)
@@ -200,9 +218,25 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
 
   readonly noItemsAvailableSignal = toSignal(this.noItemsAvailable$, { initialValue: false });
 
+  private readonly _loadedValuesSignal = toSignal(this.loadResultsDisplayValues$);
+
+  /**
+   * Whether every item that can be selected is selected.
+   */
   readonly allSelectedSignal = computed(() => {
     const items = this.itemsSignal();
-    return items.length > 0 && items.every((x) => x.selected);
+    return items.some((x) => x.selected) && items.every((x) => x.selected || x.disabled);
+  });
+
+  /**
+   * Whether the select-all toggle is offered. It is not while maxPicks would keep it from selecting every loaded value.
+   */
+  readonly showSelectAllButtonSignal = computed(() => {
+    const props = this.props();
+    const maxPicks = this._maxPicks;
+    const loadedValues = this._loadedValuesSignal();
+    const canSelectAll = maxPicks == null || (loadedValues != null && loadedValues.length <= maxPicks);
+    return canSelectAll && (props?.showSelectAllButton ?? false);
   });
 
   // Sync field value to _valuesSubject
@@ -236,43 +270,102 @@ export abstract class AbstractForgePickableItemFieldDirective<T = unknown, M = u
     }
   }
 
-  // MARK: Protected
-  protected _addValue(value: T): void {
-    const currentValues = this._valuesSubject.getValue();
+  /**
+   * Selects every visible item that is not disabled, or deselects them when every item that can be selected already is.
+   *
+   * Values without a visible item, such as the ones hidden by the text filter, stay as they are.
+   */
+  toggleAll(): void {
+    const values = this.itemsSignal()
+      .filter((x) => !x.disabled)
+      .map((x) => x.itemValue.value);
 
-    if (this._pickOnlyOne) {
-      this._setValues([value]);
+    if (this.allSelectedSignal()) {
+      this._removeValues(values);
     } else {
-      this._setValues([...currentValues, value]);
+      this._addValues(values);
     }
   }
 
-  protected _removeValue(value: T): void {
-    const hashForValue = this._hashForValue();
-    const hashToFilter = hashForValue(value);
-    const values = this._valuesSubject.getValue().filter((x) => hashForValue(x) !== hashToFilter);
-    this._setValues(values);
+  // MARK: Protected
+  protected _addValue(value: T): void {
+    this._addValues([value]);
   }
 
+  protected _addValues(values: T[]): void {
+    this._setValues(this._pickOnlyOne ? values : [...this._valuesSubject.getValue(), ...values]);
+  }
+
+  protected _removeValue(value: T): void {
+    this._removeValues([value]);
+  }
+
+  protected _removeValues(values: T[]): void {
+    const hashForValue = this._hashForValue();
+    const hashesToRemove = new Set(values.map((x) => hashForValue(x)));
+    this._setValues(this._valuesSubject.getValue().filter((x) => !hashesToRemove.has(hashForValue(x))));
+  }
+
+  /**
+   * Sets the selected values, after applying filterSelectedValues and maxPicks to the change.
+   *
+   * The selection is emitted even when the change was refused: the Material selection toggles itself when the user picks, and
+   * has to be brought back in line. The field is only written when its values changed, so a refused pick does not mark the form
+   * as modified.
+   *
+   * @param values - The proposed values.
+   */
   protected _setValues(values: T[]): void {
     const hashForValue = this._hashForValue();
+    const beforeValues = this._valuesSubject.getValue();
     values = filterUniqueValues(values, hashForValue);
 
     const filterSelectedValues = this.props()?.filterSelectedValues;
 
     if (filterSelectedValues != null) {
-      values = filterSelectedValues({ beforeValues: this._valuesSubject.getValue(), afterValues: values });
+      values = filterSelectedValues({ beforeValues, afterValues: values });
     }
 
     if (this._pickOnlyOne) {
       values = [values[0]].filter((x) => x != null);
+    } else {
+      values = this._limitToMaxPicks(beforeValues, values);
     }
 
     this._valuesSubject.next(values);
-    this._setFieldValue(values);
+
+    if (hasDifferentValues(beforeValues, values)) {
+      this._setFieldValue(values);
+    }
   }
 
   // MARK: Private
+  /**
+   * Drops the new picks that do not fit within maxPicks, keeping the first ones that do.
+   *
+   * A value that was already selected is never dropped, so a selection seeded past the limit is only reduced by the user.
+   *
+   * @param beforeValues - The values selected before the change.
+   * @param afterValues - The proposed values.
+   * @returns The values to select.
+   */
+  private _limitToMaxPicks(beforeValues: T[], afterValues: T[]): T[] {
+    const maxPicks = this._maxPicks;
+    let result = afterValues;
+
+    if (maxPicks != null) {
+      const hashForValue = this._hashForValue();
+      const beforeHashes = new Set(beforeValues.map((x) => hashForValue(x)));
+      const pickedHashes = afterValues.map((x) => hashForValue(x)).filter((x) => !beforeHashes.has(x));
+      const picksRemaining = Math.max(0, maxPicks - (afterValues.length - pickedHashes.length));
+      const refusedHashes = new Set(pickedHashes.slice(picksRemaining));
+
+      result = afterValues.filter((x) => !refusedHashes.has(hashForValue(x)));
+    }
+
+    return result;
+  }
+
   private _setFieldValue(values: T[]): void {
     const fieldGetter = this.field();
 

@@ -13,7 +13,7 @@ export interface DbxForgePickableChipFieldConfig<T = unknown, M = unknown, H ext
 export type DbxForgePickableChipFieldFunction = <T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>(config: DbxForgePickableChipFieldConfig<T, M, H>) => DbxForgeField<DbxForgePickableChipFieldDef<T, M, H>>;
 
 /**
- * Selection field rendering selected values as Material chips. Defaults to multi-select; flip to single-select via the underlying props.
+ * Selection field rendering selected values as Material chips. Defaults to multi-select; flip to single-select via the underlying props, or cap the picks with `maxPicks`.
  *
  * @param config - Pickable chip field configuration
  * @returns A {@link DbxForgeFormFieldWrapperFieldDef} wrapping a pickable chip field

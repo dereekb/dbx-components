@@ -13,7 +13,7 @@ export interface DbxForgeChecklistFieldConfig<T = unknown> extends DbxForgeField
 export type DbxForgeChecklistFieldFunction = <T = unknown>(config: DbxForgeChecklistFieldConfig<T>) => DbxForgeField<MatMultiCheckboxField<T>>;
 
 /**
- * Multi-checkbox group. Use for small static option sets where every option is visible at once.
+ * Multi-checkbox group. Use for small static option sets where every option is visible at once. It has no selection cap: use `pickable-chip` with `maxPicks` to limit the picks.
  *
  * @param config - Checklist field configuration
  * @returns A validated {@link MatMultiCheckboxField} with type `'multi-checkbox'`
@@ -30,7 +30,7 @@ export type DbxForgeChecklistFieldFunction = <T = unknown>(config: DbxForgeCheck
  *
  * @example
  * ```typescript
- * dbxForgeChecklistField<string>({ key: 'flags', props: { options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] } })
+ * dbxForgeChecklistField<string>({ key: 'flags', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] })
  * ```
  */
 export const dbxForgeChecklistField = dbxForgeFieldFunction<DbxForgeChecklistFieldConfig>({

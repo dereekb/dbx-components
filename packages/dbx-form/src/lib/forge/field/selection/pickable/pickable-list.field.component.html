@@ -17,7 +17,7 @@
   <div class="dbx-pickable-item-field-list-content">
     <mat-selection-list [multiple]="multiSelectSignal()" [disabled]="isDisabledOrReadonlySignal()" (selectionChange)="onSelectionChange($event)" [attr.aria-invalid]="ariaInvalidSignal()" [attr.aria-describedby]="ariaDescribedBySignal()">
       @for (item of itemsSignal(); track item.key) {
-        <mat-list-option class="dbx-list-view-item" [value]="item.itemValue.value" [selected]="item.selected" [disabled]="readonlySignal() || item.disabled">
+        <mat-list-option class="dbx-list-view-item" [value]="item.key" [selected]="item.selected" [disabled]="readonlySignal() || item.disabled">
           @if (item.itemValue.icon) {
             <mat-icon matListItemIcon>{{ item.itemValue.icon }}</mat-icon>
           }

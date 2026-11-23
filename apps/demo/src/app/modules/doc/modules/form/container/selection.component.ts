@@ -350,6 +350,16 @@ export class DocFormSelectionComponent implements OnInit {
           loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }]),
           displayForValue: DISPLAY_FOR_STRING_VALUE
         }
+      }),
+      dbxForgePickableChipField({
+        key: 'stringItemChipsWithMaxPicks',
+        label: 'Chips With Max Picks',
+        hint: 'Pick up to 2. The other chips are disabled until a pick is taken back.',
+        props: {
+          maxPicks: 2,
+          loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }]),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
       })
     ]
   };
@@ -395,6 +405,16 @@ export class DocFormSelectionComponent implements OnInit {
           filterLabel: 'Filter',
           filterValues: filterPickableItemFieldValuesByLabel,
           loadValues: () => of(MAKE_RANDOM_STRING_VALUES()),
+          displayForValue: DISPLAY_FOR_STRING_VALUE
+        }
+      }),
+      dbxForgePickableListField({
+        key: 'stringItemListWithMaxPicks',
+        label: 'List With Max Picks',
+        hint: 'Pick up to 2. The other items are disabled until a pick is taken back.',
+        props: {
+          maxPicks: 2,
+          loadValues: () => of([{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }]),
           displayForValue: DISPLAY_FOR_STRING_VALUE
         }
       })
