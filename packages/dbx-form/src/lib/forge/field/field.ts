@@ -958,7 +958,7 @@ function _finalizeLogicEntries<C extends DbxForgeFieldFunctionDef<any>, FV = any
           trigger: 'debounced',
           functionName: _registerCustomFunction({ isAsync: false, fn }),
           dependsOn: [SELF_DEPENDENCY_TOKEN],
-          ...(entry.debounceMs != null ? { debounceMs: entry.debounceMs } : {})
+          ...(entry.debounceMs == null ? {} : { debounceMs: entry.debounceMs })
         };
         break;
       default:

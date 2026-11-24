@@ -80,6 +80,6 @@ export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends
     authRoleClaimsService: config.claimsService as unknown as AuthRoleClaimsService<AuthClaimsObject>,
     sendPasswordReset: config.sendPasswordReset ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.sendPasswordReset,
     completePasswordReset: config.completePasswordReset ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.completePasswordReset,
-    ...(loadImpersonationAuthDetails != null ? { loadImpersonationAuthDetails } : {})
+    ...(loadImpersonationAuthDetails == null ? {} : { loadImpersonationAuthDetails })
   };
 }

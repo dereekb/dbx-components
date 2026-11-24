@@ -94,6 +94,6 @@ export class ServerErrorResponse<T extends ServerErrorResponseData = ServerError
  */
 export class UnauthorizedServerErrorResponse extends ServerErrorResponse {
   constructor({ code, data, message }: Partial<ServerError>) {
-    super({ status: 401, message: message ?? 'Unauthorized', data, ...(code !== undefined ? { code } : {}) });
+    super({ status: 401, message: message ?? 'Unauthorized', data, ...(code === undefined ? {} : { code }) });
   }
 }

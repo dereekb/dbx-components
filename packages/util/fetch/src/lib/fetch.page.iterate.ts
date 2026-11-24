@@ -512,8 +512,8 @@ export async function iterateFetchPages<I, O, R>(config: IterateFetchPagesConfig
   }
 
   const performTaskFn = performTasksFromFactoryInParallelFunction({
-    ...(maxParallelPages !== undefined ? { maxParallelTasks: maxParallelPages } : {}),
-    ...(waitBetweenPages !== undefined ? { waitBetweenTasks: waitBetweenPages } : {}),
+    ...(maxParallelPages === undefined ? {} : { maxParallelTasks: maxParallelPages }),
+    ...(waitBetweenPages === undefined ? {} : { waitBetweenTasks: waitBetweenPages }),
     taskFactory: async ({ i, fetchPageResult }: { i: IndexNumber; fetchPageResult: FetchPageResultWithInput<I, O> }) => {
       const result = await iteratePage(fetchPageResult);
       const iterationResult: IterateFetchPagesIterationResult<I, O, R> = {

@@ -266,10 +266,10 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
   }
 
   const data: MailgunMessageData = {
-    ...(from != null ? { from } : {}),
+    ...(from == null ? {} : { from }),
     to,
-    ...(cc != null ? { cc } : {}),
-    ...(bcc != null ? { bcc } : {}),
+    ...(cc == null ? {} : { cc }),
+    ...(bcc == null ? {} : { bcc }),
     subject: request.subject,
     template: request.template,
     ...request.messageData

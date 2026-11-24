@@ -394,8 +394,8 @@ export function googleCloudStorageAccessorFolder(storage: GoogleCloudStorage, st
       const { maxResults, pageToken, includeNestedResults: listAll } = options ?? {};
 
       const listOptions: GetFilesOptions = {
-        ...(maxResults != null ? { maxResults } : {}),
-        ...(pageToken != null ? { pageToken } : {}),
+        ...(maxResults == null ? {} : { maxResults }),
+        ...(pageToken == null ? {} : { pageToken }),
         autoPaginate: false,
         versions: false,
         ...(listAll

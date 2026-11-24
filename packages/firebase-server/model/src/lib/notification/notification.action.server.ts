@@ -2095,7 +2095,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               }
 
               // calculate results
-              const notificationTemplate: NotificationSendFlags & Partial<Notification> = { es, ts, ps, ns, ...(esr != null ? { esr } : {}), ...(tsr != null ? { tsr } : {}) };
+              const notificationTemplate: NotificationSendFlags & Partial<Notification> = { es, ts, ps, ns, ...(esr == null ? {} : { esr }), ...(tsr == null ? {} : { tsr }) };
               success = notificationSendFlagsImplyIsComplete(notificationTemplate);
 
               if (success) {

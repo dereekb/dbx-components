@@ -165,7 +165,7 @@ export function dbxForgeStateField(config: DbxForgeStateFieldConfig = {}) {
     key,
     placeholder,
     label,
-    ...(pattern != null ? { pattern } : {}),
+    ...(pattern == null ? {} : { pattern }),
     required,
     maxLength,
     idempotentTransform: {

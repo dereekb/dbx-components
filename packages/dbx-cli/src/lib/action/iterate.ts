@@ -244,7 +244,7 @@ async function _runItemTasks<TItem, TItemResult>(input: {
     sequential: true,
     throwError: true,
     ...(itemPerformTasksConfig as Partial<PerformAsyncTasksConfig<IndexedItem>>),
-    ...(maxParallelTasks != null ? { maxParallelTasks } : {})
+    ...(maxParallelTasks == null ? {} : { maxParallelTasks })
   };
   const performResult = await performAsyncTasks<IndexedItem, TItemResult>(indexed, ({ item, key, itemIndex }) => iterateItem({ context, item, key, pageIndex, itemIndex }), taskConfig);
 

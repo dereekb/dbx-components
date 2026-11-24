@@ -211,7 +211,7 @@ function shiftDecimalPoint(value: number, places: number): number {
  * Non-finite values are returned unchanged.
  *
  * @param value - The number to round.
- * @param precision - Decimal places to keep; may be negative to round to tens, hundreds, …
+ * @param precision - Decimal places to keep; may be negative to round to tens, hundreds, ….
  * @param rndFn - The integer rounding function.
  * @returns The rounded number.
  */

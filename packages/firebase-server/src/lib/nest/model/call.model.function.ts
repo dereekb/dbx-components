@@ -275,7 +275,7 @@ export function _onCallWithCallTypeFunction<N>(map: OnCallWithCallTypeModelMap<N
 
       return crudFn({
         ...request,
-        ...(specifier != null ? { specifier } : {}),
+        ...(specifier == null ? {} : { specifier }),
         data
       });
     }

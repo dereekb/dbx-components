@@ -58,7 +58,7 @@ export function mailgunServiceConfigFactory(configService: ConfigService, server
     mailgun: {
       username: configService.get<string>('MAILGUN_USERNAME') ?? 'api',
       key,
-      ...(url != null ? { url } : {})
+      ...(url == null ? {} : { url })
     },
     domain,
     clientUrl,

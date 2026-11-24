@@ -115,7 +115,7 @@ export class DbxInjectionInstance<T> implements Initialized, Destroyable {
     }
 
     const injector = createInjectorForInjectionComponentConfig({ config, parentInjector: this._injector });
-    const componentRef: ComponentRef<T> = content.createComponent(componentClass, { injector, ...(ngModuleRef != null ? { ngModuleRef } : {}) });
+    const componentRef: ComponentRef<T> = content.createComponent(componentClass, { injector, ...(ngModuleRef == null ? {} : { ngModuleRef }) });
     initInjectionComponent(componentRef, config);
     this.componentRef = componentRef;
   }

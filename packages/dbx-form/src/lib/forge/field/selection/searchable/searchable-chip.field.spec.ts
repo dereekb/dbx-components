@@ -717,7 +717,7 @@ describe('DbxForgeSearchableChipFieldComponent', () => {
           dbxForgeSearchableStringChipField({
             key: 'urls',
             label: 'URLs',
-            ...(placeholder != null ? { placeholder } : {}),
+            ...(placeholder == null ? {} : { placeholder }),
             props: {
               searchOnEmptyText: false,
               search: () => of([]),

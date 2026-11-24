@@ -222,7 +222,7 @@ export function resolveLlmProvidersFromEnv<X extends LlmModelConfigTypes = LlmMo
     // A typo here would otherwise route every binding-less call to an inferred default — billing an account the
     // operator just tried to switch away from.
     if (explicitProviderId == null) {
-      const ids = [...new Set([...envDefaultIds, ...declaredIds])];
+      const ids = Array.from(new Set([...envDefaultIds, ...declaredIds]));
       throw new Error(`${schema.label}: ${name} names provider '${value}', which this environment does not resolve (have: ${ids.length === 0 ? '(none)' : ids.join(', ')}).`);
     }
   }

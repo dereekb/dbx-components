@@ -175,9 +175,9 @@ export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey =
       _performAsyncTask(value, taskFn, config).then((x) => {
         taskResults[i] = x;
       }),
-    ...(maxParallelTasks !== undefined ? { maxParallelTasks } : {}),
-    ...(sequential !== undefined ? { sequential } : {}),
-    ...(waitBetweenTasks !== undefined ? { waitBetweenTasks } : {})
+    ...(maxParallelTasks === undefined ? {} : { maxParallelTasks }),
+    ...(sequential === undefined ? {} : { sequential }),
+    ...(waitBetweenTasks === undefined ? {} : { waitBetweenTasks })
   })(input);
 
   const succeded: I[] = [];

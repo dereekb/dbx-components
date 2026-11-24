@@ -783,7 +783,7 @@ export async function iterateFirestoreDocumentSnapshotCheckpoints<T, R>(config: 
 
   const performTaskFn = performTasksFromFactoryInParallelFunction({
     maxParallelTasks: maxParallelCheckpoints,
-    ...(waitBetweenCheckpoints != null ? { waitBetweenTasks: waitBetweenCheckpoints } : {}),
+    ...(waitBetweenCheckpoints == null ? {} : { waitBetweenTasks: waitBetweenCheckpoints }),
     taskFactory: async ({ i, docQuerySnapshot }: { i: IndexNumber; docQuerySnapshot: QuerySnapshot<T> }) => {
       const docSnapshots = await filterCheckpointSnapshot(docQuerySnapshot.docs);
       const results = await iterateCheckpoint(docSnapshots, docQuerySnapshot);

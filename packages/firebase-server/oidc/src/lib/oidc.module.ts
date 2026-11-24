@@ -181,7 +181,7 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
     tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES,
     trustProxy: envService.isProduction, // defaults to true in production
     trustProxyInNonProduction: false,
-    ...(resourceMetadataUrl != null ? { resourceMetadataUrl } : {}),
+    ...(resourceMetadataUrl == null ? {} : { resourceMetadataUrl }),
     jwksServiceConfig: {
       encryptionSecret
     },

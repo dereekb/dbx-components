@@ -204,7 +204,7 @@ describe('toReadableError()', () => {
   });
 
   it('should resolve an any argument to the non-Maybe overload', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const caught: any = new Error('x');
     expect(toReadableError(caught).code).toBe(DEFAULT_READABLE_ERROR_CODE);
   });

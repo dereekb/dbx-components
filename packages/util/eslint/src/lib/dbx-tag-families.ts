@@ -345,8 +345,8 @@ export function reportOnJsdocLine(input: ReportOnLineInput): void {
       end: sourceCode.getLocFromIndex(end)
     },
     messageId,
-    ...(data !== undefined ? { data } : {}),
-    ...(fix !== undefined ? { fix } : {})
+    ...(data === undefined ? {} : { data }),
+    ...(fix === undefined ? {} : { fix })
   });
 }
 

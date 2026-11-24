@@ -114,7 +114,7 @@ export function microsoftGraphRateLimitedFetchHandler(config?: Maybe<MicrosoftGr
   let consecutiveThrottles = 0;
   let pausedUntil = 0;
 
-  const inner = rateLimitedFetchHandler({
+  return rateLimitedFetchHandler({
     rateLimiter,
     maxRetries,
     updateWithResponse: (response: Response, _error, request?: Request) => {
@@ -141,6 +141,4 @@ export function microsoftGraphRateLimitedFetchHandler(config?: Maybe<MicrosoftGr
       return retry;
     }
   });
-
-  return inner;
 }

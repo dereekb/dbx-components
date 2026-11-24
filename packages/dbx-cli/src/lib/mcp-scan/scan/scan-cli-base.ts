@@ -159,7 +159,7 @@ export async function runScanCliBase<TManifest extends ScanCliManifestLike, TWar
   }
 
   const projectRoot = resolve(cwd, validation.project);
-  const outcome = await config.buildManifest({ projectRoot, generator, readFile, ...(globber != null ? { globber } : {}), ...(now != null ? { now } : {}) });
+  const outcome = await config.buildManifest({ projectRoot, generator, readFile, ...(globber == null ? {} : { globber }), ...(now == null ? {} : { now }) });
   return handleOutcome({ outcome, args: validation.args, projectArg: validation.project, readFile, writeFile, log, errorLog, config });
 }
 

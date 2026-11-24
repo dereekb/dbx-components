@@ -79,7 +79,7 @@ export class DbxFirebaseLoginButtonComponent {
     const config = this.config();
     const customTextColor = config?.buttonTextColor;
     const buttonColor = config?.buttonColor ?? (config?.color ? undefined : 'transparent');
-    const color = config?.color ?? (buttonColor ? { color: buttonColor, ...(customTextColor != null ? { contrast: customTextColor } : {}) } : undefined);
+    const color = config?.color ?? (buttonColor ? { color: buttonColor, ...(customTextColor == null ? {} : { contrast: customTextColor }) } : undefined);
 
     return { color, customTextColor };
   });

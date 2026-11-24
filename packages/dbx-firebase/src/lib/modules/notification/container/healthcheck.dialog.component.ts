@@ -42,7 +42,7 @@ export class DbxFirebaseNotificationHealthCheckDialogComponent extends AbstractD
       // max-height down to the dialog surface, which already scrolls, so capping it here keeps the
       // actions reachable. A percentage cap would not work, as the pane's height is not definite.
       maxHeight: 'calc(var(--vh100) * 0.9)',
-      ...(config?.injector != null ? { injector: config.injector } : {})
+      ...(config?.injector == null ? {} : { injector: config.injector })
     });
   }
 }

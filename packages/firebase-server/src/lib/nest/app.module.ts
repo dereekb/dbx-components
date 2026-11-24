@@ -214,7 +214,7 @@ export function buildNestServerRootModule(config: NestServerRootModuleConfig): N
     providers.push(
       firebaseServerStorageDefaultBucketIdTokenProvider({
         defaultBucketId: config.defaultStorageBucket,
-        ...(config.forceStorageBucket != null ? { forceBucket: config.forceStorageBucket } : {})
+        ...(config.forceStorageBucket == null ? {} : { forceBucket: config.forceStorageBucket })
       })
     );
   }
