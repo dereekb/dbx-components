@@ -11,12 +11,12 @@ import type { SpecFileTree, SpecNode, SpecSearchResult, SpecTreeFilters, SpecTre
 interface ItIndexEntry {
   readonly describePath: readonly string[];
   readonly title: string | undefined;
-  readonly titleIsTemplate?: boolean;
+  readonly titleIsTemplate?: boolean | undefined;
   /**
    * The callee identifier when the `it` came from a non-default helper
    * (e.g. `itShouldFail`, `xit`, `fit`). `undefined` for plain `it(...)`.
    */
-  readonly callee?: string;
+  readonly callee?: string | undefined;
   readonly line: number;
   readonly endLine: number;
 }

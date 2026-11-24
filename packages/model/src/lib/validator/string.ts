@@ -1,3 +1,6 @@
+import { isNotBlankString } from '@dereekb/util';
+import { type } from 'arktype';
+
 /**
  * A string with at least one character (non-empty).
  *
@@ -56,3 +59,20 @@ export const EMAIL_STRING = 'string.email' as const;
 export function nonEmptyStringWithMaxLength<N extends number>(maxLength: N) {
   return `${NON_EMPTY_STRING} & string <= ${maxLength}` as const;
 }
+
+/**
+ * A string with at least one non-whitespace character. The value is NOT trimmed by the check; a reader that wants the
+ * trimmed text trims it itself. Unlike {@link NON_EMPTY_STRING}, `'   '` fails.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory validator
+ * @dbxUtilKind const
+ * @dbxUtilTags validator, arktype, string, blank, whitespace, required
+ * @dbxUtilRelated non-empty-string
+ *
+ * @example
+ * ```ts
+ * type({ name: nonBlankStringType });
+ * ```
+ */
+export const nonBlankStringType = /*#__PURE__*/ type('string').narrow((value, ctx) => isNotBlankString(value) || ctx.mustBe('non-blank'));

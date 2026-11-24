@@ -1,6 +1,7 @@
 import { firstValueFromIterable, forEachInIterable } from './iterable/iterable';
 import { type MapFunction, mapIdentityFunction, type MapSameFunction } from './value/map';
 import { type Maybe, type MaybeMap } from './value/maybe.type';
+import { type PartialWithUndefined } from './type';
 
 export type SortingOrder = 'asc' | 'desc';
 
@@ -175,7 +176,7 @@ export function sortValues<T>(input: SortValuesInput<T>): T[] {
  * @param sortOnCopyDefault - Whether to sort on a copy by default (default: true).
  * @returns Sorts arrays using the configured comparison.
  */
-export function sortValuesFunctionWithSortRef<T>(sortRef: Maybe<Partial<SortCompareFunctionRef<T>>>, sortOnCopyDefault: boolean = true): SortValuesFunction<T> {
+export function sortValuesFunctionWithSortRef<T>(sortRef: Maybe<PartialWithUndefined<SortCompareFunctionRef<T>>>, sortOnCopyDefault: boolean = true): SortValuesFunction<T> {
   const sortWith = sortRef?.sortWith;
   return (values: T[], sortOnCopy = sortOnCopyDefault) => sortValues<T>({ values, sortOnCopy, sortWith });
 }
@@ -187,7 +188,7 @@ export function sortValuesFunctionWithSortRef<T>(sortRef: Maybe<Partial<SortComp
  * @param sortOnCopyDefault - Whether to sort on a copy by default.
  * @returns A sort function that sorts arrays, or the identity function if no sort comparison is configured.
  */
-export function sortValuesFunctionOrMapIdentityWithSortRef<T>(sortRef: Maybe<Partial<SortCompareFunctionRef<T>>>, sortOnCopyDefault?: boolean): SortValuesFunction<T> {
+export function sortValuesFunctionOrMapIdentityWithSortRef<T>(sortRef: Maybe<PartialWithUndefined<SortCompareFunctionRef<T>>>, sortOnCopyDefault?: boolean): SortValuesFunction<T> {
   const sortWith = sortRef?.sortWith;
   return sortWith ? sortValuesFunctionWithSortRef(sortRef, sortOnCopyDefault) : mapIdentityFunction();
 }

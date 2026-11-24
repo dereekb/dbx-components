@@ -10,13 +10,13 @@ export interface FlattenObjectConfig {
    *
    * @defaultValue '.'
    */
-  readonly separator?: string;
+  readonly separator?: string | undefined;
   /**
    * Maximum nesting depth to flatten. A depth of 1 means only the first level of nested objects is flattened.
    *
    * @defaultValue Infinity (unlimited)
    */
-  readonly maxDepth?: number;
+  readonly maxDepth?: number | undefined;
 }
 
 /**

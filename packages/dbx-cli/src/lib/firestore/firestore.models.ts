@@ -43,7 +43,7 @@ export type CliFirestoreModelsService = ((modelType: FirestoreModelType, context
 export interface CliFirestoreCollectionForModelInput {
   readonly collections: object;
   readonly modelType: FirestoreModelType;
-  readonly parentKey?: FirestoreModelKey;
+  readonly parentKey?: FirestoreModelKey | undefined;
 }
 
 /**
@@ -78,7 +78,7 @@ export interface CliFirestoreBinding<C extends object = object> {
    * Escape hatch for models whose registered collection cannot be parent-scoped generically
    * (e.g. a paged-items collection). Return `undefined` to fall through to the derived scoping.
    */
-  readonly collectionForModel?: (input: CliFirestoreCollectionForModelInput) => Maybe<FirestoreCollectionLike<unknown>>;
+  readonly collectionForModel?: ((input: CliFirestoreCollectionForModelInput) => Maybe<FirestoreCollectionLike<unknown>>) | undefined;
 }
 
 /**
@@ -95,7 +95,7 @@ export interface CliFirestoreBinding<C extends object = object> {
 export interface CliFirestoreBindingInput<C extends object, Y extends FirebaseModelsService<any, FirebaseAppModelContext<C>> = FirebaseModelsService<any, FirebaseAppModelContext<C>>> {
   readonly collections: (firestoreContext: FirestoreContext) => C;
   readonly models: Y;
-  readonly collectionForModel?: (input: CliFirestoreCollectionForModelInput) => Maybe<FirestoreCollectionLike<unknown>>;
+  readonly collectionForModel?: ((input: CliFirestoreCollectionForModelInput) => Maybe<FirestoreCollectionLike<unknown>>) | undefined;
 }
 
 /**

@@ -40,9 +40,9 @@ export interface BuildModelSnapshotFieldsManifestInput {
    * the generate-* targets all run with `cwd: {workspaceRoot}`.
    */
   readonly workspaceRoot?: string;
-  readonly now?: () => Date;
-  readonly readFile?: BuildModelSnapshotFieldsReadFile;
-  readonly globber?: BuildModelSnapshotFieldsGlobber;
+  readonly now?: (() => Date) | undefined;
+  readonly readFile?: BuildModelSnapshotFieldsReadFile | undefined;
+  readonly globber?: BuildModelSnapshotFieldsGlobber | undefined;
 }
 
 /**

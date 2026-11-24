@@ -1,4 +1,5 @@
 import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { DEFAULT_MICROSOFT_GRAPH_FETCH_TIMEOUT } from '../microsoft.config';
 import { type MicrosoftGraphContext } from './graph.config';
 import { type MicrosoftGraphRawResponse, microsoftGraphRequestRaw } from './graph.raw.api';
 
@@ -98,7 +99,8 @@ export async function readMicrosoftGraphUploadRange(bytes: MicrosoftGraphUploadB
 export const MICROSOFT_GRAPH_UPLOAD_MIN_BYTES_PER_SECOND = 64 * 1024;
 
 /**
- * Returns the default timeout of one upload PUT: the client's usual 30 seconds plus the time `byteCount`
+ * Returns the default timeout of one upload PUT: the graph client's default timeout
+ * ({@link DEFAULT_MICROSOFT_GRAPH_FETCH_TIMEOUT}) plus the time `byteCount`
  * takes at {@link MICROSOFT_GRAPH_UPLOAD_MIN_BYTES_PER_SECOND}. A flat 30 seconds would fail a 10 MiB chunk
  * on any link slower than about 2.8 Mbit/s.
  *
@@ -106,7 +108,7 @@ export const MICROSOFT_GRAPH_UPLOAD_MIN_BYTES_PER_SECOND = 64 * 1024;
  * @returns The timeout in milliseconds.
  */
 export function microsoftGraphUploadTimeout(byteCount: number): Milliseconds {
-  return 30 * 1000 + Math.ceil((byteCount / MICROSOFT_GRAPH_UPLOAD_MIN_BYTES_PER_SECOND) * 1000);
+  return DEFAULT_MICROSOFT_GRAPH_FETCH_TIMEOUT + Math.ceil((byteCount / MICROSOFT_GRAPH_UPLOAD_MIN_BYTES_PER_SECOND) * 1000);
 }
 
 export interface MicrosoftGraphUploadSessionPutInput {

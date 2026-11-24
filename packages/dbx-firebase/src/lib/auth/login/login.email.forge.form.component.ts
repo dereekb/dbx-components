@@ -25,7 +25,7 @@ export type DbxFirebaseEmailFormValue = DbxForgeDefaultUsernameLoginFieldsValue;
  */
 export interface DbxFirebaseEmailFormConfig {
   readonly loginMode: DbxFirebaseLoginMode;
-  readonly passwordConfig?: DbxForgeTextPasswordFieldConfig;
+  readonly passwordConfig?: DbxForgeTextPasswordFieldConfig | undefined;
 }
 
 /**

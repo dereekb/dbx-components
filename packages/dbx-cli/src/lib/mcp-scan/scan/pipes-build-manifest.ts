@@ -32,9 +32,9 @@ export type BuildPipesGlobber = ScanGlobber;
 export interface BuildPipesManifestInput {
   readonly projectRoot: string;
   readonly generator: string;
-  readonly now?: () => Date;
-  readonly readFile?: BuildPipesReadFile;
-  readonly globber?: BuildPipesGlobber;
+  readonly now?: (() => Date) | undefined;
+  readonly readFile?: BuildPipesReadFile | undefined;
+  readonly globber?: BuildPipesGlobber | undefined;
 }
 
 /**

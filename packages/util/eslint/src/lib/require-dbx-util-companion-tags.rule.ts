@@ -12,7 +12,7 @@ interface UtilReportContext {
   readonly commentNode: AstNode;
   readonly parsed: ParsedJsdoc;
   readonly sourceCode: AstNode;
-  readonly report: (descriptor: { node?: AstNode; loc?: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => Maybe<AstNode | AstNode[]> }) => void;
+  readonly report: (descriptor: { node?: AstNode; loc?: AstNode; messageId: string; data?: Record<string, string> | undefined; fix?: ((fixer: AstNode) => Maybe<AstNode | AstNode[]>) | undefined }) => void;
   readonly knownCompanions: readonly string[];
 }
 
@@ -145,7 +145,11 @@ export interface UtilRequireDbxUtilCompanionTagsRuleDefinition {
     readonly messages: Readonly<Record<string, string>>;
     readonly schema: readonly object[];
   };
-  create(context: { options: UtilRequireDbxUtilCompanionTagsRuleOptions[]; report: (descriptor: { node?: AstNode; loc?: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => Maybe<AstNode | AstNode[]> }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
+  create(context: {
+    options: UtilRequireDbxUtilCompanionTagsRuleOptions[];
+    report: (descriptor: { node?: AstNode; loc?: AstNode; messageId: string; data?: Record<string, string> | undefined; fix?: ((fixer: AstNode) => Maybe<AstNode | AstNode[]>) | undefined }) => void;
+    sourceCode: AstNode;
+  }): Record<string, (node: AstNode) => void>;
 }
 
 /**

@@ -74,7 +74,7 @@ export interface DateCallIndexRangeFromDatesFactoryConfig {
   /**
    * (Optional) now date/getter used to influence the limitToCompletedIndexes calculations.
    */
-  readonly now?: GetterOrValue<Date>;
+  readonly now?: GetterOrValue<Date> | undefined;
 }
 
 /**
@@ -415,7 +415,7 @@ export interface DateCellTimingExpansionFactoryConfig<B extends DateCell | DateC
   /**
    * (Optional) Max number of DateCellDurationSpan values to return.
    */
-  readonly maxDateCellsToReturn?: number;
+  readonly maxDateCellsToReturn?: number | undefined;
 }
 
 /**
@@ -1205,7 +1205,7 @@ export interface UpdateDateCellTimingWithDateCellTimingEventInput {
    *
    * Can be combined with replaceStartDay
    */
-  readonly replaceStartsAt?: boolean;
+  readonly replaceStartsAt?: boolean | undefined;
   /**
    * Replaces the end day but keeps the same time.
    */
@@ -1213,7 +1213,7 @@ export interface UpdateDateCellTimingWithDateCellTimingEventInput {
   /**
    * Replaces the duration but keeps the end day intact.
    */
-  readonly replaceDuration?: boolean;
+  readonly replaceDuration?: boolean | undefined;
 }
 
 /**

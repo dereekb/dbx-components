@@ -11,17 +11,17 @@ export interface BuildTestCliContextInput {
   readonly envName: string;
   readonly env: CliEnvConfig;
   readonly accessToken: string;
-  readonly modelManifest?: CliModelManifest;
+  readonly modelManifest?: CliModelManifest | undefined;
   /**
    * The app-supplied direct-Firestore binding. Supply it when the test drives `firestore-get` /
    * `firestore-query`, which reach for `context.getFirestoreModels()`.
    */
-  readonly firestore?: CliFirestoreBinding;
+  readonly firestore?: CliFirestoreBinding | undefined;
   /**
    * Optional on-disk direct-Firestore session cache. Point it at a temp dir when a test wants the
    * cross-invocation caching behaviour.
    */
-  readonly firestoreSessionCache?: CliFirestoreSessionCacheStore;
+  readonly firestoreSessionCache?: CliFirestoreSessionCacheStore | undefined;
 }
 
 /**
@@ -65,7 +65,7 @@ export interface RunCliCommandResult {
   readonly stderrText: string;
   readonly argv: unknown;
   readonly helpOutput: string;
-  readonly error?: Error;
+  readonly error?: Error | undefined;
   /**
    * Set when the CLI's handler called `process.exit(code)`. Captured (so the test process is not
    * killed) and surfaced here so tests can assert on the intended exit status.
@@ -74,7 +74,7 @@ export interface RunCliCommandResult {
    * middleware failures. With the `testCliContext` override the auth middleware never exits, but
    * handler errors still go through `wrapCommandHandler`.
    */
-  readonly exitCode?: number;
+  readonly exitCode?: number | undefined;
 }
 
 /**
@@ -197,11 +197,11 @@ export interface ListenOnNestAppForTestInput {
    * Global route prefix the NestJS app is mounted under. Defaults to `'api'` to match the demo-api
    * production configuration. Pass an empty string to skip the prefix.
    */
-  readonly apiPrefix?: string;
+  readonly apiPrefix?: string | undefined;
   /**
    * Host to bind to. Defaults to `127.0.0.1`.
    */
-  readonly host?: string;
+  readonly host?: string | undefined;
 }
 
 export interface ListenOnNestAppForTestResult {

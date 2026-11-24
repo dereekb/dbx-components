@@ -225,7 +225,7 @@ export function getFirestoreQueryHelperDescriptor(name: string): FirestoreQueryH
  * @param input.direction - Optional call-site direction override for orderBy parts.
  * @returns The ordered constraint entries the helper emits.
  */
-export function expandFirestoreQueryHelper(input: { readonly descriptor: FirestoreQueryHelperDescriptor; readonly fieldPath: string; readonly direction?: 'asc' | 'desc' }): readonly ConstraintSequenceEntry[] {
+export function expandFirestoreQueryHelper(input: { readonly descriptor: FirestoreQueryHelperDescriptor; readonly fieldPath: string; readonly direction?: 'asc' | 'desc' | undefined }): readonly ConstraintSequenceEntry[] {
   const { descriptor, fieldPath, direction } = input;
   const resolvedDirection = direction ?? descriptor.defaultDirection;
   const out: ConstraintSequenceEntry[] = [];

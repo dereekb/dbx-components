@@ -63,26 +63,26 @@ export type TransformStringFunctionConfig<S extends string = string> = {
    * If true, the string will be trimmed of leading/trailing whitespace.
    * Trimming occurs before other transformations like case conversion or a custom `transform` function.
    */
-  readonly trim?: boolean;
+  readonly trim?: boolean | undefined;
   /**
    * If true, the string will be converted to lowercase.
    * This is ignored if a custom `transform` function is provided.
    */
-  readonly toLowercase?: boolean;
+  readonly toLowercase?: boolean | undefined;
   /**
    * If true, the string will be converted to uppercase.
    * This is ignored if a custom `transform` function is provided and takes precedence over `toLowercase` if both are true.
    */
-  readonly toUppercase?: boolean;
+  readonly toUppercase?: boolean | undefined;
   /**
    * Slices the string based on the configuration.
    */
-  readonly slice?: SliceStringFunctionConfig;
+  readonly slice?: SliceStringFunctionConfig | undefined;
   /**
    * An optional custom function to transform the string.
    * If provided, `toLowercase` and `toUppercase` are ignored. Trimming (if `trim` is true) occurs before this custom transform.
    */
-  readonly transform?: TransformStringFunction<S>;
+  readonly transform?: TransformStringFunction<S> | undefined;
 };
 
 /**

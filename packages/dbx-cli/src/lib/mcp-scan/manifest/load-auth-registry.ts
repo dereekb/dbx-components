@@ -58,7 +58,7 @@ export interface LoadAuthRegistryResult {
  */
 export interface LoadAuthRegistryInput {
   readonly cwd: string;
-  readonly readFile?: ScanReadFile;
+  readonly readFile?: ScanReadFile | undefined;
   readonly extraFiles?: readonly string[];
   readonly skipDiscovery?: boolean;
 }

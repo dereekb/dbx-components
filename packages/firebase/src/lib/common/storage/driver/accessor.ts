@@ -199,17 +199,17 @@ export interface StorageListFilesOptions {
    *
    * The client may behave less efficiently. Use caution when using this option on the client-side on root-level folders.
    */
-  readonly includeNestedResults?: boolean;
+  readonly includeNestedResults?: boolean | undefined;
   /**
    * If set, limits the total number of `prefixes` and `items` to return.
    * The default and maximum maxResults is 1000.
    */
-  readonly maxResults?: number;
+  readonly maxResults?: number | undefined;
   /**
    * The `nextPageToken` from a previous call to `list()`. If provided,
    * listing is resumed from the previous position.
    */
-  readonly pageToken?: StorageListFilesPageToken;
+  readonly pageToken?: StorageListFilesPageToken | undefined;
 }
 
 export interface StorageListItemResult extends StoragePathRef {
@@ -319,7 +319,7 @@ export interface FirebaseStorageAccessorDriver {
   /**
    * Returns the default bucketId for the input storage.
    */
-  readonly getDefaultBucket?: FirebaseStorageAccessorDriverDefaultBucketFunction;
+  readonly getDefaultBucket?: FirebaseStorageAccessorDriverDefaultBucketFunction | undefined;
   readonly file: FirebaseStorageAccessorDriverFileFunction;
   readonly folder: FirebaseStorageAccessorDriverFolderFunction;
 }

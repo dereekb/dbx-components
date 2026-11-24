@@ -33,7 +33,7 @@ export interface DbxActionSnackbarDisplayConfig<T = unknown, O = unknown> {
   /**
    * Text to be shown on the close button. If action is defined, this is ignored and the action text is used.
    */
-  readonly button?: string;
+  readonly button?: string | undefined;
   /**
    * Message to show in the snackbar.
    */
@@ -45,7 +45,7 @@ export interface DbxActionSnackbarDisplayConfig<T = unknown, O = unknown> {
   /**
    * MatSnackBar configuration
    */
-  readonly snackbar?: MatSnackBarConfig;
+  readonly snackbar?: MatSnackBarConfig | undefined;
 }
 
 /**

@@ -27,7 +27,7 @@ import { type } from 'arktype';
 export interface ManifestSource {
   readonly origin: 'bundled' | 'external';
   readonly path: string;
-  readonly strict?: boolean;
+  readonly strict?: boolean | undefined;
 }
 
 /**
@@ -91,7 +91,7 @@ export interface ManifestLoaderConfig<TManifest extends BaseManifest<TEntry>, TE
  */
 export interface ManifestLoaderInput {
   readonly sources: readonly ManifestSource[];
-  readonly readFile?: ManifestReadFile;
+  readonly readFile?: ManifestReadFile | undefined;
 }
 
 /**

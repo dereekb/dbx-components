@@ -163,7 +163,7 @@ export interface OidcTokenManagerConfig {
   /**
    * Pre-emptive refresh buffer in milliseconds. Defaults to {@link DEFAULT_OIDC_TOKEN_REFRESH_BUFFER_MS}.
    */
-  readonly refreshBufferMs?: number;
+  readonly refreshBufferMs?: number | undefined;
 }
 
 /**

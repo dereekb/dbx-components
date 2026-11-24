@@ -46,7 +46,7 @@ export interface MicrosoftGraphRawRequestInput {
    */
   readonly authorize?: Maybe<boolean>;
   /**
-   * Overrides the client's 30-second timeout, e.g. for a large download or chunk upload.
+   * Overrides the client's timeout (30 seconds by default), e.g. for a large download or chunk upload.
    */
   readonly timeout?: Maybe<Milliseconds>;
   /**
@@ -92,7 +92,7 @@ async function fetchMicrosoftGraphRaw(context: MicrosoftGraphContext, input: Mic
     method: input.method,
     // a Uint8Array over a shared/Node buffer (ArrayBufferLike) is a valid fetch body at runtime; TS's DOM
     // BodyInit only names ArrayBuffer-backed views
-    body: (input.body ?? undefined) as Maybe<BodyInit>,
+    body: (input.body as Maybe<BodyInit>) ?? null,
     headers: {
       ...contentType,
       ...canonicalizeMicrosoftGraphHeaders(input.headers),

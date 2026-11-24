@@ -272,8 +272,7 @@ describe('performTasksInParallelFunction()', () => {
                 throw new Error('test error');
               })
             : waitForMs(200);
-        },
-        maxParallelTasks: undefined
+        }
       }).catch((e) => {
         expect(tasksStarted).toBe(tasksToRun);
         done();
@@ -517,8 +516,7 @@ describe('performTasksInParallelFunction()', () => {
             taskFactory: async () => {
               tasksStarted += 1;
               return waitForMs(400);
-            },
-            maxParallelTasks: undefined
+            }
           }).then(() => {
             expect(success).toBe(true);
             done();

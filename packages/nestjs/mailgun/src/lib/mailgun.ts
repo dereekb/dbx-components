@@ -139,7 +139,7 @@ export interface MailgunTemplateEmailRequest extends MailgunEmailRequest, Mailgu
   /**
    * (Optional) recipient variables configuration.
    */
-  readonly recipientVariablesConfig?: MailgunTemplateEmailRequestRecipientVariablesConfig;
+  readonly recipientVariablesConfig?: MailgunTemplateEmailRequestRecipientVariablesConfig | undefined;
 }
 
 export interface MailgunTemplateEmailRequestRecipientVariablesConfig {
@@ -266,10 +266,10 @@ export function convertMailgunTemplateEmailRequestToMailgunMessageData(config: C
   }
 
   const data: MailgunMessageData = {
-    from,
+    ...(from == null ? {} : { from }),
     to,
-    cc,
-    bcc,
+    ...(cc == null ? {} : { cc }),
+    ...(bcc == null ? {} : { bcc }),
     subject: request.subject,
     template: request.template,
     ...request.messageData

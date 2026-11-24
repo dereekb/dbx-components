@@ -1,4 +1,4 @@
-import { type Minutes, type Hours, type Days, type Maybe, DATE_NOW_VALUE } from '@dereekb/util';
+import { type Minutes, type Hours, type Days, type Maybe, type PartialWithUndefined, DATE_NOW_VALUE, filterUndefinedValues } from '@dereekb/util';
 import { addDays, addMinutes, isBefore, isPast } from 'date-fns';
 import { daysToMinutes, isAfter, roundDownToMinute, copyHoursAndMinutesToDate } from './date';
 import { type DateRange, clampDateRangeToDateRange, clampDateToDateRange } from './date.range';
@@ -147,12 +147,12 @@ export class LimitDateTimeInstance {
    * @example
    * ```ts
    * const limiter = new LimitDateTimeInstance({ limits: { isFuture: true } });
-   * const range = limiter.dateRange(); // { start: <now>, end: undefined }
+   * const range = limiter.dateRange(); // { start: <now> }
    * ```
    */
   dateRange(): Partial<DateRange> {
     const { instant = new Date() } = this._config;
-    return this.dateRangeForInstant(instant);
+    return filterUndefinedValues(this.dateRangeForInstant(instant));
   }
 
   /**
@@ -162,7 +162,7 @@ export class LimitDateTimeInstance {
    * @param instant - The reference point in time for resolving dynamic limits.
    * @returns A partial {@link DateRange} resolved against the given instant.
    */
-  dateRangeForInstant(instant: Date) {
+  dateRangeForInstant(instant: Date): PartialWithUndefined<DateRange> {
     const { min, max } = this;
     return {
       start: min ? dateFromLogicalDate(min, instant) : undefined,

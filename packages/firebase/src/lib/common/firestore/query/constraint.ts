@@ -327,7 +327,7 @@ export interface OrderByQueryConstraintData {
   /**
    * Direction to order results (ascending or descending)
    */
-  readonly directionStr?: OrderByDirection;
+  readonly directionStr?: OrderByDirection | undefined;
 }
 
 /**

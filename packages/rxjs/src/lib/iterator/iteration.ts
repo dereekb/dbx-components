@@ -10,11 +10,11 @@ export interface ItemIteratorNextRequest {
    * Target page number to load. If provided and the iterator is not on this page,
    * the request is ignored to prevent out-of-order loading.
    */
-  page?: number;
+  page?: number | undefined;
   /**
    * Whether to retry loading the current page after an error.
    */
-  retry?: boolean;
+  retry?: boolean | undefined;
 }
 
 /**

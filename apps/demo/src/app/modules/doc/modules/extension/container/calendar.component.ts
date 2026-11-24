@@ -3,7 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { DbxCalendarComponent, type DbxCalendarEvent, DbxCalendarStore } from '@dereekb/dbx-web/calendar';
 import { type DateCell, type DateCellCollection, dateCellTiming, durationSpanToDateRange, expandDateCellCollection, expandDateCellScheduleDayCodes, UTC_DATE_TIMEZONE_UTC_NORMAL_INSTANCE } from '@dereekb/date';
 import { addMonths, setHours, startOfDay, addDays } from 'date-fns';
-import { type Building, type Maybe, type TimezoneString, isEvenNumber, range } from '@dereekb/util';
+import { type Configurable, type Maybe, type TimezoneString, isEvenNumber, range } from '@dereekb/util';
 import { type CalendarEvent } from 'angular-calendar';
 import { CalendarScheduleSelectionDayState, type DbxScheduleSelectionCalendarComponentConfig, dbxForgeDateScheduleRangeField } from '@dereekb/dbx-form/calendar';
 import type { FormConfig } from '@ng-forge/dynamic-forms';
@@ -203,7 +203,7 @@ export class DocExtensionCalendarComponent implements OnInit {
     startWith(0),
     map((i) => {
       const even = isEvenNumber(i);
-      const x: Building<DbxScheduleSelectionCalendarComponentConfig> = {
+      const x: Configurable<DbxScheduleSelectionCalendarComponentConfig> = {
         readonly: even,
         showButtonsOnReadonly: true
       };

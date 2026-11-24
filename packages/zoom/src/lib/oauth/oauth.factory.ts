@@ -1,6 +1,7 @@
 import { fetchJsonFunction, fetchApiFetchService, type ConfiguredFetch, type FetchHandler, returnNullHandleFetchJsonParseErrorFunction } from '@dereekb/util/fetch';
 import { ZOOM_OAUTH_API_URL, isZoomRefreshTokenCredential, zoomOAuthConfigAccountCredential, type ZoomAuthCredential, type ZoomOAuthConfig, type ZoomOAuthContext, type ZoomOAuthContextRef, type ZoomOAuthFetchFactory, type ZoomOAuthMakeAccessTokenFactory } from './oauth.config';
 import { type LogZoomServerErrorFunction } from '../zoom.error.api';
+import { DEFAULT_ZOOM_FETCH_TIMEOUT } from '../zoom.config';
 import { ZoomOAuthAuthFailureError, handleZoomOAuthErrorFetch } from './oauth.error.api';
 import { type ZoomAccessToken, type ZoomAccessTokenCache, type ZoomAccessTokenFactory, type ZoomAccessTokenRefresher } from './oauth';
 import { MS_IN_MINUTE, MS_IN_SECOND, type Maybe, type Milliseconds } from '@dereekb/util';
@@ -47,6 +48,15 @@ export interface ZoomOAuthFactoryConfig {
    * Custom log error function.
    */
   readonly logZoomServerErrorFunction?: LogZoomServerErrorFunction;
+  /**
+   * Timeout in milliseconds for each request the default fetch sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * Ignored when a `fetchFactory` is provided.
+   *
+   * Defaults to {@link DEFAULT_ZOOM_FETCH_TIMEOUT} (20 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 export type ZoomOAuthFactory = (config: ZoomOAuthConfig) => ZoomOAuth;
@@ -73,7 +83,7 @@ export function zoomOAuthFactory(factoryConfig: ZoomOAuthFactoryConfig): ZoomOAu
           }
         },
         fetchHandler,
-        timeout: 20 * 1000, // 20 second timeout
+        timeout: factoryConfig.timeout ?? DEFAULT_ZOOM_FETCH_TIMEOUT,
         requireOkResponse: true, // enforce ok response
         useTimeout: true // use timeout
       })

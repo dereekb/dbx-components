@@ -1,5 +1,5 @@
 import { filterMaybe } from '@dereekb/rxjs';
-import { filterUndefinedValues, type KeyValueTransformMap, type Maybe, objectHasNoKeys } from '@dereekb/util';
+import { filterUndefinedValues, type KeyValueTransformMap, type Maybe, objectHasNoKeys, type PartialWithUndefined } from '@dereekb/util';
 import { type WriteResult, type SnapshotOptions, type DocumentReference, type DocumentSnapshot, type UpdateData, type WithFieldValue, type PartialWithFieldValue, type SetOptions, type Precondition, type DocumentData, type FirestoreDataConverter } from '../types';
 import { from, map, type Observable, type OperatorFunction } from 'rxjs';
 import { type DocumentReferenceRef } from '../reference';
@@ -259,7 +259,7 @@ export function mapDataFromSnapshot<T>(options?: SnapshotOptions): OperatorFunct
  * @param params - Optional parameters for the update operation
  * @returns A promise that resolves with the WriteResult or void
  */
-export type UpdateWithAccessorUpdateAndConverterFunction<T> = (data: Partial<T>, params?: FirestoreDocumentUpdateParams) => Promise<WriteResult | void>;
+export type UpdateWithAccessorUpdateAndConverterFunction<T> = (data: PartialWithUndefined<T>, params?: FirestoreDocumentUpdateParams) => Promise<WriteResult | void>;
 
 /**
  * Creates a function that updates a document using a data converter.
@@ -279,7 +279,7 @@ export type UpdateWithAccessorUpdateAndConverterFunction<T> = (data: Partial<T>,
  * @__NO_SIDE_EFFECTS__
  */
 export function updateWithAccessorUpdateAndConverterFunction<T>(accessor: FirestoreDocumentDataAccessor<T>, converter: FirestoreDataConverter<T>): UpdateWithAccessorUpdateAndConverterFunction<T> {
-  return async (data: Partial<T>, params?: FirestoreDocumentUpdateParams) => {
+  return async (data: PartialWithUndefined<T>, params?: FirestoreDocumentUpdateParams) => {
     const updateInput = filterUndefinedValues(data);
     const updateData = converter.toFirestore(updateInput, { merge: true }); // treat it as a merge
 

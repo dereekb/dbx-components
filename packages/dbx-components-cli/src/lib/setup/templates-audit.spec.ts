@@ -18,7 +18,7 @@
  * bug and patched a different subset of it.
  */
 
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -103,5 +103,18 @@ describe('scaffold templates — workspace convention audit', () => {
 
   it('gives every deploy lane an environment selection', () => {
     expect(result.violations.filter((violation) => violation.code === 'WORKSPACE_DEPLOY_LANE_NO_ENVIRONMENT_SELECTION')).toEqual([]);
+  });
+});
+
+describe('api project template continuous targets', () => {
+  // Nx refuses to load a project whose continuous target is also cached, and the scaffolded
+  // nx.json carries a cached `@nx/esbuild:esbuild` target default (written by Nx's node
+  // application generator), so a continuous esbuild target must opt out explicitly.
+  it('marks every continuous target that is not a run-commands target as uncached', () => {
+    const project = JSON.parse(readFileSync(join(TEMPLATES_DIR, 'apps', 'api', 'project.template.json'), 'utf-8')) as { targets: Record<string, { executor?: string; continuous?: boolean; cache?: boolean }> };
+    const cachedContinuous = Object.entries(project.targets)
+      .filter(([, target]) => target.continuous === true && target.executor !== 'nx:run-commands' && target.cache !== false)
+      .map(([name]) => name);
+    expect(cachedContinuous).toEqual([]);
   });
 });

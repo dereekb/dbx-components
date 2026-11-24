@@ -1,4 +1,4 @@
-import { cutToPrecision, cutValueToPrecision, numberFactorConverter } from './round';
+import { cutToPrecision, cutValueToPrecision, numberFactorConverter, roundToPrecision, roundToPrecisionFunction } from './round';
 
 describe('cutToPrecision', () => {
   it('should not round to the nearest value.', () => {
@@ -17,6 +17,49 @@ describe('cutToPrecision', () => {
 
     expect(value).toBeGreaterThanOrEqual(expectedValue);
     expect(result).toBe(expectedValue);
+  });
+
+  it('should cut an exponent-form value', () => {
+    expect(cutToPrecision(1e-7, 2)).toBe(0);
+  });
+});
+
+describe('roundToPrecision()', () => {
+  it('should round to the precision', () => {
+    expect(roundToPrecision(1.234, 2)).toBe(1.23);
+    expect(roundToPrecision(1.235, 2)).toBe(1.24);
+  });
+
+  it('should round exact decimal halves correctly', () => {
+    expect(roundToPrecision(1.005, 2)).toBe(1.01);
+    expect(roundToPrecision(-1.005, 2)).toBe(-1);
+    expect(roundToPrecision(-2.5, 0)).toBe(-2);
+  });
+
+  it('should round exponent-form values', () => {
+    expect(roundToPrecision(1e-7, 2)).toBe(0);
+    expect(roundToPrecision(5e21, 2)).toBe(5e21);
+    expect(roundToPrecision(1.5e-7, 7)).toBe(2e-7);
+  });
+
+  it('should return non-finite values unchanged', () => {
+    expect(roundToPrecision(Infinity, 2)).toBe(Infinity);
+    expect(roundToPrecision(-Infinity, 2)).toBe(-Infinity);
+    expect(roundToPrecision(Number.NaN, 2)).toBeNaN();
+  });
+
+  it('should support a negative precision', () => {
+    expect(roundToPrecision(1234, -2)).toBe(1200);
+  });
+});
+
+describe('roundToPrecisionFunction()', () => {
+  it('should ceil an exponent-form value', () => {
+    expect(roundToPrecisionFunction(2, 'ceil')(1e-7)).toBe(0.01);
+  });
+
+  it('should floor to the precision', () => {
+    expect(roundToPrecisionFunction(1, 'floor')(1.29)).toBe(1.2);
   });
 });
 

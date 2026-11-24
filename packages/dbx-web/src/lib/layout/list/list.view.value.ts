@@ -87,23 +87,23 @@ export interface DbxValueListItem<T, M = unknown> {
   /**
    * Arbitrary meta details available to the meta component.
    */
-  meta?: M;
+  meta?: M | undefined;
   /**
    * Optional icon to display for the item.
    */
-  icon?: string;
+  icon?: string | undefined;
   /**
    * Whether the item is disabled.
    */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /**
    * Whether the ripple effect is disabled.
    */
-  rippleDisabled?: boolean;
+  rippleDisabled?: boolean | undefined;
   /**
    * Whether the item is selected.
    */
-  selected?: boolean;
+  selected?: boolean | undefined;
   /**
    * Optional anchor for the item.
    */

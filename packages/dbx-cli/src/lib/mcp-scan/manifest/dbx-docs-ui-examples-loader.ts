@@ -19,7 +19,7 @@ export type DbxDocsUiExamplesLoaderWarning = ManifestLoaderWarning;
 
 export interface LoadDbxDocsUiExamplesManifestsInput {
   readonly sources: readonly DbxDocsUiExamplesManifestSource[];
-  readonly readFile?: DbxDocsUiExamplesManifestReadFile;
+  readonly readFile?: DbxDocsUiExamplesManifestReadFile | undefined;
 }
 
 export interface LoadDbxDocsUiExamplesManifestsResult {

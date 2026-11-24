@@ -88,7 +88,7 @@ export function withRecordId<T>(yargs: Argv<T>): Argv<T & RecordIdOptions> {
 }
 
 export interface FieldsOptions {
-  readonly fields?: string;
+  readonly fields?: string | undefined;
 }
 
 /**

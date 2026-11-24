@@ -29,7 +29,7 @@ import type { SpecFileTree } from './types.js';
  * @param config.apiRel - Optional caller-relative path metadata for the app.
  * @returns The parsed tree.
  */
-export async function inspectSpecFile(config: { readonly specAbs: string; readonly specRel: string; readonly apiAbs?: string; readonly apiRel?: string }): Promise<SpecFileTree> {
+export async function inspectSpecFile(config: { readonly specAbs: string; readonly specRel: string; readonly apiAbs?: string | undefined; readonly apiRel?: string | undefined }): Promise<SpecFileTree> {
   const { specAbs, specRel, apiAbs, apiRel } = config;
   const text = await readFile(specAbs, 'utf8');
   let prefix: string | undefined;

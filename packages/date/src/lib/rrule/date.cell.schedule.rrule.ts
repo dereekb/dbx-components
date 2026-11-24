@@ -61,7 +61,7 @@ export interface DateCellScheduleRangeRRuleConfig {
    * enabled. The two forms are provably equivalent — this changes only the emitted bytes — so the flag
    * exists to make that equivalence directly testable. Defaults to true.
    */
-  readonly preferDailyFrequency?: boolean;
+  readonly preferDailyFrequency?: boolean | undefined;
 }
 
 /**

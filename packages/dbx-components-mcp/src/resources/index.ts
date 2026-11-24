@@ -56,23 +56,23 @@ import { registerFirestoreRulesResource } from './firestore-rules.resource.js';
  * that depend on it are skipped.
  */
 export interface RegisterResourcesOptions {
-  readonly semanticTypeRegistry?: SemanticTypeRegistry;
-  readonly forgeFieldRegistry?: ForgeFieldRegistry;
-  readonly pipeRegistry?: PipeRegistry;
-  readonly utilRegistry?: UtilRegistry;
-  readonly modelSnapshotFieldRegistry?: ModelSnapshotFieldRegistry;
-  readonly modelFirebaseIndexRegistry?: ModelFirebaseIndexRegistry;
-  readonly uiComponentRegistry?: UiComponentRegistry;
-  readonly actionRegistry?: ActionRegistry;
-  readonly filterRegistry?: FilterRegistry;
-  readonly tokenRegistry?: TokenRegistry;
-  readonly cssUtilityRegistry?: CssUtilityRegistry;
-  readonly authRegistry?: AuthRegistry;
+  readonly semanticTypeRegistry?: SemanticTypeRegistry | undefined;
+  readonly forgeFieldRegistry?: ForgeFieldRegistry | undefined;
+  readonly pipeRegistry?: PipeRegistry | undefined;
+  readonly utilRegistry?: UtilRegistry | undefined;
+  readonly modelSnapshotFieldRegistry?: ModelSnapshotFieldRegistry | undefined;
+  readonly modelFirebaseIndexRegistry?: ModelFirebaseIndexRegistry | undefined;
+  readonly uiComponentRegistry?: UiComponentRegistry | undefined;
+  readonly actionRegistry?: ActionRegistry | undefined;
+  readonly filterRegistry?: FilterRegistry | undefined;
+  readonly tokenRegistry?: TokenRegistry | undefined;
+  readonly cssUtilityRegistry?: CssUtilityRegistry | undefined;
+  readonly authRegistry?: AuthRegistry | undefined;
   /**
    * Directory the `firestore.rules` resource resolves its file against. Defaults to `process.cwd()`
    * at request time.
    */
-  readonly cwd?: string;
+  readonly cwd?: string | undefined;
 }
 
 /**

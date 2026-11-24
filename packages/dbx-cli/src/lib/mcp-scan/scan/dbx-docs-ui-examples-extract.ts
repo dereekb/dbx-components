@@ -150,11 +150,11 @@ export async function extractDbxDocsUiExampleEntries(input: ExtractDbxDocsUiExam
 // MARK: JSDoc parsing
 interface ParsedTags {
   readonly hasMarker: boolean;
-  readonly slug?: string;
-  readonly category?: string;
-  readonly summary?: string;
+  readonly slug?: string | undefined;
+  readonly category?: string | undefined;
+  readonly summary?: string | undefined;
   readonly relatedSlugs: readonly string[];
-  readonly appRef?: string;
+  readonly appRef?: string | undefined;
   readonly skillRefs: readonly string[];
   readonly uses: readonly UsesTagInput[];
 }
@@ -470,9 +470,9 @@ async function buildEntryFromClass(input: BuildEntryFromClassInput): Promise<Bui
 
 // MARK: @Component decorator inspection
 interface ComponentDecoratorInfo {
-  readonly selector?: string;
-  readonly template?: string;
-  readonly templateUrl?: string;
+  readonly selector?: string | undefined;
+  readonly template?: string | undefined;
+  readonly templateUrl?: string | undefined;
 }
 
 function readComponentDecorator(decl: ClassDeclaration): ComponentDecoratorInfo | undefined {

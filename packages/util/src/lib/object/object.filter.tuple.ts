@@ -181,7 +181,7 @@ export interface KeyValueTupleFilter<T extends object = object, K extends keyof 
   /**
    * Restricts filtering to only these keys. Other keys are excluded from the result.
    */
-  keysFilter?: (K | KeyAsString<K>)[];
+  keysFilter?: (K | KeyAsString<K>)[] | undefined;
 }
 
 /**

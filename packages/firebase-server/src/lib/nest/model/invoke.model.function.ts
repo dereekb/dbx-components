@@ -69,7 +69,7 @@ export interface OnCallInvokeModelConfig<N> {
   /**
    * Optional assertion run before the invoke handler; throw to reject.
    */
-  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallInvokeModelParams>;
+  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallInvokeModelParams> | undefined;
 }
 
 /**

@@ -14,37 +14,37 @@ export interface OnScheduleConfig {
    *
    * Used by v1 and v2.
    */
-  readonly cron?: Minutes | string;
+  readonly cron?: Minutes | string | undefined;
   /**
    * Scheduled time configuration in an english format.
    *
    * Used by v2.
    */
-  readonly schedule?: string;
+  readonly schedule?: string | undefined;
   /**
    * Optional timezone to specify.
    */
-  readonly timezone?: TimezoneString;
+  readonly timezone?: TimezoneString | undefined;
   /**
    * The number of retry attempts for a failed run.
    */
-  readonly retryCount?: number;
+  readonly retryCount?: number | undefined;
   /**
    * The time limit for retrying.
    */
-  readonly maxRetrySeconds?: Seconds;
+  readonly maxRetrySeconds?: Seconds | undefined;
   /**
    * The minimum time to wait before retying.
    */
-  readonly minBackoffSeconds?: Seconds;
+  readonly minBackoffSeconds?: Seconds | undefined;
   /**
    * The maximum time to wait before retrying.
    */
-  readonly maxBackoffSeconds?: Seconds;
+  readonly maxBackoffSeconds?: Seconds | undefined;
   /**
    * The time between will double max doublings times.
    */
-  readonly maxDoublings?: number;
+  readonly maxDoublings?: number | undefined;
 }
 
 /**
@@ -53,7 +53,7 @@ export interface OnScheduleConfig {
  * @typeParam S - The schedule event type (e.g., `scheduler.ScheduledEvent` for v2).
  */
 export interface OnScheduleRequest<S> {
-  readonly scheduleContext?: S;
+  readonly scheduleContext?: S | undefined;
 }
 
 // MARK: Application

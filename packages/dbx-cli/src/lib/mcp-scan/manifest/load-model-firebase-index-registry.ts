@@ -39,7 +39,7 @@ export type BundledModelFirebaseIndexManifestPathsFactory = () => readonly strin
 export interface LoadModelFirebaseIndexRegistryInput {
   readonly cwd: string;
   readonly bundledManifestPaths?: BundledModelFirebaseIndexManifestPathsFactory;
-  readonly readFile?: ModelFirebaseIndexManifestReadFile;
+  readonly readFile?: ModelFirebaseIndexManifestReadFile | undefined;
 }
 
 /**

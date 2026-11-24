@@ -491,8 +491,8 @@ function plainScope(sf: SourceFile, index: TaskBotIndex): ResolveScope {
 }
 
 interface ScriptTypeResolution {
-  readonly ref?: ExtractedTaskBotScriptTypeRef;
-  readonly reason?: string;
+  readonly ref?: ExtractedTaskBotScriptTypeRef | undefined;
+  readonly reason?: string | undefined;
 }
 
 function resolveScriptTypeExpression(node: Node, scope: ResolveScope, depth: number): ScriptTypeResolution {
@@ -645,7 +645,7 @@ function readProcessorElement(el: Node, scope: ResolveScope, depth: number): Ext
 }
 
 interface ProcessorTargetRead extends ScriptTypeResolution {
-  readonly trusted?: boolean;
+  readonly trusted?: boolean | undefined;
 }
 
 function readProcessorIdentifier(name: string, scope: ResolveScope, depth: number): ProcessorTargetRead {
@@ -729,7 +729,7 @@ function readHandlerValidate(config: ObjectLiteralExpression, index: TaskBotInde
 
 interface ValidateValueRead {
   readonly usesRegistry: boolean;
-  readonly reason?: string;
+  readonly reason?: string | undefined;
 }
 
 interface ValidateWalk {

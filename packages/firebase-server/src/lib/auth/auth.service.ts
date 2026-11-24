@@ -1024,13 +1024,15 @@ export abstract class AbstractFirebaseServerNewUserService<U extends FirebaseSer
     let user: admin.auth.UserRecord;
 
     try {
-      user = await this.authService.auth.createUser({
-        uid: uid ?? undefined,
-        displayName: displayName ?? undefined,
-        email: email ?? undefined,
-        phoneNumber: phoneNumber ?? undefined,
-        password
-      });
+      user = await this.authService.auth.createUser(
+        filterUndefinedValues({
+          uid: uid ?? undefined,
+          displayName: displayName ?? undefined,
+          email: email ?? undefined,
+          phoneNumber: phoneNumber ?? undefined,
+          password
+        })
+      );
     } catch (e: unknown) {
       const firebaseError = e as { code?: string };
       const errorCode = firebaseError.code;

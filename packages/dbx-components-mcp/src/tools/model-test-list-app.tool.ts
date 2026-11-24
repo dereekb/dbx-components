@@ -88,7 +88,7 @@ async function run(rawArgs: unknown): Promise<ToolResult> {
     }
     if (catalog !== undefined && discoveryError === undefined) {
       const filtered = parsed.group === undefined ? catalog : filterCatalogByGroup(catalog, parsed.group);
-      const text = parsed.format === 'json' ? formatListAppAsJson(filtered) : formatListAppAsMarkdown(filtered, { group: parsed.group });
+      const text = parsed.format === 'json' ? formatListAppAsJson(filtered) : formatListAppAsMarkdown(filtered, parsed.group === undefined ? {} : { group: parsed.group });
       result = { content: [{ type: 'text', text }] };
     } else {
       result = toolError(discoveryError ?? 'Failed to discover spec files.');

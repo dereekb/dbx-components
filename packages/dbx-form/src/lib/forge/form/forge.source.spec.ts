@@ -18,7 +18,7 @@ import type { DbxFormSourceDirectiveMode } from '../../form/io/form.input.direct
 // MARK: Interfaces
 interface TestFormValue {
   readonly name: string;
-  readonly age?: number;
+  readonly age?: number | undefined;
 }
 
 // MARK: Test Host

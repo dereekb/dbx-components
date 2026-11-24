@@ -32,7 +32,7 @@ export interface TypeformFormQuestionAnswerPair<T = unknown> extends TypeformFor
   /**
    * Definition field, if it exists.
    */
-  readonly definitionField?: TypeformFormResponseDefinitionField;
+  readonly definitionField?: TypeformFormResponseDefinitionField | undefined;
 }
 
 /**

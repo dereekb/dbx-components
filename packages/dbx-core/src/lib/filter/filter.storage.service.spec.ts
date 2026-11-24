@@ -10,12 +10,12 @@ import { DbxFilterStorageService } from './filter.storage.service';
 
 interface TestStorageFilter {
   name?: string;
-  date?: Date;
+  date?: Date | undefined;
 }
 
 interface TestStorageFilterJson {
   name?: string;
-  date?: string;
+  date?: string | undefined;
 }
 
 const TEST_STORAGE_FILTER_JSON_CONVERTER: FilterJsonConverter<TestStorageFilter, TestStorageFilterJson> = {

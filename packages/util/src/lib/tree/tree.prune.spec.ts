@@ -3,7 +3,7 @@ import { pruneTreesFunction } from './tree.prune';
 interface TestItem {
   readonly id: string;
   readonly at: number;
-  readonly parent?: string;
+  readonly parent?: string | undefined;
   readonly group?: string;
   readonly failed?: boolean;
 }

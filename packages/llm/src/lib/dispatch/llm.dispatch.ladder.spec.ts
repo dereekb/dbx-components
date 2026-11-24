@@ -1,0 +1,113 @@
+import { describe, expect, it } from 'vitest';
+import { makeLlmCallContext } from '../record/llm.call.context';
+import { type LlmDispatchResult, type LlmRequest } from '../strategy/llm.strategy';
+import { resolveLlmDecodeRetryModel, makeLlmDispatchRetryLadder } from './llm.dispatch.ladder';
+import { LLM_RETRY_BONUS_LEVER } from './llm.retry.lever';
+
+const FAILED: LlmDispatchResult = { text: 'prose', strategyId: 's', capability: 'c', finishReason: 'stop' };
+const CAPPED: LlmDispatchResult = { text: '{"a":', strategyId: 's', capability: 'c', finishReason: 'length' };
+
+function ladderOf(baseRequest: LlmRequest = { capability: 'c', prompt: 'p' }, escalateModel?: string) {
+  const callContext = makeLlmCallContext({ label: 'c', timing: true });
+  const ladder = makeLlmDispatchRetryLadder({ capability: 'c', baseRequest, baseOutputBudget: 1024, resolvedModel: 'm/fast', escalateModel, reasoningSupported: true, callContext });
+  const diags = () => callContext.profile().diags ?? [];
+  return { ladder, diags };
+}
+
+describe('resolveLlmDecodeRetryModel()', () => {
+  const modelTiers = { fast: 'm/fast', strong: { model: 'm/strong' } };
+
+  it('should resolve off, explicit and implicit tiers', () => {
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: 'off' })).toBeUndefined();
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: 'OFF' })).toBeUndefined();
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: ' none ' })).toBeUndefined();
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: '' })).toBe('m/strong');
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: ' fast ' })).toBe('m/fast');
+    expect(resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: 'fast' })).toBe('m/fast');
+    expect(resolveLlmDecodeRetryModel({ modelTiers })).toBe('m/strong');
+    expect(resolveLlmDecodeRetryModel({ modelTiers: { fast: 'm/fast' } })).toBeUndefined();
+  });
+
+  it('should fail loud on an explicit typo', () => {
+    expect(() => resolveLlmDecodeRetryModel({ modelTiers, decodeRetryTier: 'strnog' })).toThrow();
+  });
+});
+
+describe('makeLlmDispatchRetryLadder()', () => {
+  it('should take the budget rung on a truncation, persist the raise and file its breadcrumbs', () => {
+    const { ladder, diags } = ladderOf();
+    const lever = ladder.take({ cause: 'length-truncation', failed: CAPPED, attempt: 1 });
+
+    expect(lever).toMatchObject({ lever: 'budget', from: '1024', to: '4096' });
+    expect(ladder.apply({ capability: 'c', prompt: 'p2' })).toEqual({ capability: 'c', prompt: 'p2', maxOutputTokens: 4096 });
+    expect(diags().map((diag) => diag.code)).toEqual(['output-budget-raise', 'retry-lever']);
+    expect(diags()[1]).toMatchObject({ fields: { attempt: 2, cause: 'length-truncation', lever: 'budget' }, message: 'retry moves the budget lever' });
+    expect(ladder.take({ cause: 'length-truncation', failed: CAPPED, attempt: 2 })).toMatchObject({ lever: 'budget', from: '4096', to: '16384' });
+  });
+
+  it('should escalate the model with a decode-escalate breadcrumb, then walk down the ladder', () => {
+    const { ladder, diags } = ladderOf(undefined, 'm/strong');
+
+    expect(ladder.take({ cause: 'parse-error', failed: FAILED, attempt: 1 })).toMatchObject({ lever: 'model', to: 'm/strong' });
+    expect(diags()[0]).toMatchObject({ code: 'decode-escalate', fields: { attempt: 2, model: 'm/strong' } });
+    expect(ladder.take({ cause: 'parse-error', failed: FAILED, attempt: 2 }).lever).not.toBe('model');
+  });
+
+  it('should raise the budget with reasoning-low headroom, and drop the schema with structured-off', () => {
+    const { ladder } = ladderOf({ capability: 'c', prompt: 'p', responseSchemaHint: { type: 'object' } });
+    const low = ladder.take({ cause: 'schema-validation', failed: FAILED, attempt: 1 });
+
+    expect(low).toMatchObject({ lever: 'reasoning-low', headroom: 2048 });
+    expect(ladder.pending()).toEqual({ lever: 'reasoning-low', from: 'off', to: 'low', cause: 'schema-validation', headroom: 2048 });
+
+    const next = ladder.take({ cause: 'schema-validation', failed: FAILED, attempt: 2 });
+    const applied = ladder.apply({ capability: 'c', prompt: 'p', responseSchemaHint: { type: 'object' } });
+
+    expect(applied).toMatchObject({ reasoning: { enabled: true, effort: 'low' }, maxOutputTokens: 2048 });
+    expect(next.lever === 'structured-off' ? applied.responseSchemaHint : undefined).toBeUndefined();
+  });
+
+  it('should read and clear the pending decision', () => {
+    const { ladder } = ladderOf();
+
+    expect(ladder.pending()).toBeUndefined();
+    ladder.take({ cause: 'transport', failed: FAILED, attempt: 1 });
+    expect(ladder.takePending()).toMatchObject({ lever: 'none', cause: 'transport' });
+    expect(ladder.pending()).toBeUndefined();
+    expect(ladder.apply({ capability: 'c', prompt: 'p' })).toEqual({ capability: 'c', prompt: 'p' });
+  });
+
+  it('should grant the bonus lever with its stamps', () => {
+    const { ladder, diags } = ladderOf({ capability: 'c', prompt: 'p', reasoning: { enabled: true, effort: 'low' } });
+    const lever = ladder.takeBonus({ cause: 'empty-result', attempt: 2 });
+
+    expect(lever).toMatchObject({ lever: 'reasoning-off', from: 'low', to: 'off', induced: 'reasoning-low' });
+    expect(ladder.pending()).toEqual({ lever: 'reasoning-off', from: 'low', to: 'off', cause: 'empty-result', bonus: true, induced: 'reasoning-low' });
+    expect(ladder.apply({ capability: 'c', prompt: 'p' }).reasoning).toEqual({ enabled: false });
+    expect(diags()[0]).toMatchObject({ code: 'retry-lever', fields: { attempt: 3, bonus: true, induced: 'reasoning-low' } });
+  });
+
+  it('should read its axes off the base request as every lever taken so far moves it', () => {
+    const { ladder } = ladderOf();
+    ladder.take({ cause: 'length-truncation', failed: CAPPED, attempt: 1 });
+    const low = ladder.take({ cause: 'schema-validation', failed: FAILED, attempt: 2 });
+
+    // the reasoning-low headroom doubles the RAISED budget the second attempt sent, not the base one
+    expect(low).toMatchObject({ lever: 'reasoning-low', from: 'off', to: 'low', headroom: 8192 });
+    expect(ladder.apply({ capability: 'c', prompt: 'p' })).toMatchObject({ maxOutputTokens: 8192, reasoning: { enabled: true, effort: 'low' } });
+    expect(ladder.take({ cause: 'length-truncation', failed: CAPPED, attempt: 3 })).toMatchObject({ lever: 'budget', from: '8192', to: '32768' });
+  });
+
+  it('should owe the bonus only after a reasoning-low retry, and only once', () => {
+    const { ladder } = ladderOf();
+    const low = { lever: 'reasoning-low', from: 'off', to: 'low', cause: 'schema-validation' } as const;
+
+    expect(ladder.bonusDue(undefined)).toBe(false);
+    expect(ladder.bonusDue({ lever: 'budget', from: '1024', to: '4096', cause: 'length-truncation' })).toBe(false);
+    expect(ladder.bonusDue(low)).toBe(true);
+    expect(ladder.bonusAttempts()).toBe(0);
+    expect(ladder.takeBonus({ cause: 'empty-result', attempt: 2 })).toBe(LLM_RETRY_BONUS_LEVER);
+    expect(ladder.bonusAttempts()).toBe(1);
+    expect(ladder.bonusDue(low)).toBe(false);
+  });
+});

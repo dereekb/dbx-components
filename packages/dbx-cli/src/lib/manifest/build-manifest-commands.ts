@@ -219,7 +219,7 @@ interface BuilderContext {
   readonly dataHelpFormat: ManifestHelpDataFormat;
   readonly helpMode: ManifestHelpMode;
   readonly hideOnFocus: readonly string[];
-  readonly modelManifest?: CliModelManifest;
+  readonly modelManifest?: CliModelManifest | undefined;
   readonly modelCommands: CliModelCommands;
 }
 
@@ -762,7 +762,7 @@ function readArktypeExpression(entry: CliApiManifestEntry): string | undefined {
 
 interface CallEntryOptions {
   readonly expandKeys: boolean;
-  readonly modelManifest?: CliModelManifest;
+  readonly modelManifest?: CliModelManifest | undefined;
 }
 
 async function callEntry(entry: CliApiManifestEntry, rawData: string | undefined, options: CallEntryOptions): Promise<void> {

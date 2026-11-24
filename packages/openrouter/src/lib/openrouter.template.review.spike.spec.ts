@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { expect, it } from 'vitest';
+import { describeIfEnvFlag } from '@dereekb/util/test';
 import { OpenRouterCore } from '@openrouter/sdk/core';
 import { type Maybe } from '@dereekb/util';
 import { TEST_BAD_TEMPLATE_SCRIPTS, TEST_GOOD_TEMPLATE_SCRIPTS, TEST_JOB_REMINDER_TEMPLATE_TYPE } from '../test/openrouter.template.fixture';
@@ -19,15 +20,15 @@ import { OPENROUTER_JEV_1_13_MODEL_ID } from './openrouter.type';
  *
  * ## Running
  *
- * Skipped unless `OPENROUTER_API_KEY` is set, because these make real calls. Jev input is billed at $0.042 per million
- * tokens, so a run costs a fraction of a cent.
+ * Skipped unless `OPENROUTER_LIVE_SPECS` is `1` or `true`, because these make real calls with `OPENROUTER_API_KEY`. The key
+ * alone never enables them (see "Live probes" in the package README). Jev input is billed at $0.042 per million tokens, so a
+ * run costs a fraction of a cent.
  *
  * ```
- * OPENROUTER_API_KEY=sk-or-… npx nx test openrouter --testFile=openrouter.template.review.spike.spec.ts
+ * OPENROUTER_LIVE_SPECS=1 npx nx test openrouter --testFile=openrouter.template.review.spike.spec.ts --skip-nx-cache
  * ```
  */
 const OPENROUTER_API_KEY = process.env['OPENROUTER_API_KEY'];
-const CREDENTIALS_PRESENT = Boolean(OPENROUTER_API_KEY);
 
 const REVIEW_MODEL = process.env['OPENROUTER_TEST_DECISION_MODEL_ID'] ?? OPENROUTER_JEV_1_13_MODEL_ID;
 
@@ -38,7 +39,10 @@ const REVIEW_RUNS = 5;
 
 const REVIEW_TIMEOUT = 120_000;
 
-describe.skipIf(!CREDENTIALS_PRESENT)('template review live spike', () => {
+// Whether to run the live spike: `OPENROUTER_LIVE_SPECS` is `1` / `true` (trimmed, any case: `describeIfEnvFlag` from
+// `@dereekb/util/test`). Never inferred from the key, which Nx always loads from the workspace `.env.local` / `.env`
+// and an empty override cannot blank.
+describeIfEnvFlag('OPENROUTER_LIVE_SPECS')('template review live spike', () => {
   const client = new OpenRouterCore({ apiKey: OPENROUTER_API_KEY as string });
   const typeConfig = TEST_JOB_REMINDER_TEMPLATE_TYPE;
 

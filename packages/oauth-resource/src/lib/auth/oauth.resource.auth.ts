@@ -68,7 +68,7 @@ export function oauthResourceAuthInfoForVerifiedBearer(verified: VerifiedBearer)
     token: verified.token,
     clientId: typeof claimClientId === 'string' ? claimClientId : fallbackClientId,
     scopes: scopesFromScopeClaim(verified.claims['scope']),
-    expiresAt: verified.claims.exp,
+    ...(verified.claims.exp == null ? {} : { expiresAt: verified.claims.exp }),
     extra: { sub: verified.subject, iss: verified.issuer, kind: verified.kind }
   };
 }

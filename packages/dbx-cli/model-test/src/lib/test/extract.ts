@@ -34,13 +34,13 @@ export interface ExtractSpecTreeInput {
    * Optional explicit prefix (e.g. `Hellosubs`). When supplied alongside
    * {@link knownFixtureNames}, no import-based detection is attempted.
    */
-  readonly prefix?: string;
+  readonly prefix?: string | undefined;
   /**
    * Optional explicit list of `<prefix><Model>Context` function names.
    * Typically supplied from the result of `inspectAppFixtures()`. When
    * non-empty, fixture-name matching is exact instead of suffix-based.
    */
-  readonly knownFixtureNames?: readonly string[];
+  readonly knownFixtureNames?: readonly string[] | undefined;
 }
 
 const SPEC_FILE_VIRTUAL_PATH = '__spec__/spec.ts';

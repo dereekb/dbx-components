@@ -31,19 +31,19 @@ export interface DbxForgePhoneFieldConfig extends DbxForgeFieldFunctionDef<DbxFo
   /**
    * Preferred countries to show at the top of the country selector.
    */
-  readonly preferredCountries?: string[];
+  readonly preferredCountries?: string[] | undefined;
   /**
    * ISO country codes to restrict the dropdown to.
    */
-  readonly onlyCountries?: string[];
+  readonly onlyCountries?: string[] | undefined;
   /**
    * Whether or not to enable the search feature. True by default.
    */
-  readonly enableSearch?: boolean;
+  readonly enableSearch?: boolean | undefined;
   /**
    * Whether or not to allow adding an extension. False by default.
    */
-  readonly allowExtension?: boolean;
+  readonly allowExtension?: boolean | undefined;
   /**
    * Sets the autocomplete attribute on the phone input.
    *

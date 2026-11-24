@@ -76,7 +76,7 @@ export class DbxFirebaseModelEntitiesPopoverComponent extends AbstractPopoverDir
     return popupService.open({
       height: '600px',
       width: '800px',
-      injector: injector ?? undefined,
+      ...(injector == null ? {} : { injector }),
       isResizable: true,
       ...popoverSizingConfig,
       key: popoverKey ?? DEFAULT_DBX_FIREBASE_MODEL_ENTITIES_COMPONENT_POPOVER_KEY,

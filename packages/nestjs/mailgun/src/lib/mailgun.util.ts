@@ -126,7 +126,7 @@ export interface ExpandMailgunRecipientBatchSendTargetRequestFactoryConfig {
   /**
    * Configuration for the recipient variables.
    */
-  readonly recipientVariablesConfig?: MailgunTemplateEmailRequestRecipientVariablesConfig;
+  readonly recipientVariablesConfig?: MailgunTemplateEmailRequestRecipientVariablesConfig | undefined;
   /**
    * Optional lookup for notification message entity keys.
    */

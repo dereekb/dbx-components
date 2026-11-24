@@ -143,8 +143,8 @@ function resolveWindow(since: string | undefined, days: number): { readonly sinc
  * handler can pass it straight to {@link resolveLogBasePath}.
  */
 export interface LogSearchConfig {
-  readonly basePath?: string;
-  readonly defaultProject?: string;
+  readonly basePath?: string | undefined;
+  readonly defaultProject?: string | undefined;
 }
 
 /**

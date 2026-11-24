@@ -179,7 +179,7 @@ export async function runSetupInit(context: SetupContext, flags: SetupInitFlags)
   //      out of sync with the final package.json.
   //
   //      `--force` rather than `--legacy-peer-deps`: every `@dereekb/*` package declares its whole
-  //      runtime surface (`date-fns`, `extra-set`, `ts-essentials`, `@angular/material`, `@ngrx/*`,
+  //      runtime surface (`date-fns`, `make-error`, `ts-essentials`, `@angular/material`, `@ngrx/*`,
   //      …) as peerDependencies and carries no `dependencies` of its own, so the scaffolded project
   //      relies on npm auto-installing missing peers. `--legacy-peer-deps` ignores peerDependencies
   //      outright, which does not merely skip that — it prunes the peers the earlier `--force`

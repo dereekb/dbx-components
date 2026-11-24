@@ -38,7 +38,7 @@ export type BundledModelSnapshotFieldManifestPathsFactory = () => readonly strin
 export interface LoadModelSnapshotFieldRegistryInput {
   readonly cwd: string;
   readonly bundledManifestPaths?: BundledModelSnapshotFieldManifestPathsFactory;
-  readonly readFile?: ModelSnapshotFieldManifestReadFile;
+  readonly readFile?: ModelSnapshotFieldManifestReadFile | undefined;
 }
 
 /**

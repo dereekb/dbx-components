@@ -46,9 +46,9 @@ export interface FixedDateRangeScan {
   /**
    * The generated boundary range.
    */
-  readonly boundary?: DateRange;
+  readonly boundary?: DateRange | undefined;
   /**
    * New Date Range
    */
-  readonly range?: DateRange;
+  readonly range?: DateRange | undefined;
 }

@@ -8,7 +8,7 @@ export interface TrelloWebhookEventVerificationResult {
   /**
    * Parsed event, only present on successful verification.
    */
-  readonly event?: UntypedTrelloWebhookEvent;
+  readonly event?: UntypedTrelloWebhookEvent | undefined;
 }
 
 /**

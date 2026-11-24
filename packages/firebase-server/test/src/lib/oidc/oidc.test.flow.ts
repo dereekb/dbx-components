@@ -25,19 +25,19 @@ export interface OAuthTestFlowConfig {
    *
    * If omitted, all registered scopes are resolved from {@link OidcAccountService.allRegisteredScopes}.
    */
-  readonly scopes?: string;
+  readonly scopes?: string | undefined;
   /**
    * OAuth redirect URI. Defaults to `'https://example.com/callback'`.
    */
-  readonly redirectUri?: string;
+  readonly redirectUri?: string | undefined;
   /**
    * Client name used when creating the test OAuth client. Defaults to `'test-oauth-context'`.
    */
-  readonly clientName?: string;
+  readonly clientName?: string | undefined;
   /**
    * Token endpoint auth method. Defaults to `'client_secret_post'`.
    */
-  readonly tokenEndpointAuthMethod?: OidcTokenEndpointAuthMethod;
+  readonly tokenEndpointAuthMethod?: OidcTokenEndpointAuthMethod | undefined;
   /**
    * Provider profile keys to assign to the test client (persisted as its `dbx_provider_profiles`
    * client metadata). Defaults to none.
@@ -47,17 +47,17 @@ export interface OAuthTestFlowConfig {
    * {@link OAuthTestFlowConfig.scopes} string containing the gated scope, since the default
    * "all registered scopes" resolution deliberately drops assignment-only scopes.
    */
-  readonly providerProfiles?: readonly OidcProviderProfileKey[];
+  readonly providerProfiles?: readonly OidcProviderProfileKey[] | undefined;
   /**
    * OAuth `prompt` parameter for the authorization request (e.g. `'consent'` to force the consent screen
    * on a session that has already authorized the client). Omitted by default.
    */
-  readonly prompt?: string;
+  readonly prompt?: string | undefined;
   /**
    * Explicit subset of the requested OIDC scopes to grant at consent (the consent request's
    * `grantedOIDCScopes`). Omitted by default, which grants every requested scope.
    */
-  readonly grantedOIDCScopes?: readonly string[];
+  readonly grantedOIDCScopes?: readonly string[] | undefined;
   /**
    * A prior flow's client and cookies to run this flow against — the same OAuth client, the same
    * provider session, and therefore the same Grant. Omitted by default, which creates a fresh client
@@ -66,7 +66,7 @@ export interface OAuthTestFlowConfig {
    * When the session is still logged in, the provider skips the login prompt and the flow goes straight
    * to consent (or straight to the callback when nothing new needs consenting and `prompt` is unset).
    */
-  readonly session?: OAuthTestFlowSession;
+  readonly session?: OAuthTestFlowSession | undefined;
   /**
    * RFC 8707 `resource` indicator, sent on both `/oidc/auth` and `/oidc/token`.
    *
@@ -75,12 +75,12 @@ export interface OAuthTestFlowConfig {
    * `accessTokenFormat: 'jwt'` — is an RS256 JWT a remote resource server can verify against the
    * provider's JWKS, rather than the default opaque token only the provider itself can validate.
    */
-  readonly resource?: string;
+  readonly resource?: string | undefined;
   /**
    * Extra query parameters merged onto the `/oidc/auth` request, for parameters this config does
    * not model explicitly.
    */
-  readonly extraAuthParams?: Record<string, string | number>;
+  readonly extraAuthParams?: Record<string, string | number> | undefined;
   /**
    * The stage to stop the flow at. Defaults to `'token'`, the full flow.
    *
@@ -96,7 +96,7 @@ export interface OAuthTestFlowConfig {
    * Ignored by {@link performFullOAuthFlow} / {@link setupAndPerformFullOAuthFlow}, whose result type
    * guarantees tokens; stop early with {@link performOAuthFlow} / {@link setupAndPerformOAuthFlow}.
    */
-  readonly stopAtStage?: OAuthTestFlowStage;
+  readonly stopAtStage?: OAuthTestFlowStage | undefined;
 }
 
 /**
@@ -112,7 +112,7 @@ export interface OAuthTestFlowSession {
  */
 export interface OAuthTestFlowClient {
   readonly client_id: string;
-  readonly client_secret?: string;
+  readonly client_secret?: string | undefined;
   readonly redirectUri: string;
 }
 
@@ -167,11 +167,11 @@ export interface OAuthTestFlowResult {
   /**
    * The access token the token endpoint issued. Undefined unless the flow ran to the `'token'` stage.
    */
-  readonly accessToken?: string;
+  readonly accessToken?: string | undefined;
   /**
    * The ID token the token endpoint issued. Undefined unless the flow ran to the `'token'` stage.
    */
-  readonly idToken?: string;
+  readonly idToken?: string | undefined;
   /**
    * The refresh token the token endpoint issued.
    *
@@ -181,16 +181,16 @@ export interface OAuthTestFlowResult {
    * This is what a revocation test spends: a refresh exchange is the one operation that keeps working
    * against a still-live Grant and fails with `invalid_grant` the instant the Grant is destroyed.
    */
-  readonly refreshToken?: string;
+  readonly refreshToken?: string | undefined;
   /**
    * The `token_type` the token endpoint reported for the access token.
    */
-  readonly tokenType?: string;
+  readonly tokenType?: string | undefined;
   /**
    * The space-separated scope the token endpoint reported for the access token. Undefined unless the
    * flow ran to the `'token'` stage.
    */
-  readonly scope?: string;
+  readonly scope?: string | undefined;
   /**
    * The client and cookies this flow ran with, for chaining another flow onto the same session via
    * {@link OAuthTestFlowConfig.session} — and for the cookie header a caller's own `/oidc/token`
@@ -354,7 +354,7 @@ export interface PerformOAuthFlowInput {
    * interaction. Any later stage throws when it is missing.
    */
   readonly uid?: Maybe<string>;
-  readonly config?: OAuthTestFlowConfig;
+  readonly config?: OAuthTestFlowConfig | undefined;
 }
 
 /**

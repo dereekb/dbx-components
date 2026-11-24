@@ -1,6 +1,7 @@
 import { type Maybe } from '@dereekb/util';
 import { type OpenRouterProviderConfig } from './openrouter.config';
 import { type CreateEmbeddingsRequest, type OpenRouterCore, type RequestOptions, embeddingsGenerate } from './openrouter.sdk';
+import { openRouterRequestOptions } from './openrouter.timeout';
 import { type OpenRouterModelId } from './openrouter.type';
 
 /**
@@ -81,7 +82,7 @@ export async function openRouterEmbeddings(params: OpenRouterEmbeddingsParams): 
     provider: (provider ?? undefined) as CreateEmbeddingsRequest['requestBody']['provider']
   };
 
-  const result = await embeddingsGenerate(client, { requestBody }, options ?? undefined);
+  const result = await embeddingsGenerate(client, { requestBody }, openRouterRequestOptions(options));
 
   if (!result.ok) {
     throw result.error;

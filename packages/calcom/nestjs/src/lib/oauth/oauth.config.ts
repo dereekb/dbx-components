@@ -9,10 +9,10 @@ export const CALCOM_REFRESH_TOKEN_CONFIG_KEY = 'CALCOM_REFRESH_TOKEN';
 export const CALCOM_API_KEY_CONFIG_KEY = 'CALCOM_API_KEY';
 
 export interface CalcomOAuthServiceApiConfig {
-  readonly clientId?: string;
-  readonly clientSecret?: string;
-  readonly refreshToken?: string;
-  readonly apiKey?: string;
+  readonly clientId?: string | undefined;
+  readonly clientSecret?: string | undefined;
+  readonly refreshToken?: string | undefined;
+  readonly apiKey?: string | undefined;
 }
 
 /**

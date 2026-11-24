@@ -38,7 +38,7 @@ export interface FirebaseStorageContextFactoryConfig {
   /**
    * The default bucket
    */
-  readonly defaultBucketId?: StorageBucketId;
+  readonly defaultBucketId?: StorageBucketId | undefined;
   /**
    * Whether or not to force using the default bucket id.
    */

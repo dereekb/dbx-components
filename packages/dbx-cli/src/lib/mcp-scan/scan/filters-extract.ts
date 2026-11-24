@@ -160,12 +160,12 @@ function collectFilterInterfaceEntry(decl: InterfaceDeclaration, sink: FilterCol
 interface ParsedFilterTags {
   readonly hasMarker: boolean;
   readonly summary: string;
-  readonly slug?: string;
+  readonly slug?: string | undefined;
   readonly relatedSlugs: readonly string[];
   readonly skillRefs: readonly string[];
   readonly examples: readonly string[];
-  readonly deprecated?: boolean | string;
-  readonly since?: string;
+  readonly deprecated?: boolean | string | undefined;
+  readonly since?: string | undefined;
 }
 
 interface MutableTagState {

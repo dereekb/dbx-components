@@ -6,25 +6,25 @@ import { createMemoizedJsonFileAsyncKeyedValueCache } from '@dereekb/nestjs';
  */
 export interface CliTokenEntry {
   readonly accessToken: string;
-  readonly refreshToken?: string;
+  readonly refreshToken?: string | undefined;
   /**
    * Unix epoch milliseconds at which the access token expires.
    */
   readonly expiresAt: number;
-  readonly tokenType?: string;
-  readonly scope?: string;
-  readonly idToken?: string;
+  readonly tokenType?: string | undefined;
+  readonly scope?: string | undefined;
+  readonly idToken?: string | undefined;
   /**
    * Unix epoch SECONDS at which the underlying grant (session) expires, as reported by the OIDC
    * `GET /oidc/session` route (`dbx_session_expires_at`). Distinct from {@link expiresAt}, which is
    * the short-lived access token's expiry in milliseconds. Used to surface the session lifetime.
    */
-  readonly sessionExpiresAt?: number;
+  readonly sessionExpiresAt?: number | undefined;
   /**
    * Whether refresh-token rotation is disabled for this grant (a long-lived service token).
    * Sourced from the `GET /oidc/session` route (`dbx_rotation_disabled`).
    */
-  readonly rotationDisabled?: boolean;
+  readonly rotationDisabled?: boolean | undefined;
   /**
    * Whether this entry was redeemed from an MCP-minted claim code (`auth handoff`) rather than an
    * interactive `auth login`. Persisted.
@@ -33,13 +33,13 @@ export interface CliTokenEntry {
    * by `auth login`. A handoff entry with no {@link refreshToken} is a bearer credential: it is used
    * as-is until {@link expiresAt} and cannot be refreshed.
    */
-  readonly handoff?: boolean;
+  readonly handoff?: boolean | undefined;
   /**
    * Transient (never persisted) marker that this entry was sourced from environment variables rather
    * than the on-disk cache. Env-sourced entries are not written back after a refresh — see the auth
    * middleware. Set by `readEnvTokenEntry`.
    */
-  readonly fromEnv?: boolean;
+  readonly fromEnv?: boolean | undefined;
 }
 
 /**
@@ -135,7 +135,7 @@ export interface MergeRefreshedTokenEntryInput {
   /**
    * The current time in unix epoch milliseconds, used to derive `expiresAt`. Defaults to `Date.now()`.
    */
-  readonly nowMs?: number;
+  readonly nowMs?: number | undefined;
 }
 
 /**

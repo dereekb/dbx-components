@@ -62,7 +62,7 @@ export interface CreateCliTokenToolDeps {
   /**
    * Roles the caller must hold to see and call the tool. Defaults to {@link DEFAULT_MCP_CLI_TOKEN_REQUIRED_ROLES}.
    */
-  readonly requiredRoles?: ReadonlyArray<AuthRole>;
+  readonly requiredRoles?: ReadonlyArray<AuthRole> | undefined;
   /**
    * Binaries the caller can request by name beside the CLI, from `McpModuleConfig.cliTokenAdditionalDownloads`.
    * Each name must match {@link MCP_CLI_TOKEN_DOWNLOAD_NAME_PATTERN}. When empty or unset the tool's

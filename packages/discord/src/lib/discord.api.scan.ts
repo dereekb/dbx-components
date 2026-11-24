@@ -307,7 +307,7 @@ export function discordScanMessagesFactory<I extends DiscordMessagePageFilter, T
       maxPage: maxPages == null ? null : Math.max(0, maxPages - 1),
       maxItemsPerPage: messagesPerPage,
       maxParallelPages: 1, // cursor bookkeeping and handler ordering both require serial pages
-      waitBetweenPages: waitBetweenPages ?? undefined,
+      ...(waitBetweenPages == null ? {} : { waitBetweenPages }),
       iteratePage: async (fetchPageResult) => {
         const raw = fetchPageResult.result.data;
 

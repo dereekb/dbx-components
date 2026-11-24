@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { LimitedMap, type Maybe } from '@dereekb/util';
 import { OpenRouterTemplateRenderError, type OpenRouterTemplateScriptPhase } from './openrouter.template';
 import { type OpenRouterTemplateScriptError, validateOpenRouterTemplateScript } from './openrouter.template.script';
 import { type OpenRouterTemplateTypeConfig } from './openrouter.template.type';
@@ -9,7 +9,7 @@ import { type OpenRouterTemplateTypeConfig } from './openrouter.template.type';
 export const OPENROUTER_TEMPLATE_SCRIPT_ERROR_MESSAGE_MAX_LENGTH = 300;
 
 /**
- * The most compiled scripts kept per template type. The oldest is dropped first.
+ * The most compiled scripts kept per template type. The least recently used is dropped first.
  */
 export const OPENROUTER_TEMPLATE_COMPILED_SCRIPT_CACHE_MAX_SIZE = 200;
 
@@ -63,9 +63,10 @@ const ASYNC_FUNCTION_CONSTRUCTOR = Object.getPrototypeOf(async function () {
 }).constructor as new (...args: string[]) => (context: object) => Promise<unknown>;
 
 /**
- * Compiled scripts, cached per type config identity and then by phase, output schema and code.
+ * Compiled scripts, cached per type config identity and then by phase, output schema and code — at most
+ * {@link OPENROUTER_TEMPLATE_COMPILED_SCRIPT_CACHE_MAX_SIZE} per type, least recently used dropped first.
  */
-const COMPILED_SCRIPT_CACHE = new WeakMap<OpenRouterTemplateTypeConfig, Map<string, OpenRouterTemplateCompiledScript>>();
+const COMPILED_SCRIPT_CACHE = new WeakMap<OpenRouterTemplateTypeConfig, LimitedMap<string, OpenRouterTemplateCompiledScript>>();
 
 /**
  * Reduces a thrown value to a message safe to return to a script's author: its name and message, truncated. No stack.
@@ -107,7 +108,7 @@ export function compileOpenRouterTemplateScript(config: CompileOpenRouterTemplat
   let typeCache = COMPILED_SCRIPT_CACHE.get(typeConfig);
 
   if (typeCache == null) {
-    typeCache = new Map();
+    typeCache = new LimitedMap<string, OpenRouterTemplateCompiledScript>({ limit: OPENROUTER_TEMPLATE_COMPILED_SCRIPT_CACHE_MAX_SIZE, order: 'recent' });
     COMPILED_SCRIPT_CACHE.set(typeConfig, typeCache);
   }
 
@@ -136,14 +137,6 @@ export function compileOpenRouterTemplateScript(config: CompileOpenRouterTemplat
         throw new OpenRouterTemplateRenderError(`The template script failed: ${sanitizeOpenRouterTemplateScriptError(e)}`);
       }
     };
-
-    if (typeCache.size >= OPENROUTER_TEMPLATE_COMPILED_SCRIPT_CACHE_MAX_SIZE) {
-      const oldestKey = typeCache.keys().next().value;
-
-      if (oldestKey != null) {
-        typeCache.delete(oldestKey);
-      }
-    }
 
     typeCache.set(cacheKey, compiled);
   }

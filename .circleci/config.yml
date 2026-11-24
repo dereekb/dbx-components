@@ -216,6 +216,9 @@ jobs:
           name: run openrouter-firebase tests
           command: npx nx test openrouter-firebase
       - run:
+          name: run llm tests
+          command: npx nx run-all-tests llm
+      - run:
           name: run analytics tests
           command: npx nx run-all-tests analytics
       - store_test_results:

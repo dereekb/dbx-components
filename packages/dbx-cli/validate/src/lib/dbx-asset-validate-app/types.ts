@@ -31,7 +31,7 @@ export interface Violation extends TwoSideViolation {
    * emission time. `undefined` when no catalog entry exists for the
    * code (the formatter renders no nested block in that case).
    */
-  readonly remediation?: RemediationHint;
+  readonly remediation?: RemediationHint | undefined;
 }
 
 export interface ValidationResult extends TwoSideResult {

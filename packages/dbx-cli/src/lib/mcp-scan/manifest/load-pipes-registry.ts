@@ -34,7 +34,7 @@ export type BundledPipeManifestPathsFactory = () => readonly string[];
 export interface LoadPipeRegistryInput {
   readonly cwd: string;
   readonly bundledManifestPaths?: BundledPipeManifestPathsFactory;
-  readonly readFile?: PipeManifestReadFile;
+  readonly readFile?: PipeManifestReadFile | undefined;
 }
 
 /**

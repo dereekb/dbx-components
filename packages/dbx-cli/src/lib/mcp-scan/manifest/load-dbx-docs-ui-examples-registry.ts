@@ -21,7 +21,7 @@ export type BundledDbxDocsUiExamplesManifestPathsFactory = () => readonly string
 export interface LoadDbxDocsUiExamplesRegistryInput {
   readonly cwd: string;
   readonly bundledManifestPaths?: BundledDbxDocsUiExamplesManifestPathsFactory;
-  readonly readFile?: DbxDocsUiExamplesManifestReadFile;
+  readonly readFile?: DbxDocsUiExamplesManifestReadFile | undefined;
 }
 
 export interface LoadDbxDocsUiExamplesRegistryResult {

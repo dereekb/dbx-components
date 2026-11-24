@@ -66,7 +66,7 @@ export interface WorkspaceSnapshot {
  */
 export interface BuildSnapshotInput {
   readonly workspaceRoot: string;
-  readonly explicitDirs?: readonly string[];
+  readonly explicitDirs?: readonly string[] | undefined;
 }
 
 /**

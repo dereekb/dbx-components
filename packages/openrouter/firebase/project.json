@@ -18,6 +18,10 @@
         {
           "projects": ["rxjs"],
           "target": "build"
+        },
+        {
+          "projects": ["llm"],
+          "target": "build"
         }
       ],
       "metadata": {

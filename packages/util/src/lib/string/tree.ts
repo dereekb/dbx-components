@@ -188,11 +188,11 @@ export interface AddToSplitStringTreeInputValueWithMeta<M = unknown> {
   /**
    * The meta value to merge/attach to each node in the tree
    */
-  readonly nodeMeta?: M;
+  readonly nodeMeta?: M | undefined;
   /**
    * The meta value to merge/attach to each leaf node
    */
-  readonly leafMeta?: M;
+  readonly leafMeta?: M | undefined;
 }
 
 /**

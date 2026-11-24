@@ -1,4 +1,4 @@
-import { type Maybe } from '@dereekb/util';
+import { type DefinedValues, type Maybe } from '@dereekb/util';
 import { type CliConfig, loadCliConfig } from './cli.config';
 import { type CliEnvConfig, type CliEnvDefault, applyEnvVarOverrides, findCliEnvDefault, isCliEnvConfigComplete, mergeCliEnvWithDefault } from './env';
 import { type CliPaths } from './paths';
@@ -10,7 +10,7 @@ import { CliError } from '../util/output';
  * Guarantees that the OIDC client fields are present so callers can pass them through to the
  * OIDC client/token helpers without a non-null assertion or extra runtime check.
  */
-export type CliEnvConfigComplete = Required<Pick<CliEnvConfig, 'apiBaseUrl' | 'oidcIssuer' | 'clientId' | 'redirectUri'>> & CliEnvConfig;
+export type CliEnvConfigComplete = DefinedValues<Required<Pick<CliEnvConfig, 'apiBaseUrl' | 'oidcIssuer' | 'clientId' | 'redirectUri'>>> & CliEnvConfig;
 
 /**
  * Builds the conventional `<CLINAME>_ENV` env var name from the CLI binary name.
@@ -35,11 +35,11 @@ export interface ResolveCliEnvInput {
   /**
    * Optional override for the env-name env var. Defaults to {@link getCliEnvVarName}(cliName).
    */
-  readonly envVarName?: string;
+  readonly envVarName?: string | undefined;
   /**
    * Optional built-in env presets merged underneath the user's stored env when names match.
    */
-  readonly defaultEnvs?: readonly CliEnvDefault[];
+  readonly defaultEnvs?: readonly CliEnvDefault[] | undefined;
 }
 
 export interface ResolveCliEnvResult {
@@ -95,7 +95,7 @@ export interface ResolveCliEnvOrThrowInput extends ResolveCliEnvInput {
    * {@link isCliEnvConfigComplete}. The returned env is narrowed to {@link CliEnvConfigComplete}.
    * Defaults to `false`.
    */
-  readonly requireComplete?: boolean;
+  readonly requireComplete?: boolean | undefined;
 }
 
 export interface ResolveCliEnvOrThrowResult<E extends CliEnvConfig = CliEnvConfig> {

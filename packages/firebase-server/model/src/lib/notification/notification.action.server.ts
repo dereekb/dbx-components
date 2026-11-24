@@ -1062,8 +1062,7 @@ export function updateNotificationBoxRecipientExclusionInTransactionFactory(cont
 
       const { update: notificationUserUpdate } = updateNotificationUserNotificationSendExclusions({
         notificationUser,
-        addExclusions: setExclusion ? targetExclusions : undefined,
-        removeExclusions: setExclusion ? undefined : targetExclusions
+        ...(setExclusion ? { addExclusions: targetExclusions } : { removeExclusions: targetExclusions })
       });
 
       await notificationUserDocument.update(notificationUserUpdate);
@@ -2096,7 +2095,7 @@ export function sendNotificationFactory(context: NotificationServerActionsContex
               }
 
               // calculate results
-              const notificationTemplate: NotificationSendFlags & Partial<Notification> = { es, ts, ps, ns, esr, tsr };
+              const notificationTemplate: NotificationSendFlags & Partial<Notification> = { es, ts, ps, ns, ...(esr == null ? {} : { esr }), ...(tsr == null ? {} : { tsr }) };
               success = notificationSendFlagsImplyIsComplete(notificationTemplate);
 
               if (success) {

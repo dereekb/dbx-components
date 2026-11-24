@@ -74,7 +74,7 @@ export interface OnCallCreateModelConfig<N> {
   /**
    * Optional assertion run before the create handler; throw to reject.
    */
-  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallCreateModelParams>;
+  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallCreateModelParams> | undefined;
 }
 
 /**

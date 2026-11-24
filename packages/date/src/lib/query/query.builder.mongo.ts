@@ -24,8 +24,8 @@ export interface TimeFieldsNameSet {
  * A MongoDB-style range filter object with optional upper and lower date bounds.
  */
 export interface MongoDBLikeDateRangeFilter {
-  $lte?: Date;
-  $gte?: Date;
+  $lte?: Date | undefined;
+  $gte?: Date | undefined;
 }
 
 export type MongoDBLikeDateQueryFilter = object;

@@ -33,8 +33,8 @@ import { renderMcpManifest } from './render';
 
 interface LoadedManifest {
   readonly apiManifest: CliApiManifest;
-  readonly modelManifest?: CliModelManifest;
-  readonly enumManifest?: CliEnumManifest;
+  readonly modelManifest?: CliModelManifest | undefined;
+  readonly enumManifest?: CliEnumManifest | undefined;
 }
 
 interface Flags {

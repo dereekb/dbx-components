@@ -60,7 +60,7 @@ export interface ExtractedAuthClaim {
 export interface ExtractedAuthApp {
   readonly app: string;
   readonly claimsInterfaceName: string;
-  readonly serviceConstName?: string;
+  readonly serviceConstName?: string | undefined;
   readonly inheritedInterfaceNames: readonly string[];
   readonly ownClaimKeys: readonly string[];
   readonly filePath: string;

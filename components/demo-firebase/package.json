@@ -1,8 +1,9 @@
 {
   "name": "demo-firebase",
-  "version": "14.30.0",
+  "version": "14.31.0",
   "dependencies": {
     "@dereekb/firebase": "*",
+    "@dereekb/llm": "*",
     "@dereekb/model": "*",
     "@dereekb/openrouter": "*",
     "@dereekb/util": "*",

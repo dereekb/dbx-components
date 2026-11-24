@@ -34,7 +34,7 @@ export type BundledManifestPathsFactory = () => readonly string[];
 export interface LoadSemanticTypeRegistryInput {
   readonly cwd: string;
   readonly bundledManifestPaths?: BundledManifestPathsFactory;
-  readonly readFile?: ManifestReadFile;
+  readonly readFile?: ManifestReadFile | undefined;
 }
 
 /**

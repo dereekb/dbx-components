@@ -69,7 +69,7 @@ export interface DiscoverDownstreamPackagesInput {
    * the default glob discovery is skipped — only these dirs are returned
    * (filtered to those that actually look like packages).
    */
-  readonly explicitDirs?: readonly string[];
+  readonly explicitDirs?: readonly string[] | undefined;
 }
 
 /**

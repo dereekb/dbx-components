@@ -448,8 +448,8 @@ interface BuildFieldsInput {
   readonly converter: ExtractedConverter;
   readonly inheritedProps: ReadonlyMap<string, { readonly name: string; readonly tsType: string; readonly optional: boolean; readonly description: string | undefined; readonly longName: string | undefined; readonly syncFlag: string | undefined }>;
   readonly enumNames: ReadonlySet<string>;
-  readonly subObjectConstIndex?: ReadonlyMap<string, SubObjectConstEntry>;
-  readonly subObjectInterfaceIndex?: ReadonlyMap<string, ExtractedInterface>;
+  readonly subObjectConstIndex?: ReadonlyMap<string, SubObjectConstEntry> | undefined;
+  readonly subObjectInterfaceIndex?: ReadonlyMap<string, ExtractedInterface> | undefined;
 }
 
 function buildFields(input: BuildFieldsInput): readonly FirebaseField[] {

@@ -171,6 +171,8 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
     }
   }
 
+  const resourceMetadataUrl = deriveResourceMetadataUrlFromEnv(envService);
+
   const config: OidcModuleConfig = {
     issuer,
     appOAuthLoginUrlPart: DEFAULT_APP_OAUTH_LOGIN_PATH_PART,
@@ -179,7 +181,7 @@ export function oidcModuleConfigFactory(configService: ConfigService, envService
     tokenLifetimes: DEFAULT_OIDC_TOKEN_LIFETIMES,
     trustProxy: envService.isProduction, // defaults to true in production
     trustProxyInNonProduction: false,
-    resourceMetadataUrl: deriveResourceMetadataUrlFromEnv(envService),
+    ...(resourceMetadataUrl == null ? {} : { resourceMetadataUrl }),
     jwksServiceConfig: {
       encryptionSecret
     },

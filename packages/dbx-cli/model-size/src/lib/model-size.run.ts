@@ -49,7 +49,7 @@ export interface ModelSizeReport {
   /**
    * Solve-for-N result, present when the profile set `solveFor`.
    */
-  readonly solve?: SolveForCountResult;
+  readonly solve?: SolveForCountResult | undefined;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

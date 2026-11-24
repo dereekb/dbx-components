@@ -12,9 +12,9 @@ export const MICROSOFT_OAUTH_TENANT_CONFIG_KEY = 'MICROSOFT_OAUTH_TENANT';
  * missing variable is reported by {@link MicrosoftOAuthServiceConfig.assertValidConfig}.
  */
 export interface MicrosoftOAuthServiceApiConfig {
-  readonly tenantId?: MicrosoftEntraTenantId;
-  readonly clientId?: MicrosoftOAuthClientId;
-  readonly clientSecret?: MicrosoftOAuthClientSecret;
+  readonly tenantId?: MicrosoftEntraTenantId | undefined;
+  readonly clientId?: MicrosoftOAuthClientId | undefined;
+  readonly clientSecret?: MicrosoftOAuthClientSecret | undefined;
 }
 
 /**

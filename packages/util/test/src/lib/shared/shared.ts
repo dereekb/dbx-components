@@ -271,7 +271,7 @@ export interface UseContextFixture<C extends TestContextFixture<I>, I> {
   readonly fixture: C;
   readonly buildTests: BuildTestsWithContextFunction<C>;
   initInstance(): PromiseOrValue<I>;
-  destroyInstance?(instance: I): PromiseOrValue<void>;
+  readonly destroyInstance?: ((instance: I) => PromiseOrValue<void>) | undefined;
 }
 
 /**

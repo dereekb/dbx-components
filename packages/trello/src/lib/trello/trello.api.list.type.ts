@@ -27,11 +27,11 @@ export interface CreateListBody {
   /**
    * The id of the list to copy from. Cannot be used with `idBoard`.
    */
-  readonly idListSource?: TrelloListId;
+  readonly idListSource?: TrelloListId | undefined;
   /**
    * Position of the list (top, bottom, or a positive number).
    */
-  readonly pos?: TrelloPosition;
+  readonly pos?: TrelloPosition | undefined;
 }
 
 export interface UpdateListBody {

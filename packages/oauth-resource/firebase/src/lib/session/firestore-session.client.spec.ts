@@ -5,7 +5,7 @@ const SESSION_BODY = { uid: 'u1', customToken: 'ct', appCheckToken: 'act', expir
 
 describe('fetchFirestoreSession()', () => {
   it('GETs <apiBaseUrl>/session/firestore with a bearer header and returns the parsed credentials', async () => {
-    let captured: { url?: string; init?: RequestInit } = {};
+    let captured: { url?: string; init?: RequestInit | undefined } = {};
     const fetcher = (async (input: unknown, init?: RequestInit) => {
       captured = { url: input as string, init };
       return new Response(JSON.stringify(SESSION_BODY), { status: 200, headers: { 'Content-Type': 'application/json' } });

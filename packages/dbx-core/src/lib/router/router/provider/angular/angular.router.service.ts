@@ -68,7 +68,7 @@ export class DbxAngularRouterService implements DbxRouterService, DbxRouterTrans
       if (Array.isArray(ref)) {
         result = this.router.navigate(ref as unknown[], {
           ...extras,
-          queryParams: segueRef.refParams
+          queryParams: segueRef.refParams ?? null
         });
       } else {
         result = this.router.navigateByUrl(ref as string | UrlTree, {

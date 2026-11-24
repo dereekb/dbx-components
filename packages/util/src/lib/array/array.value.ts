@@ -4,12 +4,12 @@ import { type Maybe, type MaybeNot } from '../value/maybe.type';
 /**
  * Function that takes an optional array of optional values and returns a filtered array with no Maybe values.
  */
-export type FilterMaybeArrayFunction<T> = (value: Maybe<Maybe<T[]>>) => T[];
+export type FilterMaybeArrayFunction<T> = (values: Maybe<ReadonlyArray<Maybe<T>>>) => T[];
 
 /**
  * A generic variant of {@link FilterMaybeArrayFunction} that works with any element type.
  */
-export type UniversalFilterMaybeArrayFunction = <T>(values: Maybe<Maybe<T>[]>) => T[];
+export type UniversalFilterMaybeArrayFunction = <T>(values: Maybe<ReadonlyArray<Maybe<T>>>) => T[];
 
 /**
  * Creates a {@link FilterMaybeArrayFunction} that filters maybe values from an array using the provided filter function.
@@ -25,14 +25,15 @@ export type UniversalFilterMaybeArrayFunction = <T>(values: Maybe<Maybe<T>[]>) =
  *
  * @__NO_SIDE_EFFECTS__
  */
-export function filterMaybeArrayFunction<T>(filterFn: Parameters<Array<Maybe<T>>['filter']>[0]): FilterMaybeArrayFunction<T> {
-  return (values: Maybe<Maybe<T[]>>) => {
+export function filterMaybeArrayFunction<T>(filterFn: (value: Maybe<T>, index: number, array: ReadonlyArray<Maybe<T>>) => unknown): FilterMaybeArrayFunction<T> {
+  return (values: Maybe<ReadonlyArray<Maybe<T>>>) => {
     let result: T[];
 
     if (values == null) {
       result = [];
     } else {
-      result = values.filter((v, i, arr) => filterFn(v, i, arr));
+      // the filter function is responsible for removing the maybe values
+      result = values.filter((v, i, arr) => filterFn(v, i, arr)) as T[];
     }
 
     return result;

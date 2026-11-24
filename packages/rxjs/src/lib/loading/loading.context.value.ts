@@ -48,7 +48,7 @@ export interface LoadingContextConfiguration {
  * ```
  */
 export class ValuesLoadingContext extends SimpleLoadingContext {
-  private _checkDone?: LoadingContextCheckCompletionFunction;
+  private _checkDone?: LoadingContextCheckCompletionFunction | undefined;
 
   constructor({ checkDone, loading = true }: LoadingContextConfiguration = {}) {
     super(loading);

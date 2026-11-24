@@ -27,11 +27,11 @@ export interface SetDeltaChangePair<T, K extends PrimativeKey = PrimativeKey> {
   /**
    * Value as it was in the past set, if applicable.
    */
-  readonly pastValue?: T;
+  readonly pastValue?: T | undefined;
   /**
    * Value as it was in the next set, if applicable.
    */
-  readonly nextValue?: T;
+  readonly nextValue?: T | undefined;
   /**
    * Evaluated value.
    */
@@ -43,7 +43,7 @@ export interface SetDeltaChangePair<T, K extends PrimativeKey = PrimativeKey> {
   /**
    * Whether or not the value was modified.
    */
-  readonly isModified?: boolean;
+  readonly isModified?: boolean | undefined;
 }
 
 /**

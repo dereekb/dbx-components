@@ -129,7 +129,7 @@ export interface CallMcpToolParams {
    * carrying these scopes (exercising the per-verb + per-function scope filter); omit for a plain
    * Firebase caller that bypasses scope filtering.
    */
-  readonly scopes?: string;
+  readonly scopes?: string | undefined;
 }
 
 /**

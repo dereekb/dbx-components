@@ -32,9 +32,9 @@ export type BuildUiManifestGlobber = ScanGlobber;
 export interface BuildUiManifestInput {
   readonly projectRoot: string;
   readonly generator: string;
-  readonly now?: () => Date;
-  readonly readFile?: BuildUiManifestReadFile;
-  readonly globber?: BuildUiManifestGlobber;
+  readonly now?: (() => Date) | undefined;
+  readonly readFile?: BuildUiManifestReadFile | undefined;
+  readonly globber?: BuildUiManifestGlobber | undefined;
 }
 
 /**

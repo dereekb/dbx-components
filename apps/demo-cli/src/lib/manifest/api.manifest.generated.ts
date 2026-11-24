@@ -73,7 +73,7 @@ import {
 } from 'demo-firebase';
 import { type CliApiManifest, type CliGeneratedManifestStamp, type CliModelManifest, type CliEnumManifest } from '@dereekb/dbx-cli';
 
-export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.29.0' };
+export const DEMO_CLI_API_MANIFEST_STAMP: CliGeneratedManifestStamp = { generatorVersion: '14.30.0' };
 
 export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
   {
@@ -689,7 +689,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
       { name: 'client_id', typeText: 'OidcEntryClientId' },
       {
         name: 'client_secret',
-        typeText: 'string',
+        typeText: 'string | undefined',
         description:
           'The generated client secret in plaintext. Only returned for auth methods that require a secret\n(e.g., `client_secret_basic`, `client_secret_post`, `client_secret_jwt`). Undefined for the\nsecret-less methods `private_key_jwt` and `none` (public PKCE client) — those clients never\nhave a secret to return.'
       }
@@ -1383,7 +1383,7 @@ export const DEMO_CLI_API_MANIFEST: CliApiManifest = [
     ],
     resultTypeDescription: "Result of reading the calling user's connection data.",
     resultFields: [
-      { name: 'data', typeText: 'UserExternalConnectionDataMap', description: 'The values, keyed provider type → data type → item key. Absent with `keysOnly`.' },
+      { name: 'data', typeText: 'UserExternalConnectionDataMap | undefined', description: 'The values, keyed provider type → data type → item key. Absent with `keysOnly`.' },
       { name: 'items', typeText: 'readonly UserExternalConnectionDataItemSummary[]', description: 'A summary of every matching item.' },
       { name: 'dataTypes', typeText: 'readonly UserExternalConnectionDataTypeSummary[]', description: 'The data types the caller may store (for the matching provider), so a caller can discover what to save.' }
     ]
@@ -1980,7 +1980,7 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'i', longName: 'instructions', tsType: 'Maybe<string>', optional: true, description: 'System prompt.' },
       { name: 'm', longName: 'messages', tsType: 'Maybe<OpenRouterPromptVersionMessage[]>', optional: true, description: "Static seed messages, emitted before the caller's dynamic input." },
       { name: 'c', longName: 'config', tsType: 'Maybe<OpenRouterModelConfig>', optional: true, description: 'Model configuration.' },
-      { name: 'q', longName: 'questions', tsType: 'Maybe<OpenRouterDecisionQuestions>', optional: true, description: 'The questions this version declares, when it is a DECISION prompt.' },
+      { name: 'q', longName: 'questions', tsType: 'Maybe<LlmDecisionQuestions>', optional: true, description: 'The questions this version declares, when it is a DECISION prompt.' },
       { name: 'nt', longName: 'notes', tsType: 'Maybe<string>', optional: true, description: 'Why this version was published.' },
       { name: 'by', longName: 'createdBy', tsType: 'Maybe<FirebaseAuthUserId>', optional: true, description: 'Uid of whoever published it, following the `StorageFile.uby` / `NotificationItem.cb` precedent.' },
       { name: 'lk', longName: 'locked', tsType: 'Maybe<boolean>', optional: true, description: 'Whether the version is locked against further edits.' },
@@ -2018,11 +2018,11 @@ export const DEMO_CLI_MODEL_MANIFEST: CliModelManifest = [
       { name: 'fp', longName: 'files', tsType: 'Maybe<OpenRouterFileReference[]>', optional: true, description: 'Files to attach, as GCS object paths — never signed URLs. See {@link OpenRouterFileReference} for why.' },
       { name: 'fa', longName: 'fileAnnotations', tsType: 'Maybe<OpenRouterFileAnnotation[]>', optional: true, description: 'Cached `file-parser` annotations, resubmitted on retries and chained calls so an already-parsed PDF is not parsed again. See {@link OpenRouterFileAnnotation} for what a re-parse costs.' },
       { name: 'co', longName: 'configOverrides', tsType: 'Maybe<OpenRouterModelConfig>', optional: true, description: "Per-run overrides applied on top of the version's config. Passthrough JSON, for the reason {@link OpenRouterModelConfig} states." },
-      { name: 'st', longName: 'state', tsType: 'Maybe<OpenRouterStorableDecisionState>', optional: true, description: 'The content to judge, on a DECISION run.' },
-      { name: 'q', longName: 'questions', tsType: 'Maybe<OpenRouterDecisionQuestions>', optional: true, description: "Questions declared by the caller for THIS run, merged over the version's own stored questions." },
+      { name: 'st', longName: 'state', tsType: 'Maybe<LlmStorableDecisionState>', optional: true, description: 'The content to judge, on a DECISION run.' },
+      { name: 'q', longName: 'questions', tsType: 'Maybe<LlmDecisionQuestions>', optional: true, description: "Questions declared by the caller for THIS run, merged over the version's own stored questions." },
       { name: 'o', longName: 'outputText', tsType: 'Maybe<string>', optional: true, description: 'The output text.' },
       { name: 'j', longName: 'outputJson', tsType: 'Maybe<Record<string, unknown>>', optional: true, description: 'The output parsed as JSON, when it parsed as an object.' },
-      { name: 'an', longName: 'answers', tsType: 'Maybe<OpenRouterDecisionAnswers>', optional: true, description: 'The answers, on a completed DECISION run.' },
+      { name: 'an', longName: 'answers', tsType: 'Maybe<LlmDecisionAnswers>', optional: true, description: 'The answers, on a completed DECISION run.' },
       { name: 'gi', longName: 'generationIds', tsType: 'Maybe<OpenRouterGenerationId[]>', optional: true, description: 'Generation ids produced, for auditing via `getGeneration` / `listGenerationContent`.' },
       { name: 'u', longName: 'usage', tsType: 'Maybe<OpenRouterRunUsage>', optional: true, description: 'Token and cost usage.' },
       { name: 'e', longName: 'error', tsType: 'Maybe<OpenRouterRunError>', optional: true, description: 'Why the run failed.' },

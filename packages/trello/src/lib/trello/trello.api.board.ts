@@ -182,19 +182,19 @@ export interface ListBoardActionsInput {
    *
    * @see https://developer.atlassian.com/cloud/trello/guides/rest-api/action-types/
    */
-  readonly filter?: TrelloActionType;
+  readonly filter?: TrelloActionType | undefined;
   /**
    * Maximum number of actions to return. Defaults to 50 server-side; max is 1000.
    */
-  readonly limit?: number;
+  readonly limit?: number | undefined;
   /**
    * Cursor: return actions before this action id (older). Also accepts an ISO 8601 date string.
    */
-  readonly before?: string;
+  readonly before?: string | undefined;
   /**
    * Cursor: return actions since this action id (newer). Also accepts an ISO 8601 date string.
    */
-  readonly since?: string;
+  readonly since?: string | undefined;
 }
 
 export type ListBoardActionsFunction = <D = unknown>(input: ListBoardActionsInput) => Promise<ReadonlyArray<TrelloAction<D>>>;

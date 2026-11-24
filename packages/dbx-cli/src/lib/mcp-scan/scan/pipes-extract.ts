@@ -122,15 +122,15 @@ export function extractPipeEntries(input: ExtractPipeEntriesInput): ExtractPipeE
 interface ParsedPipeTags {
   readonly hasMarker: boolean;
   readonly summary: string;
-  readonly slug?: string;
-  readonly category?: string;
+  readonly slug?: string | undefined;
+  readonly category?: string | undefined;
   readonly relatedSlugs: readonly string[];
   readonly skillRefs: readonly string[];
   readonly examples: readonly string[];
-  readonly inputTypeOverride?: string;
-  readonly outputTypeOverride?: string;
-  readonly deprecated?: boolean | string;
-  readonly since?: string;
+  readonly inputTypeOverride?: string | undefined;
+  readonly outputTypeOverride?: string | undefined;
+  readonly deprecated?: boolean | string | undefined;
+  readonly since?: string | undefined;
 }
 
 interface MutableTagState {

@@ -8,8 +8,8 @@ import type { ApiLookupReport } from './types.js';
 export interface LookupApiOptions {
   readonly componentAbs: string;
   readonly componentDir: string;
-  readonly apiAbs?: string;
-  readonly apiDir?: string;
+  readonly apiAbs?: string | undefined;
+  readonly apiDir?: string | undefined;
   readonly modelFilter: string;
 }
 

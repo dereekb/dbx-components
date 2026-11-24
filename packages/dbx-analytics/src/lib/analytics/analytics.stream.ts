@@ -86,5 +86,5 @@ export interface DbxAnalyticsStreamEvent {
   readonly type: DbxAnalyticsStreamEventType;
   readonly user?: Maybe<AnalyticsUser>;
   readonly event?: UserAnalyticsEvent;
-  readonly userId?: AnalyticsUserId;
+  readonly userId?: AnalyticsUserId | undefined;
 }

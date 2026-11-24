@@ -159,7 +159,7 @@ export function roundToPrecisionFunction(precision: NumberPrecision, roundFn: Ro
     result = (value) => cutToPrecision(value, precision);
   } else {
     const rndFn = roundingFunction(roundFn);
-    result = (value) => +(rndFn(Number(value + 'e+' + precision)) + 'e-' + precision);
+    result = (value) => roundWithDecimalShift(value, precision, rndFn);
   }
 
   return result;
@@ -173,7 +173,7 @@ export function roundToPrecisionFunction(precision: NumberPrecision, roundFn: Ro
  * @returns The rounded number.
  */
 export function roundToPrecision(value: number, precision: NumberPrecision): number {
-  return +(Math.round(Number(value + 'e+' + precision)) + 'e-' + precision);
+  return roundWithDecimalShift(value, precision, Math.round);
 }
 
 /**
@@ -189,7 +189,34 @@ export function roundToPrecision(value: number, precision: NumberPrecision): num
 export function cutToPrecision(value: number, precision: NumberPrecision): number {
   // use floor for positive numbers, ceil for negative numbers
   const rndFn = value > 0 ? Math.floor : Math.ceil;
-  return +(rndFn(Number(value + 'e+' + precision)) + 'e-' + precision);
+  return roundWithDecimalShift(value, precision, rndFn);
+}
+
+/**
+ * Shifts a number's decimal point by `places` through its string form, so the shift is exact for decimal input.
+ *
+ * Handles exponent-form strings (`1e-7`, `5e+21`) by adding `places` to the exponent.
+ *
+ * @param value - A finite number.
+ * @param places - How many places to shift (positive moves the point right).
+ * @returns The shifted number.
+ */
+function shiftDecimalPoint(value: number, places: number): number {
+  const [mantissa, exponent] = String(value).split('e');
+  return Number(`${mantissa}e${Number(exponent ?? 0) + places}`);
+}
+
+/**
+ * Rounds `value` to `precision` decimal places with `rndFn`, shifting the decimal point through the number's string form.
+ * Non-finite values are returned unchanged.
+ *
+ * @param value - The number to round.
+ * @param precision - Decimal places to keep; may be negative to round to tens, hundreds, ….
+ * @param rndFn - The integer rounding function.
+ * @returns The rounded number.
+ */
+function roundWithDecimalShift(value: number, precision: NumberPrecision, rndFn: (x: number) => number): number {
+  return Number.isFinite(value) ? shiftDecimalPoint(rndFn(shiftDecimalPoint(value, precision)), -precision) : value;
 }
 
 // MARK: Steps

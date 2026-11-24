@@ -42,11 +42,11 @@ export interface ScoredCssUtilityMatch {
  * specific parent's children.
  */
 export interface SearchByDeclarationsOptions {
-  readonly limit?: number;
-  readonly minScore?: number;
-  readonly role?: string;
-  readonly parent?: string;
-  readonly includeChildren?: boolean;
+  readonly limit?: number | undefined;
+  readonly minScore?: number | undefined;
+  readonly role?: string | undefined;
+  readonly parent?: string | undefined;
+  readonly includeChildren?: boolean | undefined;
 }
 
 /**
@@ -54,9 +54,9 @@ export interface SearchByDeclarationsOptions {
  * semantics of {@link SearchByDeclarationsOptions}.
  */
 export interface FindByIntentOptions {
-  readonly role?: string;
-  readonly parent?: string;
-  readonly includeChildren?: boolean;
+  readonly role?: string | undefined;
+  readonly parent?: string | undefined;
+  readonly includeChildren?: boolean | undefined;
 }
 
 /**
@@ -373,8 +373,8 @@ interface PickCandidatePoolInput {
   readonly all: readonly CssUtilityEntry[];
   readonly byRole: ReadonlyMap<string, readonly CssUtilityEntry[]>;
   readonly byParent: ReadonlyMap<string, readonly CssUtilityEntry[]>;
-  readonly role?: string;
-  readonly parent?: string;
+  readonly role?: string | undefined;
+  readonly parent?: string | undefined;
 }
 
 /**

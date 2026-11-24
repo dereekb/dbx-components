@@ -122,12 +122,12 @@ export interface CreateDoctorCommandInput {
   /**
    * Additional checks to append after the default check list.
    */
-  readonly checks?: DoctorCheck[];
+  readonly checks?: DoctorCheck[] | undefined;
   /**
    * Built-in env presets. Resolved by env name and merged underneath the user's stored config so
    * doctor can run against an env that only stores overrides on top of a registered default.
    */
-  readonly defaultEnvs?: readonly CliEnvDefault[];
+  readonly defaultEnvs?: readonly CliEnvDefault[] | undefined;
   /**
    * The generator version stamped into the app's generated manifests, forwarded to the built-in
    * build-drift check.

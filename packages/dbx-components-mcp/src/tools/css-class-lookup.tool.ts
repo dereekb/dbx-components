@@ -76,13 +76,13 @@ const CssClassLookupArgs = type({
 });
 
 interface ParsedArgs {
-  readonly name?: string;
-  readonly declarations?: string;
-  readonly intent?: string;
-  readonly role?: string;
-  readonly category?: string;
-  readonly parent?: string;
-  readonly includeChildren?: boolean;
+  readonly name?: string | undefined;
+  readonly declarations?: string | undefined;
+  readonly intent?: string | undefined;
+  readonly role?: string | undefined;
+  readonly category?: string | undefined;
+  readonly parent?: string | undefined;
+  readonly includeChildren?: boolean | undefined;
 }
 
 function parseArgs(raw: unknown): ParsedArgs {

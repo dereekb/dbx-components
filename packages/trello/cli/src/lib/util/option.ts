@@ -1,6 +1,6 @@
 import { CliError } from '@dereekb/dbx-cli';
 import { TRELLO_API_URL, type TrelloBoardId, type TrelloCardId, type TrelloContext, type TrelloList, type TrelloPosition, listBoardLists, matchTrelloList, parseTrelloCardRef } from '@dereekb/trello';
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, toMaybeString } from '@dereekb/util';
 import { readFile } from 'node:fs/promises';
 import type { Argv } from 'yargs';
 
@@ -23,7 +23,7 @@ export const TRELLO_CLI_ALLOWED_API_HOSTS: readonly string[] = ['api.trello.com'
  * @throws {CliError} `INVALID_ARGUMENT` when the value is not a card reference.
  */
 export function parseTrelloCliCardArg(value: unknown): TrelloCardId {
-  const text = value == null ? undefined : String(value);
+  const text = toMaybeString(value);
   const parsed = parseTrelloCardRef(text);
 
   if (!parsed) {

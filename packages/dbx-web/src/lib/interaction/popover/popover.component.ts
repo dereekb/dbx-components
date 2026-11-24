@@ -135,7 +135,7 @@ export class DbxPopoverComponent<O = unknown, I = unknown, T = unknown> extends 
   /**
    * Optional function that provides the value to close with. A value that is not a promise closes the popover right away.
    */
-  getClosingValueFn?: (value: Maybe<I>, closeType: NgPopoverCloseType) => PromiseOrValue<O | undefined>;
+  getClosingValueFn?: ((value: Maybe<I>, closeType: NgPopoverCloseType) => PromiseOrValue<O | undefined>) | undefined;
 
   constructor() {
     super();

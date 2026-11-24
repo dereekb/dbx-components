@@ -67,8 +67,8 @@ interface DbxDetachEntryState<T = unknown> {
   readonly componentRef: ComponentRef<T>;
   readonly controller: DbxDetachEntryController;
   readonly overlayConfig: DbxDetachOverlayConfig;
-  overlayRef?: NgPopoverRef<DbxDetachOverlayData>;
-  currentOutlet?: Element;
+  overlayRef?: NgPopoverRef<DbxDetachOverlayData> | undefined;
+  currentOutlet?: Element | undefined;
   lastOutlet?: Element;
 }
 

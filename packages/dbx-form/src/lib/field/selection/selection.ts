@@ -21,8 +21,8 @@ export interface SelectionValue<T, M = unknown> {
  * Displayed value.
  */
 export interface SelectionDisplayValue<T, M = unknown> extends SelectionValue<T, M>, LabelRef {
-  readonly sublabel?: string;
-  readonly icon?: string;
+  readonly sublabel?: string | undefined;
+  readonly icon?: string | undefined;
   /**
    * Whether or not the value is known.
    */

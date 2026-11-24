@@ -103,11 +103,11 @@ export interface DbxForgeTextPasswordWithVerifyFieldConfig {
   /**
    * Optional configuration for the primary password field.
    */
-  readonly password?: DbxForgeTextPasswordFieldConfig;
+  readonly password?: DbxForgeTextPasswordFieldConfig | undefined;
   /**
    * Optional configuration for the verify/confirm password field.
    */
-  readonly verifyPassword?: DbxForgeTextPasswordFieldConfig;
+  readonly verifyPassword?: DbxForgeTextPasswordFieldConfig | undefined;
 }
 
 /**

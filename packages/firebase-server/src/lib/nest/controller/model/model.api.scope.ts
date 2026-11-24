@@ -26,7 +26,7 @@ export interface ModelApiOidcScopeConfig {
    * require e.g. `'hellosubs'` across all models without editing individual handlers. Set this to the
    * SAME value passed to the MCP `McpModuleConfig.defaultRequiredScope` so tool listing == callability.
    */
-  readonly defaultRequiredScope?: OidcScopeTerm;
+  readonly defaultRequiredScope?: OidcScopeTerm | undefined;
   /**
    * Per-model group-term overrides keyed by {@link FirestoreModelType}. The ONLY place a plain `/get`
    * read (which has no per-function handler) can be scope-gated beyond the per-verb `model.read` scope.
@@ -34,7 +34,7 @@ export interface ModelApiOidcScopeConfig {
    * this to the SAME value passed to the MCP `McpModuleConfig.modelRequiredScopes` so tool listing ==
    * callability.
    */
-  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;
+  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement> | undefined;
 }
 
 // MARK: Scope Reading

@@ -196,7 +196,7 @@ export interface PagedItemFirestoreCollectionConfig<T, PT, D extends FirestoreDo
    * scheme-based static distribution. When omitted, the collection uses
    * dynamic count-based paging.
    */
-  readonly distributionScheme?: PagedItemDistributionScheme<T>;
+  readonly distributionScheme?: PagedItemDistributionScheme<T> | undefined;
   /**
    * Max items per page document. Only used in dynamic mode. Defaults to
    * {@link DEFAULT_PAGED_ITEM_MAX_ITEMS_PER_PAGE}.

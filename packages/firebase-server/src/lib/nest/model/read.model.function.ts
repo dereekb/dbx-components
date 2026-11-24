@@ -66,7 +66,7 @@ export interface OnCallReadModelConfig<N> {
   /**
    * Optional assertion run before the read handler; throw to reject.
    */
-  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallReadModelParams>;
+  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallReadModelParams> | undefined;
 }
 
 /**

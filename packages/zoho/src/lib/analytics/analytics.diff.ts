@@ -79,8 +79,8 @@ export interface ZohoAnalyticsSchemaDiffDroppedColumn {
  */
 export interface ZohoAnalyticsSchemaDiffEmptyColumn {
   readonly columnName: ZohoAnalyticsName;
-  readonly dataType?: ZohoAnalyticsColumnDataType;
-  readonly isNullable?: boolean;
+  readonly dataType?: ZohoAnalyticsColumnDataType | undefined;
+  readonly isNullable?: boolean | undefined;
   /**
    * Whether omitting the column is expected to fail rather than just leave a gap: it is explicitly
    * not nullable and carries no default value.

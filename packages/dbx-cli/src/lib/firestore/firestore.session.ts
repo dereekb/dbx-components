@@ -35,17 +35,17 @@ export interface CreateCliFirestoreSessionContextInput {
   /**
    * Custom fetch implementation for tests.
    */
-  readonly fetcher?: typeof fetch;
+  readonly fetcher?: typeof fetch | undefined;
   /**
    * Optional on-disk session cache. When supplied, a live cached envelope for {@link envName} is
    * reused instead of re-minting one, and a freshly minted envelope is written back.
    */
-  readonly sessionCache?: CliFirestoreSessionCacheStore;
+  readonly sessionCache?: CliFirestoreSessionCacheStore | undefined;
   /**
    * Skips the cache read for this call and re-mints, still writing the result back. Used by
    * `doctor` and by a retry after a sign-in failure.
    */
-  readonly refreshSession?: boolean;
+  readonly refreshSession?: boolean | undefined;
 }
 
 /**

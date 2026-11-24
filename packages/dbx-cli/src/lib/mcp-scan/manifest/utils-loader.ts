@@ -35,7 +35,7 @@ export type UtilLoaderWarning = ManifestLoaderWarning;
  */
 export interface LoadUtilManifestsInput {
   readonly sources: readonly UtilManifestSource[];
-  readonly readFile?: UtilManifestReadFile;
+  readonly readFile?: UtilManifestReadFile | undefined;
 }
 
 /**

@@ -178,7 +178,7 @@ function formatTagLookup(registry: AuthRegistry, tag: string, depth: 'brief' | '
   return lines.join('\n').trimEnd();
 }
 
-function formatReverseLookup(input: { readonly registry: AuthRegistry; readonly model?: string; readonly verb?: string }): string {
+function formatReverseLookup(input: { readonly registry: AuthRegistry; readonly model?: string | undefined; readonly verb?: string | undefined }): string {
   const { registry, model, verb } = input;
   const lines: string[] = ['# Reverse lookup'];
   lines.push('', bullet('model', model === undefined ? '_(unspecified)_' : `\`${model}\``), bullet('verb', verb === undefined ? '_(unspecified)_' : `\`${verb}\``), '');

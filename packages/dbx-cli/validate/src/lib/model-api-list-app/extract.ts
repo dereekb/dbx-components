@@ -19,7 +19,7 @@ const MODEL_SUBPATH = 'src/lib';
 export interface ExtractApiListInput {
   readonly componentAbs: string;
   readonly componentDir: string;
-  readonly modelFilter?: string;
+  readonly modelFilter?: string | undefined;
 }
 
 export interface ExtractApiListResult {

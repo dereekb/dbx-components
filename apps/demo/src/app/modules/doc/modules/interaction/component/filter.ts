@@ -223,7 +223,7 @@ export function docInteractionTestAttributesFilterSelectionCount(filter: Maybe<D
 export function refreshDocInteractionTestDatePresetFilter(filter: DocInteractionTestFilter): DocInteractionTestFilter {
   const preset = filter.preset ? DOC_INTERACTION_DATE_TEST_PRESETS.find((x) => x.preset === filter.preset) : undefined;
   const presetValue = preset ? (getValueFromGetter(preset.presetValue) as Maybe<DocInteractionTestFilter>) : undefined;
-  return presetValue ? { ...presetValue, preset: filter.preset } : filter;
+  return preset && presetValue ? { ...presetValue, preset: preset.preset } : filter;
 }
 
 // MARK: URL Filter

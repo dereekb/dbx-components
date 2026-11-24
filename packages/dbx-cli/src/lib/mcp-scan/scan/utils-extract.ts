@@ -139,17 +139,17 @@ export function extractUtilEntries(input: ExtractUtilEntriesInput): ExtractUtilE
 // MARK: JSDoc parsing
 interface ParsedUtilTags {
   readonly summary: string;
-  readonly slug?: string;
-  readonly category?: string;
+  readonly slug?: string | undefined;
+  readonly category?: string | undefined;
   readonly explicitTags: readonly string[];
   readonly relatedSlugs: readonly string[];
   readonly skillRefs: readonly string[];
-  readonly kindOverride?: string;
+  readonly kindOverride?: string | undefined;
   readonly examples: readonly string[];
   readonly paramDescriptions: ReadonlyMap<string, string>;
-  readonly returnsText?: string;
-  readonly deprecated?: boolean | string;
-  readonly since?: string;
+  readonly returnsText?: string | undefined;
+  readonly deprecated?: boolean | string | undefined;
+  readonly since?: string | undefined;
 }
 
 interface MutableTagState {

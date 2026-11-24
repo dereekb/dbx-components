@@ -70,8 +70,8 @@ const DecodeArgsType = type({
 
 interface ParsedDecodeArgs {
   readonly data?: unknown;
-  readonly key?: string;
-  readonly model?: string;
+  readonly key?: string | undefined;
+  readonly model?: string | undefined;
 }
 
 function parseDecodeArgs(raw: unknown): ParsedDecodeArgs {
@@ -89,7 +89,7 @@ function parseDecodeArgs(raw: unknown): ParsedDecodeArgs {
 
 interface Document {
   readonly doc: Readonly<Record<string, unknown>>;
-  readonly extraKey?: string;
+  readonly extraKey?: string | undefined;
 }
 
 function coerceToDocument(data: unknown): Document {
@@ -196,7 +196,7 @@ function buildPrefixMap(): Map<string, string> {
 interface DecodedSegment {
   readonly prefix: string;
   readonly id: string;
-  readonly model?: FirebaseModel;
+  readonly model?: FirebaseModel | undefined;
 }
 
 interface DecodedKeyPath {

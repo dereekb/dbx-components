@@ -53,7 +53,7 @@ export interface OpenStreamingDumpParams {
 
 interface WriteBothInput {
   readonly mainContent: string;
-  readonly pickContent?: string;
+  readonly pickContent?: string | undefined;
   readonly append: boolean;
 }
 

@@ -12,7 +12,7 @@ export interface QueryPublishedGuestbookEntriesDirectInput {
   /**
    * Max guestbooks to visit. Unbounded when omitted.
    */
-  readonly limit?: number;
+  readonly limit?: number | undefined;
 }
 
 /**

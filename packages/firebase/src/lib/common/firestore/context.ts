@@ -238,7 +238,7 @@ export interface FirestoreContextPagedItemFirestoreCollectionConfig<T, PT, D ext
 > {
   readonly converter?: FirestoreContextFirestoreCollectionWithParentConfig<PagedItemPageData<T>, PT, D, PD>['converter'];
   readonly indexDocumentId?: string;
-  readonly distributionScheme?: PagedItemDistributionScheme<T>;
+  readonly distributionScheme?: PagedItemDistributionScheme<T> | undefined;
   readonly maxItemsPerPage?: number;
   readonly itemConverter?: PagedItemConverter<T>;
 }

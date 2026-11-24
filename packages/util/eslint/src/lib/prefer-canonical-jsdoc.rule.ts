@@ -39,7 +39,11 @@ export interface UtilPreferCanonicalJsdocRuleDefinition {
     readonly messages: Readonly<Record<string, string>>;
     readonly schema: readonly object[];
   };
-  create(context: { options: UtilPreferCanonicalJsdocRuleOptions[]; report: (descriptor: { node?: AstNode; loc?: AstNode; messageId: string; data?: Record<string, string>; fix?: (fixer: AstNode) => Maybe<AstNode | AstNode[]> }) => void; sourceCode: AstNode }): Record<string, (node: AstNode) => void>;
+  create(context: {
+    options: UtilPreferCanonicalJsdocRuleOptions[];
+    report: (descriptor: { node?: AstNode; loc?: AstNode; messageId: string; data?: Record<string, string> | undefined; fix?: ((fixer: AstNode) => Maybe<AstNode | AstNode[]>) | undefined }) => void;
+    sourceCode: AstNode;
+  }): Record<string, (node: AstNode) => void>;
 }
 
 const DEFAULT_WORKSPACE_TAG_PREFIXES: readonly string[] = ['dbxUtil', 'dbxPipe', 'dbxModel', 'dbxForm', 'dbxAction', 'dbxWeb', 'dbxFilter', 'dbxAuth', 'dbxDocsUiExample', 'dbxRule', 'see'];

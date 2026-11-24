@@ -70,6 +70,7 @@ export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends
   }
 
   const authUserStateObs = config.authUserStateObs ?? authUserStateFromFirebaseAuthServiceFunction(config.stateForLoggedInUserToken ? stateFromTokenForLoggedInUserFunction(config.stateForLoggedInUserToken) : config.stateForLoggedInUser);
+  const loadImpersonationAuthDetails = config.loadImpersonationAuthDetails ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.loadImpersonationAuthDetails;
 
   return {
     authUserStateObs,
@@ -79,6 +80,6 @@ export function defaultDbxFirebaseAuthServiceDelegateWithClaimsService<T extends
     authRoleClaimsService: config.claimsService as unknown as AuthRoleClaimsService<AuthClaimsObject>,
     sendPasswordReset: config.sendPasswordReset ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.sendPasswordReset,
     completePasswordReset: config.completePasswordReset ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.completePasswordReset,
-    loadImpersonationAuthDetails: config.loadImpersonationAuthDetails ?? DEFAULT_DBX_FIREBASE_AUTH_SERVICE_DELEGATE.loadImpersonationAuthDetails
+    ...(loadImpersonationAuthDetails == null ? {} : { loadImpersonationAuthDetails })
   };
 }

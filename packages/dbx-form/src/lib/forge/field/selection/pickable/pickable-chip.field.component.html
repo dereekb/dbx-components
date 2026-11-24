@@ -9,14 +9,14 @@
     </div>
   }
   <div class="dbx-pickable-item-field-chips">
-    <mat-chip-listbox [multiple]="multiSelectSignal()" [selectable]="!isDisabledOrReadonlySignal()" [disabled]="isDisabledOrReadonlySignal()" [attr.aria-invalid]="ariaInvalidSignal()" [attr.aria-describedby]="ariaDescribedBySignal()">
+    <mat-chip-listbox [multiple]="multiSelectSignal()" [value]="listboxValueSignal()" [selectable]="!isDisabledOrReadonlySignal()" [disabled]="isDisabledOrReadonlySignal()" [attr.aria-invalid]="ariaInvalidSignal()" [attr.aria-describedby]="ariaDescribedBySignal()">
       @if (showSelectAllButtonSignal() && multiSelectSignal() && !isDisabledOrReadonlySignal()) {
-        <mat-chip-option (click)="toggleAll()" [selected]="allSelectedSignal()">
+        <mat-chip-option [value]="selectAllChipValue" (selectionChange)="selectAllSelectionChange($event)" [selected]="allSelectedSignal()">
           <span class="dbx-chip-label">All</span>
         </mat-chip-option>
       }
       @for (item of itemsSignal(); track item.key) {
-        <mat-chip-option (click)="itemClicked(item)" [selected]="item.selected" [disabled]="readonlySignal() || item.disabled">
+        <mat-chip-option [value]="item.key" (selectionChange)="itemSelectionChange($event, item)" [selected]="item.selected" [disabled]="readonlySignal() || item.disabled">
           @if (item.itemValue.icon) {
             <mat-icon matChipAvatar>{{ item.itemValue.icon }}</mat-icon>
           }

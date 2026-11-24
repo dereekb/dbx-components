@@ -1046,7 +1046,7 @@ describe('DbxValueListViewContentComponent', () => {
  * Returns the item signal a component created from the input config injects.
  */
 function itemSignalForConfig<T>(config: DbxInjectionComponentConfig, parent?: Injector) {
-  const injector = Injector.create({ providers: config.providers as StaticProvider[], parent });
+  const injector = Injector.create({ providers: config.providers as StaticProvider[], ...(parent == null ? {} : { parent }) });
   return runInInjectionContext(injector, () => injectDbxValueListViewItemSignal<DbxValueListItem<T>>());
 }
 

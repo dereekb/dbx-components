@@ -14,7 +14,7 @@ export type EmailAddress = string;
  * Interface representing a pair of a name and an email address.
  */
 export interface NameEmailPair {
-  name?: string;
+  name?: string | undefined;
   email: EmailAddress;
 }
 

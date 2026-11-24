@@ -13,8 +13,8 @@ export const DISCORD_CLIENT_SECRET_CONFIG_KEY = 'DISCORD_CLIENT_SECRET';
  * `undefined` further down.
  */
 export interface DiscordOAuthServiceApiConfig {
-  readonly clientId?: DiscordOAuthClientId;
-  readonly clientSecret?: DiscordOAuthClientSecret;
+  readonly clientId?: DiscordOAuthClientId | undefined;
+  readonly clientSecret?: DiscordOAuthClientSecret | undefined;
 }
 
 /**

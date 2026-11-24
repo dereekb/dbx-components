@@ -16,7 +16,8 @@
       "!{projectRoot}/cypress/**/*",
       "!{projectRoot}/**/*.cy.[jt]s?(x)",
       "!{projectRoot}/cypress.config.[jt]s"
-    ]
+    ],
+    "liveSpecFlags": [{ "env": "LLM_LIVE_SPECS" }, { "env": "OPENROUTER_LIVE_SPECS" }]
   },
   "tui": {
     "enabled": false
@@ -43,20 +44,20 @@
     "run-many": {},
     "run-all-tests": {
       "dependsOn": ["build"],
-      "inputs": ["default", "^default", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
+      "inputs": ["default", "^default", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts", "liveSpecFlags"],
       "outputs": ["{projectRoot}/.reports/vitest/{projectName}.junit.xml"],
       "cache": true
     },
     "run-tests": {
       "cache": true,
       "dependsOn": ["build"],
-      "inputs": ["default", "^production", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
+      "inputs": ["default", "^production", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts", "liveSpecFlags"],
       "outputs": ["{projectRoot}/.reports/vitest/{projectName}.junit.xml"]
     },
     "test": {
       "cache": true,
       "dependsOn": ["build"],
-      "inputs": ["default", "^production", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts"],
+      "inputs": ["default", "^production", "{workspaceRoot}/vitest.preset.config.mts", "{workspaceRoot}/vitest.setup.*.ts", "liveSpecFlags"],
       "outputs": ["{projectRoot}/.reports/vitest/{projectName}.junit.xml"]
     },
     "ci-publish-npmjs": {},

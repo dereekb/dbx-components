@@ -33,7 +33,7 @@ export interface TrelloWriteRequest {
   /**
    * The fields to set, sent as the JSON body. Undefined when every given field was cleared, so the request carries no body.
    */
-  readonly body?: Record<string, unknown>;
+  readonly body?: Record<string, unknown> | undefined;
 }
 
 /**

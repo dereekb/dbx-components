@@ -171,7 +171,7 @@ export interface NotificationTaskSubtaskProcessorConfig<
    *
    * If not provided, the default cleanup actions will take place.
    */
-  readonly cleanup?: NotificationTaskSubtaskProcessorCleanupInstructionsFunction<I, CUI, D, M, S>;
+  readonly cleanup?: NotificationTaskSubtaskProcessorCleanupInstructionsFunction<I, CUI, D, M, S> | undefined;
   /**
    * If true, then results returned by this processor will set "canRunNextCheckpoint" to true if it is undefined.
    */
@@ -367,7 +367,7 @@ export function notificationTaskSubtaskNotificationTaskHandlerFactory<
       S extends NotificationTaskSubtaskCheckpointString = NotificationTaskSubtaskCheckpointString
     > {
       readonly process: NotificationTaskSubtaskProcessorProcessFunction<I, D, M, S>;
-      readonly cleanup?: NotificationTaskSubtaskProcessorCleanupInstructionsFunction<I, CUI, D, M, S>;
+      readonly cleanup?: NotificationTaskSubtaskProcessorCleanupInstructionsFunction<I, CUI, D, M, S> | undefined;
     }
 
     const processors: Record<NotificationTaskSubtaskTarget, NotificationTaskSubtaskProcessor<I, CUI, D, M, S>> = {};

@@ -87,7 +87,7 @@ export interface OnCallQueryModelConfig<N> {
   /**
    * Optional assertion run before the query handler; throw to reject.
    */
-  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallQueryModelParams>;
+  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallQueryModelParams> | undefined;
 }
 
 /**

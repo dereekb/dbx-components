@@ -52,7 +52,7 @@ describe('toCliCacheJson()/fromCliCacheJson()', () => {
   it('keeps a key whose value is undefined, distinct from an absent key', () => {
     // `JSON.stringify` DROPS an undefined-valued property, which would turn an explicitly-unset
     // field into a missing one — exactly the drift that makes a cached row differ from a live one
-    const result = roundTrip({ set: undefined, other: 1 } as { set?: number; other: number });
+    const result = roundTrip({ set: undefined, other: 1 } as { set?: number | undefined; other: number });
     expect('set' in result).toBe(true);
     expect(result.set).toBeUndefined();
   });

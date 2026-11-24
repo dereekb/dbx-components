@@ -35,7 +35,7 @@ export type ForgeFieldLoaderWarning = ManifestLoaderWarning;
  */
 export interface LoadForgeFieldManifestsInput {
   readonly sources: readonly ForgeFieldManifestSource[];
-  readonly readFile?: ForgeFieldManifestReadFile;
+  readonly readFile?: ForgeFieldManifestReadFile | undefined;
 }
 
 /**

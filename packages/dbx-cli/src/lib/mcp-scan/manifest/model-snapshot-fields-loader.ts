@@ -35,7 +35,7 @@ export type ModelSnapshotFieldLoaderWarning = ManifestLoaderWarning;
  */
 export interface LoadModelSnapshotFieldManifestsInput {
   readonly sources: readonly ModelSnapshotFieldManifestSource[];
-  readonly readFile?: ModelSnapshotFieldManifestReadFile;
+  readonly readFile?: ModelSnapshotFieldManifestReadFile | undefined;
 }
 
 /**

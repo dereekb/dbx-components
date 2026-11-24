@@ -62,7 +62,7 @@ export interface FixtureMethod {
   readonly isAsync: boolean;
   readonly visibility: 'public' | 'private' | 'protected';
   readonly parameterText: string;
-  readonly returnTypeText?: string;
+  readonly returnTypeText?: string | undefined;
   readonly line: number;
   readonly endLine: number;
 }
@@ -79,8 +79,8 @@ export interface FixtureParamsField {
   readonly name: string;
   readonly typeText: string;
   readonly optional: boolean;
-  readonly fixtureModel?: string;
-  readonly array?: boolean;
+  readonly fixtureModel?: string | undefined;
+  readonly array?: boolean | undefined;
 }
 
 /**
@@ -99,7 +99,7 @@ export interface FixtureParamsType {
   readonly kind: 'interface' | 'alias';
   readonly extendsPartial: boolean;
   readonly aliasOfPartial: boolean;
-  readonly modelName?: string;
+  readonly modelName?: string | undefined;
   readonly fields: readonly FixtureParamsField[];
   readonly line: number;
 }
@@ -113,12 +113,12 @@ export interface FixtureParamsType {
  */
 export interface FactoryCall {
   readonly factoryName: string;
-  readonly singletonName?: string;
+  readonly singletonName?: string | undefined;
   readonly genericArgs: readonly string[];
   readonly hasParamsGetCollection: boolean;
   readonly hasCollectionForDocument: boolean;
   readonly hasInitDocument: boolean;
-  readonly parentFixtureFieldFromGetCollection?: string;
+  readonly parentFixtureFieldFromGetCollection?: string | undefined;
   readonly line: number;
 }
 
@@ -145,18 +145,18 @@ export interface FixtureEntry {
    * matched (e.g. `'authorized-user'`) so lookup/list output can describe
    * the pair. Set together with `kind`.
    */
-  readonly nonModelFamily?: 'authorized-user' | 'jsdoc-tag';
+  readonly nonModelFamily?: 'authorized-user' | 'jsdoc-tag' | undefined;
   readonly fixtureClassName: string;
   readonly instanceClassName: string;
   readonly paramsTypeName: string;
-  readonly factoryName?: string;
-  readonly singletonName?: string;
+  readonly factoryName?: string | undefined;
+  readonly singletonName?: string | undefined;
   readonly fixtureExtendsGenerics: readonly string[];
   readonly instanceExtendsGenerics: readonly string[];
   readonly fixtureMethods: readonly FixtureMethod[];
   readonly instanceMethods: readonly FixtureMethod[];
-  readonly params?: FixtureParamsType;
-  readonly factory?: FactoryCall;
+  readonly params?: FixtureParamsType | undefined;
+  readonly factory?: FactoryCall | undefined;
   readonly fixtureLine: number;
   readonly fixtureEndLine: number;
   readonly instanceLine: number;
@@ -176,7 +176,7 @@ export interface FixtureEntry {
  */
 export interface AppFixturesExtraction {
   readonly fixturePath: string;
-  readonly prefix?: string;
+  readonly prefix?: string | undefined;
   readonly entries: readonly FixtureEntry[];
   readonly unrecognizedClassNames: readonly string[];
   readonly identityImports: readonly string[];

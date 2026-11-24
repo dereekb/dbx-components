@@ -102,7 +102,7 @@ export abstract class DbxMutableForm<T = unknown> extends DbxForm<T> {
   /**
    * LockSet for the form.
    */
-  abstract readonly lockSet?: LockSet;
+  abstract readonly lockSet?: LockSet | undefined;
 
   /**
    * Sets the initial value of the form, and resets the form.

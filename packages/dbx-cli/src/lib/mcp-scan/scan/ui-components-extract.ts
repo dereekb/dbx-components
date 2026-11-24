@@ -134,16 +134,16 @@ export function extractUiEntries(input: ExtractUiEntriesInput): ExtractUiEntries
 interface ParsedUiTags {
   readonly hasMarker: boolean;
   readonly summary: string;
-  readonly slug?: string;
-  readonly category?: string;
-  readonly kind?: string;
-  readonly contentProjection?: string;
+  readonly slug?: string | undefined;
+  readonly category?: string | undefined;
+  readonly kind?: string | undefined;
+  readonly contentProjection?: string | undefined;
   readonly relatedSlugs: readonly string[];
   readonly skillRefs: readonly string[];
   readonly examples: readonly string[];
-  readonly minimalExample?: string;
-  readonly deprecated?: boolean | string;
-  readonly since?: string;
+  readonly minimalExample?: string | undefined;
+  readonly deprecated?: boolean | string | undefined;
+  readonly since?: string | undefined;
 }
 
 interface MutableTagState {
@@ -349,9 +349,9 @@ function checkRequiredTags(input: CheckRequiredTagsInput): CheckRequiredTagsResu
 
 // MARK: Angular decorator inspection
 interface AngularDecoratorInfo {
-  readonly kind?: UiComponentEntry['kind'];
-  readonly selector?: string;
-  readonly contentProjectionFromTemplate?: string;
+  readonly kind?: UiComponentEntry['kind'] | undefined;
+  readonly selector?: string | undefined;
+  readonly contentProjectionFromTemplate?: string | undefined;
 }
 
 function readAngularDecorator(decl: ClassDeclaration): AngularDecoratorInfo {
@@ -398,8 +398,8 @@ function mapDecoratorNameToKind(name: string): UiComponentEntry['kind'] | undefi
 }
 
 interface DecoratorConfig {
-  readonly selector?: string;
-  readonly contentProjectionFromTemplate?: string;
+  readonly selector?: string | undefined;
+  readonly contentProjectionFromTemplate?: string | undefined;
 }
 
 function readDecoratorConfig(decorator: Decorator): DecoratorConfig {

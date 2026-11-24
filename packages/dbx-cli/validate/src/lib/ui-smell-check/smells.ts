@@ -58,7 +58,7 @@ export interface SmellMatch {
  * `dbx-mcp.config.json`.
  */
 export interface ProjectConventions {
-  readonly cardWrapperClasses?: readonly string[];
+  readonly cardWrapperClasses?: readonly string[] | undefined;
 }
 
 /**
@@ -76,8 +76,8 @@ export interface SmellInput {
    * `apps/hellosubs/...` produces `$hellosubs-…` rather than the generic
    * `$myapp-…` placeholder.
    */
-  readonly scssPath?: string;
-  readonly htmlPath?: string;
+  readonly scssPath?: string | undefined;
+  readonly htmlPath?: string | undefined;
 }
 
 /**

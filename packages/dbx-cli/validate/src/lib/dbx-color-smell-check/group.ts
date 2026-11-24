@@ -20,7 +20,7 @@ export interface GroupColorSmellsInput {
   readonly equivalenceMode: ColorSmellEquivalenceMode;
   readonly minDuplicates: number;
   readonly filesScanned: number;
-  readonly templates?: readonly ColorTemplateEntry[];
+  readonly templates?: readonly ColorTemplateEntry[] | undefined;
 }
 
 /**

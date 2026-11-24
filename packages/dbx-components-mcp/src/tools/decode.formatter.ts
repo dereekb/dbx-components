@@ -14,9 +14,9 @@ import type { FirebaseEnum, FirebaseField, FirebaseModel } from '@dereekb/dbx-cl
 export interface DecodedField {
   readonly field: FirebaseField;
   readonly rawValue: unknown;
-  readonly enumName?: string;
+  readonly enumName?: string | undefined;
   readonly displayValue: string;
-  readonly extraDetail?: string;
+  readonly extraDetail?: string | undefined;
 }
 
 /**
@@ -34,7 +34,7 @@ export interface DecodeContext {
   readonly model: FirebaseModel;
   readonly doc: Readonly<Record<string, unknown>>;
   readonly prefixes: ReadonlyMap<string, string>;
-  readonly extraKey?: string;
+  readonly extraKey?: string | undefined;
 }
 
 /**

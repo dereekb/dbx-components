@@ -48,12 +48,12 @@ export abstract class ModelApiDispatchConfig implements ModelApiOidcScopeConfig 
    * This is the home for the callModel group-scope default; providing it here enforces it across
    * dispatch AND the `/get` reads.
    */
-  readonly defaultRequiredScope?: OidcScopeTerm;
+  readonly defaultRequiredScope?: OidcScopeTerm | undefined;
   /**
    * Optional per-model OIDC group-scope overrides. See {@link ModelApiOidcScopeConfig.modelRequiredScopes}.
    * The only place a plain `/get` read (no per-function handler) can be scope-gated beyond `model.read`.
    */
-  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement>;
+  readonly modelRequiredScopes?: Record<FirestoreModelType, OidcModelScopeRequirement> | undefined;
 }
 
 /**

@@ -28,7 +28,7 @@ import {
 } from '../config/cli.config';
 import { loadZohoCliTokenSourceStatus, zohoCliTokenSourceCommandConfig, zohoCliTokenSourceReport, zohoCliTokenSourceStatusError, type ZohoCliTokenSourceStatus } from '../config/token.source';
 import { DEFAULT_AUTH_LOGIN_REDIRECT_URI, ZOHO_CLI_REGION_CHOICES, exchangeZohoAuthorizationCode, loadZohoAuthUserEmail, parseZohoAuthRedirect, zohoCliScopesForProducts } from '../config/cli.oauth';
-import { noop, generateOAuthState, type Maybe } from '@dereekb/util';
+import { noop, generateOAuthState, type Maybe, type PartialWithUndefined } from '@dereekb/util';
 import { parseDurationStringToMilliseconds } from '@dereekb/date';
 import {
   buildCliTokenSourceAuthCommand,
@@ -766,7 +766,7 @@ async function handleAuthLogin(argv: AuthLoginArgv): Promise<void> {
 }
 
 // MARK: Show
-function maskCredentials(creds: Maybe<Partial<ZohoCliCredentials>>) {
+function maskCredentials(creds: Maybe<PartialWithUndefined<ZohoCliCredentials>>) {
   return creds
     ? {
         clientId: creds.clientId ? maskSecret(creds.clientId) : undefined,

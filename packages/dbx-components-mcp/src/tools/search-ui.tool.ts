@@ -326,7 +326,7 @@ export interface CreateSearchUiToolInput {
    * `relatedSlugs` overlap any returned component slug. When omitted (or
    * empty), the search output is unchanged.
    */
-  readonly examplesRegistry?: DbxDocsUiExamplesRegistry;
+  readonly examplesRegistry?: DbxDocsUiExamplesRegistry | undefined;
 }
 
 /**

@@ -1,4 +1,5 @@
-import { type OpenRouterDecisionAnswers, type OpenRouterModelConfig, type OpenRouterPromptDefinition, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber, DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID, openRouterChoiceQuestion, openRouterNoulQuestion, openRouterScoreQuestion } from '@dereekb/openrouter';
+import { llmChoiceQuestion, type LlmDecisionAnswers, llmNoulQuestion, llmScoreQuestion } from '@dereekb/llm';
+import { type OpenRouterModelConfig, type OpenRouterPromptDefinition, type OpenRouterPromptKey, type OpenRouterPromptVersionNumber, DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID } from '@dereekb/openrouter';
 
 /**
  * The demo's DECISION prompt: given a support message, route it and rate it.
@@ -53,7 +54,7 @@ export interface DemoSupportTriageState {
  * beside it as the absolute question, and may be high whatever the Choice picked.
  */
 export const DEMO_SUPPORT_TRIAGE_QUESTIONS = {
-  team: openRouterChoiceQuestion(
+  team: llmChoiceQuestion(
     { question: 'Which team should own `ticket`?', inspect: ['ticket.subject', 'ticket.body'] },
     {
       // Contrastive: the SAME keys on every option, so the model compares like with like.
@@ -64,14 +65,14 @@ export const DEMO_SUPPORT_TRIAGE_QUESTIONS = {
     }
   ),
   // Situations, not degrees: "moderately urgent" gives the model nothing to match the state against.
-  urgency: openRouterScoreQuestion('How urgent is `ticket`?', [
+  urgency: llmScoreQuestion('How urgent is `ticket`?', [
     { what: 'No deadline is mentioned and nothing is blocked' },
     { what: 'Something is inconvenient but the sender can keep working', signals: ['a workaround is described'] },
     { what: 'The sender names a deadline within the week' },
     { what: 'Money or access is blocked right now', signals: ['cannot pay', 'cannot sign in', 'locked out'] }
   ]),
   // A condition, not a degree — which is what makes this a Noul rather than a Score.
-  spam: openRouterNoulQuestion('`ticket` is unsolicited marketing or an automated message rather than a real support request.', {
+  spam: llmNoulQuestion('`ticket` is unsolicited marketing or an automated message rather than a real support request.', {
     true: 'the message advertises something, or was clearly sent by a machine to no one in particular',
     false: 'a person is asking for help with something'
   })
@@ -83,7 +84,7 @@ export const DEMO_SUPPORT_TRIAGE_QUESTIONS = {
  * Derived from the questions rather than declared beside them, so renaming a question is a compile
  * error at every reader instead of an undefined at runtime.
  */
-export type DemoSupportTriageAnswers = OpenRouterDecisionAnswers<typeof DEMO_SUPPORT_TRIAGE_QUESTIONS>;
+export type DemoSupportTriageAnswers = LlmDecisionAnswers<typeof DEMO_SUPPORT_TRIAGE_QUESTIONS>;
 
 /**
  * Model config for {@link DEMO_SUPPORT_TRIAGE_PROMPT_KEY}.

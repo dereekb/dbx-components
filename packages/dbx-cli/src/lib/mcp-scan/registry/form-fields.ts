@@ -560,11 +560,16 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'optional',
     configInterface: 'DbxForgePickableChipFieldConfig<T, M, H>',
     generic: '<T = unknown, M = unknown, H extends PrimativeKey = PrimativeKey>',
-    description: 'Selection field rendering selected values as Material chips. Defaults to multi-select; flip to single-select via the underlying props.',
+    description: 'Selection field rendering selected values as Material chips. Defaults to multi-select; flip to single-select via the underlying props, or cap the picks with `maxPicks`.',
     config: {
       loadValues: { name: 'loadValues (props)', type: 'Observable<T[]> | () => Observable<T[]>', description: 'Function/observable producing the list of selectable values.', required: true },
       displayForValue: { name: 'displayForValue (props)', type: '(values: T[]) => Observable<DisplayValue[]>', description: 'Display renderer for selected values.', required: true },
-      maxPicks: { name: 'maxPicks (props)', type: 'number', description: 'Maximum number of items that can be selected.', required: false }
+      maxPicks: {
+        name: 'maxPicks (props)',
+        type: 'Maybe<number>',
+        description: 'Maximum number of values that can be picked. At the limit every unselected item is disabled until a pick is taken back; a selected item is never disabled. Ignored when only one value can be picked. Add `maxLength` to also make a longer value invalid.',
+        required: false
+      }
     },
     example: `dbxForgePickableChipField<Tag>({ key: 'tags', label: 'Tags', props: { loadValues: () => loadTags$, displayForValue: displayTag } })`,
     minimalExample: `dbxForgePickableChipField({ key: 'tags', props: { loadValues: () => of([]), displayForValue: (v) => of([]) } })`
@@ -582,7 +587,13 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     description: 'Scrollable-list variant of `pickable-chip` — same API, different presentation. Prefer this when the option set is large.',
     config: {
       loadValues: { name: 'loadValues (props)', type: 'Observable<T[]> | () => Observable<T[]>', description: 'Function/observable producing the list of selectable values.', required: true },
-      displayForValue: { name: 'displayForValue (props)', type: '(values: T[]) => Observable<DisplayValue[]>', description: 'Display renderer for selected values.', required: true }
+      displayForValue: { name: 'displayForValue (props)', type: '(values: T[]) => Observable<DisplayValue[]>', description: 'Display renderer for selected values.', required: true },
+      maxPicks: {
+        name: 'maxPicks (props)',
+        type: 'Maybe<number>',
+        description: 'Maximum number of values that can be picked. At the limit every unselected item is disabled until a pick is taken back; a selected item is never disabled. Ignored when only one value can be picked. Add `maxLength` to also make a longer value invalid.',
+        required: false
+      }
     },
     example: `dbxForgePickableListField<Item>({ key: 'items', props: { loadValues, displayForValue } })`,
     minimalExample: `dbxForgePickableListField({ key: 'items', props: { loadValues: () => of([]), displayForValue: (v) => of([]) } })`
@@ -711,12 +722,12 @@ export const FORM_FIELDS: readonly FormFieldInfo[] = [
     arrayOutput: 'yes',
     configInterface: 'DbxForgeChecklistFieldConfig<T>',
     generic: '<T = unknown>',
-    description: 'Multi-checkbox group. Use for small static option sets where every option is visible at once.',
+    description: 'Multi-checkbox group. Use for small static option sets where every option is visible at once. It has no selection cap: use `pickable-chip` with `maxPicks` to limit the picks.',
     config: {
-      options: { name: 'options (props)', type: '(MatSelectOption | MatOptGroup)[]', description: 'Array of checkbox options or option groups.', required: true }
+      options: { name: 'options', type: '(MatSelectOption | MatOptGroup)[]', description: 'Array of checkbox options or option groups.', required: true }
     },
-    example: `dbxForgeChecklistField<string>({ key: 'flags', props: { options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] } })`,
-    minimalExample: `dbxForgeChecklistField({ key: 'v', props: { options: [] } })`
+    example: `dbxForgeChecklistField<string>({ key: 'flags', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] })`,
+    minimalExample: `dbxForgeChecklistField({ key: 'v', options: [] })`
   },
 
   // ----- editors / component ------------------------------------------

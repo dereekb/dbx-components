@@ -289,7 +289,14 @@ demoApiFunctionContextFactory((f: DemoApiFunctionContextFixture) => {
         const jwks = await request(app.getHttpServer()).get('/.well-known/jwks.json').expect(200);
         const publicJwk = jwks.body.keys[0] as JWK;
         const secret = Buffer.from(JSON.stringify(publicJwk));
-        const forged = await new SignJWT({}).setProtectedHeader({ alg: 'HS256', kid: publicJwk.kid }).setIssuer(issuer).setAudience(SATELLITE_ORIGIN).setSubject(u.uid).setIssuedAt().setExpirationTime('1h').sign(secret);
+        const forged = await new SignJWT({})
+          .setProtectedHeader({ alg: 'HS256', ...(publicJwk.kid == null ? undefined : { kid: publicJwk.kid }) })
+          .setIssuer(issuer)
+          .setAudience(SATELLITE_ORIGIN)
+          .setSubject(u.uid)
+          .setIssuedAt()
+          .setExpirationTime('1h')
+          .sign(secret);
 
         await expect(verifyBearerJwt(forged, { profiles })).rejects.toThrow(/Invalid bearer token/);
       });

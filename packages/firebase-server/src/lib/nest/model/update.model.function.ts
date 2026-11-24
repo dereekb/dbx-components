@@ -64,7 +64,7 @@ export interface OnCallUpdateModelConfig<N> {
   /**
    * Optional assertion run before the update handler; throw to reject.
    */
-  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallUpdateModelParams>;
+  readonly preAssert?: AssertModelCrudRequestFunction<N, OnCallUpdateModelParams> | undefined;
 }
 
 /**

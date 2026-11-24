@@ -65,28 +65,28 @@ export interface AddAttachmentToCardFileInput {
   /**
    * MIME type for the uploaded file. Defaults to `application/octet-stream` when omitted.
    */
-  readonly mimeType?: ContentTypeMimeType;
+  readonly mimeType?: ContentTypeMimeType | undefined;
 }
 
 export interface AddAttachmentToCardBody {
   /**
    * Optional display name. Defaults to the file name (for file uploads) or the url (for url-only attachments).
    */
-  readonly name?: string;
+  readonly name?: string | undefined;
   /**
    * Uploads a file. Mutually exclusive with `url`.
    */
-  readonly file?: AddAttachmentToCardFileInput;
+  readonly file?: AddAttachmentToCardFileInput | undefined;
   /**
    * Attaches an external url. Mutually exclusive with `file`.
    */
-  readonly url?: string;
+  readonly url?: string | undefined;
   /**
    * If true, asks Trello to use this attachment for the card cover (uploaded files only).
    */
-  readonly setCover?: boolean;
+  readonly setCover?: boolean | undefined;
   /**
    * Optional mimeType override sent as a form field — only honored for url-only attachments.
    */
-  readonly mimeType?: ContentTypeMimeType;
+  readonly mimeType?: ContentTypeMimeType | undefined;
 }

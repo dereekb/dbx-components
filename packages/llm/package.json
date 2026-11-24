@@ -1,0 +1,44 @@
+{
+  "name": "@dereekb/llm",
+  "version": "14.31.0",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    "./openai": {
+      "types": "./openai/index.d.ts",
+      "import": "./openai/index.esm.js",
+      "default": "./openai/index.esm.js"
+    },
+    "./openrouter": {
+      "types": "./openrouter/index.d.ts",
+      "import": "./openrouter/index.esm.js",
+      "default": "./openrouter/index.esm.js"
+    },
+    "./zenmux": {
+      "types": "./zenmux/index.d.ts",
+      "import": "./zenmux/index.esm.js",
+      "default": "./zenmux/index.esm.js"
+    },
+    "./node": {
+      "types": "./node/index.d.ts",
+      "import": "./node/index.esm.js",
+      "default": "./node/index.esm.js"
+    },
+    "./test": {
+      "types": "./test/index.d.ts",
+      "import": "./test/index.esm.js",
+      "default": "./test/index.esm.js"
+    }
+  },
+  "peerDependencies": {
+    "@dereekb/model": "14.31.0",
+    "@dereekb/util": "14.31.0",
+    "arktype": "^2.2.0",
+    "openai": "^7.8.0"
+  },
+  "peerDependenciesMeta": {
+    "openai": {
+      "optional": true
+    }
+  }
+}

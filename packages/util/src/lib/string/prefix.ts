@@ -64,11 +64,11 @@ export interface CharacterPrefixSuffixInstanceConfiguration<P extends CharacterP
   /**
    * If true, the prefix will be added to empty strings.
    */
-  readonly prefixEmptyString?: boolean;
+  readonly prefixEmptyString?: boolean | undefined;
   /**
    * If true, the suffix will be added to empty strings.
    */
-  readonly suffixEmptyString?: boolean;
+  readonly suffixEmptyString?: boolean | undefined;
 }
 
 /**

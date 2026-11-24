@@ -260,24 +260,24 @@ function findTaggedDocs(jsDocs: readonly JSDoc[]): readonly JSDoc[] {
 // MARK: JSDoc parsing
 interface ParsedIndexTags {
   readonly summary: string;
-  readonly slug?: string;
-  readonly model?: string;
-  readonly scope?: string;
+  readonly slug?: string | undefined;
+  readonly model?: string | undefined;
+  readonly scope?: string | undefined;
   readonly manual: boolean;
   readonly skip: boolean;
   readonly specOnly: boolean;
   readonly excluded: boolean;
   readonly dispatcher: boolean;
   readonly allowArrayContainsAny: boolean;
-  readonly category?: string;
+  readonly category?: string | undefined;
   readonly explicitTags: readonly string[];
   readonly relatedSlugs: readonly string[];
   readonly skillRefs: readonly string[];
   readonly examples: readonly string[];
   readonly paramDescriptions: ReadonlyMap<string, string>;
-  readonly returnsText?: string;
-  readonly deprecated?: boolean | string;
-  readonly since?: string;
+  readonly returnsText?: string | undefined;
+  readonly deprecated?: boolean | string | undefined;
+  readonly since?: string | undefined;
   /**
    * One entry per `@dbxModelFirebaseIndexPath` tag occurrence. Each entry
    * is the parsed list of field paths the author declared for that call

@@ -76,10 +76,13 @@ export class ServerErrorResponse<T extends ServerErrorResponseData = ServerError
   readonly status: number;
   readonly code?: StringErrorCode;
   readonly message?: Maybe<string>;
-  readonly data?: T;
+  readonly data?: T | undefined;
 
   constructor({ code, status, data, message }: ServerError<T>) {
-    this.code = code;
+    if (code !== undefined) {
+      this.code = code;
+    }
+
     this.message = message;
     this.status = status;
     this.data = data;
@@ -91,6 +94,6 @@ export class ServerErrorResponse<T extends ServerErrorResponseData = ServerError
  */
 export class UnauthorizedServerErrorResponse extends ServerErrorResponse {
   constructor({ code, data, message }: Partial<ServerError>) {
-    super({ status: 401, message: message ?? 'Unauthorized', data, code });
+    super({ status: 401, message: message ?? 'Unauthorized', data, ...(code === undefined ? {} : { code }) });
   }
 }

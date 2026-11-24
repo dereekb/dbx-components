@@ -28,7 +28,7 @@ const KNOWN_CONFIG_PROPS = new Set(['template', 'color', 'contrast', 'tone', 'to
 export interface ExtractedColorTemplates {
   readonly templates: readonly ColorTemplateEntry[];
   readonly warnings: readonly ColorTemplateWarning[];
-  readonly provideCallLocation?: ColorTemplateProvideLocation;
+  readonly provideCallLocation?: ColorTemplateProvideLocation | undefined;
 }
 
 interface ExtractContext {

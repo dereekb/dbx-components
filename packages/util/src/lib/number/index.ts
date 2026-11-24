@@ -6,5 +6,6 @@ export * from './number';
 export * from './random';
 export * from './round';
 export * from './sort';
+export * from './statistics';
 export * from './transform';
 export * from './encoded';

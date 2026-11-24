@@ -57,7 +57,7 @@ export interface CliContext {
   readonly callModel: <TParams = unknown, TResult = unknown>(params: OnCallTypedModelParams<TParams>) => Promise<TResult>;
   readonly getModel: <TResult = unknown>(modelType: string, key: string) => Promise<GetModelOverHttpResult<TResult>>;
   readonly getMultipleModels: <TResult = unknown>(modelType: string, keys: ReadonlyArray<string>) => Promise<GetMultipleModelsOverHttpResult<TResult>>;
-  readonly modelManifest?: CliModelManifest;
+  readonly modelManifest?: CliModelManifest | undefined;
   /**
    * Opens (once per invocation) a direct Firestore connection as the authenticated user and returns
    * the `FirestoreContext` an app's `make<App>FirestoreCollections(context)` factory consumes — the
@@ -72,13 +72,13 @@ export interface CliContext {
    * Calling it throws when the env carries no Firebase client config — there is no fallback to the
    * HTTP model API by design.
    */
-  readonly getFirestoreContext?: () => Promise<FirestoreContext>;
+  readonly getFirestoreContext?: (() => Promise<FirestoreContext>) | undefined;
   /**
    * The full session behind {@link CliContext.getFirestoreContext} — the signed-in `Auth`, the raw
    * `Firestore`, and the minted credential envelope. Memoized alongside it, so calling both opens one
    * session.
    */
-  readonly getFirestoreSession?: () => Promise<CliFirestoreSessionContext>;
+  readonly getFirestoreSession?: (() => Promise<CliFirestoreSessionContext>) | undefined;
   /**
    * The app's models bound to the direct-Firestore session — what `firestore-get` /
    * `firestore-query` dispatch through. Layered on the {@link CliContext.getFirestoreSession} memo,
@@ -87,7 +87,7 @@ export interface CliContext {
    *
    * Present only when the CLI was configured with a `firestore` binding (`runCli({ firestore })`).
    */
-  readonly getFirestoreModels?: () => Promise<CliFirestoreModels>;
+  readonly getFirestoreModels?: (() => Promise<CliFirestoreModels>) | undefined;
   /**
    * Releases the direct-Firestore session opened during this invocation, if any.
    *
@@ -98,7 +98,7 @@ export interface CliContext {
    * Never opens a session in order to close one — a command that never touched Firestore resolves
    * immediately. Safe to call more than once.
    */
-  readonly closeFirestoreSession?: () => Promise<void>;
+  readonly closeFirestoreSession?: (() => Promise<void>) | undefined;
 }
 
 /**
@@ -179,18 +179,18 @@ export interface CreateCliContextInput {
    * Optional generated model manifest. When supplied, surfaced on the context so commands
    * (e.g. `get <key>`) can resolve `prefix/id` keys to a `modelType` via `decodeFirestoreModelKey`.
    */
-  readonly modelManifest?: CliModelManifest;
+  readonly modelManifest?: CliModelManifest | undefined;
   /**
    * Optional on-disk direct-Firestore session cache. When supplied, the session opened by
    * {@link CliContext.getFirestoreSession} is reused across invocations for up to an hour instead of
    * costing a `GET /session/firestore` round-trip every time.
    */
-  readonly firestoreSessionCache?: CliFirestoreSessionCacheStore;
+  readonly firestoreSessionCache?: CliFirestoreSessionCacheStore | undefined;
   /**
    * The app-supplied Firestore binding (`cliFirestoreBinding({ collections, models })`). When
    * present, the context exposes {@link CliContext.getFirestoreModels}.
    */
-  readonly firestore?: CliFirestoreBinding;
+  readonly firestore?: CliFirestoreBinding | undefined;
 }
 
 /**

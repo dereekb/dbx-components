@@ -104,7 +104,7 @@ export function capLoginDurationSeconds(seconds: number, maxSessionTtl: Maybe<nu
  * @param maxSessionTtl - The cap from the grant's provider profiles, if any.
  * @param nowSeconds - The current unix time in seconds.
  */
-export function capExistingGrantExpiration(grant: Maybe<{ exp?: number }>, maxSessionTtl: Maybe<number>, nowSeconds: number): void {
+export function capExistingGrantExpiration(grant: Maybe<{ exp?: number | undefined }>, maxSessionTtl: Maybe<number>, nowSeconds: number): void {
   if (grant != null && maxSessionTtl != null) {
     const cappedExp = nowSeconds + maxSessionTtl;
 

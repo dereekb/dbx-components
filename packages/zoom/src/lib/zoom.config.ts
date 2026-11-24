@@ -1,7 +1,15 @@
+import { type Milliseconds, MS_IN_SECOND } from '@dereekb/util';
+
 /**
  * The Zoom API URL for the US datacenter.
  */
 export const ZOOM_API_URL = 'https://api.zoom.us/v2';
+
+/**
+ * Default timeout for the requests the default Zoom fetches send: the wait for the response headers. Configure it
+ * per factory with `timeout`.
+ */
+export const DEFAULT_ZOOM_FETCH_TIMEOUT: Milliseconds = 20 * MS_IN_SECOND;
 
 /**
  * Url for the Zoom API.

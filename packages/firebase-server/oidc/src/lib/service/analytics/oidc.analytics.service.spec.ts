@@ -23,7 +23,7 @@ function envService(isProduction = false): FirebaseServerEnvService {
   return { isProduction } as unknown as FirebaseServerEnvService;
 }
 
-function makeService(options: { isProduction?: boolean; downstream?: FirebaseServerAnalyticsService; config?: FirebaseServerOidcAnalyticsConfig } = {}): FirebaseServerOidcAnalyticsService {
+function makeService(options: { isProduction?: boolean | undefined; downstream?: FirebaseServerAnalyticsService | undefined; config?: FirebaseServerOidcAnalyticsConfig | undefined } = {}): FirebaseServerOidcAnalyticsService {
   return new FirebaseServerOidcAnalyticsService(envService(options.isProduction ?? false), options.downstream, options.config);
 }
 

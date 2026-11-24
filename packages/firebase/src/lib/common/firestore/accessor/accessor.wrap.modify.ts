@@ -27,7 +27,7 @@ export interface ModifyBeforeSetFistoreDataAccessorInput<T> extends DocumentRefe
   /**
    * Set options passed to the set function, if available.
    */
-  readonly options?: SetOptions;
+  readonly options?: SetOptions | undefined;
 }
 
 export type ModifyBeforeSetModifierFunction<T> = ModifierFunction<ModifyBeforeSetFistoreDataAccessorInput<T>>;

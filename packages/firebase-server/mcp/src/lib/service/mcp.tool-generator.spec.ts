@@ -33,7 +33,7 @@ function makeApiDetailsWithMcp(callType: string, mcp: object | undefined): Model
           [callType]: {
             isSpecifier: false,
             specifiers: {
-              _: { inputType: makeSchemaRef('WidgetParams'), mcp }
+              _: { inputType: makeSchemaRef('WidgetParams'), ...(mcp == null ? undefined : { mcp }) }
             }
           }
         }
@@ -50,7 +50,7 @@ function makeOneEntry(mcp?: object): ModelApiDetailsResult {
           query: {
             isSpecifier: false,
             specifiers: {
-              _: { inputType: makeSchemaRef('QueryGuestbooksParams'), mcp }
+              _: { inputType: makeSchemaRef('QueryGuestbooksParams'), ...(mcp == null ? undefined : { mcp }) }
             }
           }
         }
@@ -707,7 +707,7 @@ describe('generateMcpToolDefinitions scope-term composition (visibility parity)'
       models: {
         [modelType]: {
           calls: {
-            [callType]: { isSpecifier: false, specifiers: { _: { inputType: makeSchemaRef('P'), requiredScope } } }
+            [callType]: { isSpecifier: false, specifiers: { _: { inputType: makeSchemaRef('P'), ...(requiredScope == null ? undefined : { requiredScope }) } } }
           }
         }
       }

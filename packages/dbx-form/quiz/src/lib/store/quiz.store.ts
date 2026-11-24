@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { type QuestionIndex, type Quiz, type QuizAnswer, type QuizQuestion, type QuizQuestionId, type QuizQuestionIdIndexPair, type QuizQuestionWithIndex } from './quiz';
 import { ComponentStore } from '@ngrx/component-store';
-import { type ArrayOrValue, asArray, type Configurable, type Maybe } from '@dereekb/util';
+import { type ArrayOrValue, asArray, type Configurable, type Maybe, type PartialWithUndefined } from '@dereekb/util';
 import { combineLatest, distinctUntilChanged, map, type Observable, of, shareReplay, switchMap } from 'rxjs';
 import { asObservable, type ObservableOrValue } from '@dereekb/rxjs';
 
@@ -73,8 +73,8 @@ export interface QuizStoreState {
  * Lookup input for retrieving an answer by question id, index, or the current question.
  * Provide exactly one of `id`, `index`, or `currentIndex`.
  */
-export interface QuizStoreAnswerLookupInput extends Partial<QuizQuestionIdIndexPair> {
-  readonly currentIndex?: boolean;
+export interface QuizStoreAnswerLookupInput extends PartialWithUndefined<QuizQuestionIdIndexPair> {
+  readonly currentIndex?: boolean | undefined;
 }
 
 /**

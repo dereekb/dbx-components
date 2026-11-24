@@ -1,6 +1,7 @@
 import { type Maybe, type PromiseOrValue, type PromiseRateLimiter } from '@dereekb/util';
 import { type FetchHandler } from './fetch';
 import { type FetchResponseError } from './error';
+import { cloneRequestWithTimeout } from './timeout';
 
 /**
  * A FetchRequestFactory with PromiseRateLimiter
@@ -22,7 +23,7 @@ export interface RateLimitedFetchHandlerConfig<T extends PromiseRateLimiter> {
    *
    * Defaults to 1.
    */
-  readonly maxRetries?: number;
+  readonly maxRetries?: number | undefined;
   /**
    * Update the fetch handler with the response, ideally setting/updating the time at which the rate limiter can be reset.
    *
@@ -44,6 +45,10 @@ export interface RateLimitedFetchHandlerConfig<T extends PromiseRateLimiter> {
  * Creates a FetchHandler that enforces rate limiting via the provided PromiseRateLimiter and supports
  * automatic retry when the server signals throttling.
  *
+ * Each attempt sends a clone of the request that keeps the request's `timeout` (see {@link cloneRequestWithTimeout}),
+ * so a configured `fetchTimeout` times every attempt on its own, from when that attempt is sent. The limiter's
+ * waits are not timed.
+ *
  * @param config - Configuration containing the rate limiter, retry settings, and response handler.
  * @returns A RateLimitedFetchHandler that rate-limits outgoing requests and retries on throttle responses.
  */
@@ -62,7 +67,7 @@ export function rateLimitedFetchHandler<T extends PromiseRateLimiter>(config: Ra
       let fetchResponseError: Maybe<FetchResponseError>;
 
       try {
-        response = await makeFetch(request.clone());
+        response = await makeFetch(cloneRequestWithTimeout(request));
       } catch (e) {
         // an abort, timeout or network error carries no response: there is nothing to rate-limit on, so it reaches the caller as-is
         if ((e as Maybe<Partial<FetchResponseError>>)?.response == null) {

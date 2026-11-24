@@ -72,10 +72,10 @@ const SmellCheckArgs = type({
 type ParsedArgs = {
   readonly html: string;
   readonly scss: string;
-  readonly htmlPath?: string;
-  readonly scssPath?: string;
-  readonly paths?: readonly string[];
-  readonly context?: string;
+  readonly htmlPath?: string | undefined;
+  readonly scssPath?: string | undefined;
+  readonly paths?: readonly string[] | undefined;
+  readonly context?: string | undefined;
   readonly conventions: ProjectConventions;
 };
 
@@ -101,8 +101,8 @@ async function readPathInput(path: string, cwd: string, readFile: ConfigReadFile
 
 interface PairedFile {
   readonly label: string;
-  readonly htmlPath?: string;
-  readonly scssPath?: string;
+  readonly htmlPath?: string | undefined;
+  readonly scssPath?: string | undefined;
 }
 
 /**
@@ -165,7 +165,7 @@ export interface CreateUiSmellCheckToolInput {
    * Working directory used to resolve `dbx-mcp.config.json` for project
    * convention overrides. Defaults to `process.cwd()` when omitted.
    */
-  readonly cwd?: string;
+  readonly cwd?: string | undefined;
   /**
    * Optional config reader override for tests.
    */
@@ -265,7 +265,7 @@ async function runSingleMode(input: RunModeInput): Promise<ToolResult> {
     scssPath: args.scssPath,
     htmlPath: args.htmlPath
   });
-  const text = formatSmellResult({ html, scss, context: args.context }, result, tokenRegistry);
+  const text = formatSmellResult({ html, scss, ...(args.context === undefined ? {} : { context: args.context }) }, result, tokenRegistry);
   return { content: [{ type: 'text', text }] };
 }
 

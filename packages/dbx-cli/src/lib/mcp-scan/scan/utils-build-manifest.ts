@@ -39,9 +39,9 @@ export interface BuildUtilsManifestInput {
    * the generate-* targets all run with `cwd: {workspaceRoot}`.
    */
   readonly workspaceRoot?: string;
-  readonly now?: () => Date;
-  readonly readFile?: BuildUtilsReadFile;
-  readonly globber?: BuildUtilsGlobber;
+  readonly now?: (() => Date) | undefined;
+  readonly readFile?: BuildUtilsReadFile | undefined;
+  readonly globber?: BuildUtilsGlobber | undefined;
 }
 
 /**

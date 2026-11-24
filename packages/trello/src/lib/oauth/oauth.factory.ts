@@ -1,4 +1,5 @@
-import { type Maybe } from '@dereekb/util';
+import { type Maybe, type Milliseconds } from '@dereekb/util';
+import { DEFAULT_TRELLO_FETCH_TIMEOUT } from '../trello.config';
 import { fetchApiFetchService, fetchJsonFunction, returnNullHandleFetchJsonParseErrorFunction, type ConfiguredFetch, type FetchHandler } from '@dereekb/util/fetch';
 import { type TrelloOAuthConfig, type TrelloOAuthContext, type TrelloOAuthContextRef } from './oauth.config';
 import { handleTrelloOAuthErrorFetch, type LogTrelloOAuthErrorFunction } from './oauth.error.api';
@@ -19,6 +20,13 @@ export interface TrelloOAuthFactoryConfig {
    * Custom log error function.
    */
   readonly logTrelloOAuthErrorFunction?: LogTrelloOAuthErrorFunction;
+  /**
+   * Timeout in milliseconds for each request the default fetch sends: the wait for the response headers (reading the
+   * body is not timed). `0` turns it off. A request's own `timeout`, set in its init, wins over this.
+   *
+   * Defaults to {@link DEFAULT_TRELLO_FETCH_TIMEOUT} (20 seconds).
+   */
+  readonly timeout?: Maybe<Milliseconds>;
 }
 
 export type TrelloOAuthFactory = (config: TrelloOAuthConfig) => TrelloOAuth;
@@ -29,7 +37,7 @@ export type TrelloOAuthFactory = (config: TrelloOAuthConfig) => TrelloOAuth;
  * There is no access-token cache or per-user token factory here: the external-connection framework
  * stores each member's credentials itself, so the client only makes the calls it is asked to make.
  *
- * @param factoryConfig - Configuration including an optional fetch handler and error logging.
+ * @param factoryConfig - Configuration including an optional fetch handler, error logging and timeout.
  * @returns A factory accepting a TrelloOAuthConfig and producing a TrelloOAuth instance.
  *
  * @__NO_SIDE_EFFECTS__
@@ -54,7 +62,7 @@ export function trelloOAuthFactory(factoryConfig: TrelloOAuthFactoryConfig = {})
         }
       },
       ...(fetchHandler ? { makeFetch: ((input: RequestInfo | URL, init?: RequestInit) => fetchHandler(new Request(input, init), fetch)) as typeof fetch } : undefined),
-      timeout: 20 * 1000, // 20 second timeout
+      timeout: factoryConfig.timeout ?? DEFAULT_TRELLO_FETCH_TIMEOUT,
       requireOkResponse: true, // enforce ok response
       useTimeout: true // use timeout
     });

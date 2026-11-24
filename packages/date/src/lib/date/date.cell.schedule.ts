@@ -2,6 +2,7 @@ import { type DateRange } from '@dereekb/date';
 import {
   type StringOrder,
   type Maybe,
+  type PartialWithUndefined,
   pushArrayItemsIntoArray,
   firstValueFromIterable,
   type DayOfWeek,
@@ -501,11 +502,11 @@ export interface DateCellSchedule {
   /**
    * Specific DateCellIndex values to include.
    */
-  d?: DateCellIndex[];
+  d?: DateCellIndex[] | undefined;
   /**
    * Specific DateCellIndex values to exclude.
    */
-  ex?: DateCellIndex[];
+  ex?: DateCellIndex[] | undefined;
 }
 
 /**
@@ -606,7 +607,7 @@ export function isSameDateCellScheduleDateRange(a: Maybe<DateCellScheduleDateRan
  *
  * Invalid input has undetermined behavior.
  */
-export type DateCellScheduleDateRangeInput = DateCellSchedule & Partial<TimezoneStringRef & (DateRange | DateCellTimingStartsAtEndRange)>;
+export type DateCellScheduleDateRangeInput = DateCellSchedule & PartialWithUndefined<TimezoneStringRef & (DateRange | DateCellTimingStartsAtEndRange)>;
 
 /**
  * Creates a DateCellScheduleDateRange from the input, normalizing the start date to the start of day in the target timezone.
@@ -773,7 +774,7 @@ export interface FullDateCellScheduleRangeInput {
    *
    * If a duration is provided in the timing, this is ignored unless updateWithDefaults is true.
    */
-  readonly duration?: number;
+  readonly duration?: number | undefined;
   /**
    * (Optional) Hours/Minutes to copy from when setting the inital startsAt.
    *
@@ -781,7 +782,7 @@ export interface FullDateCellScheduleRangeInput {
    *
    * If a startsAt is provided in the timing, this is ignored unless updateWithDefaults is true.
    */
-  readonly startsAtTime?: Date;
+  readonly startsAtTime?: Date | undefined;
   /**
    * Whether or not to always update the range with the default duration/startsAt time
    */
@@ -889,7 +890,7 @@ export type DateCellScheduleDateFilter = DecisionFunction<DateCellScheduleDateFi
 /**
  * dateCellScheduleDateFilter() configuration.
  */
-export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Partial<DateCellTimingStartsAtEndRange & DateCellTimingDateRange> {
+export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, PartialWithUndefined<DateCellTimingStartsAtEndRange & DateCellTimingDateRange> {
   /**
    * The min/max date range for the filter.
    */
@@ -897,7 +898,7 @@ export interface DateCellScheduleDateFilterConfig extends DateCellSchedule, Part
   /**
    * Whether or not to restrict the start as the min date if a min date is not set in minMaxDateRange. True by default.
    */
-  readonly setStartAsMinDate?: boolean;
+  readonly setStartAsMinDate?: boolean | undefined;
 }
 
 /**

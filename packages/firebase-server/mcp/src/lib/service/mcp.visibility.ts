@@ -65,7 +65,7 @@ interface McpToolFilterMetadataBase {
    * `read`/`query` → true; `create`/`update`/`delete` → false; anything else → undefined.
    * Unknown counts as a write for fail-safe filtering.
    */
-  readonly effectiveReadOnly?: boolean;
+  readonly effectiveReadOnly?: boolean | undefined;
   /**
    * Destructive classification of a call that sets no escalating param. Only meaningful when `effectiveReadOnly` is not true.
    *

@@ -17,7 +17,7 @@ export class DbxFirebaseDevelopmentDirective implements AfterViewInit {
   readonly matSnackBar = inject(MatSnackBar);
   readonly dbxFirebaseDevelopmentService = inject(DbxFirebaseDevelopmentService);
 
-  ref?: NgPopoverRef<any, any>;
+  ref?: NgPopoverRef<any, any> | undefined;
 
   get enabled() {
     return this.dbxFirebaseDevelopmentService.enabled;

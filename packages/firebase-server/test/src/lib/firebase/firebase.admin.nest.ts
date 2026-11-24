@@ -133,7 +133,7 @@ export class FirebaseAdminNestTestContextInstance<PI extends FirebaseAdminTestCo
   get<TInput = any, TResult = TInput>(
     typeOrToken: Type<TInput> | Abstract<TInput> | string | symbol,
     options?: {
-      strict?: boolean | undefined;
+      strict?: boolean;
       each?: undefined | false;
     }
   ): TResult {

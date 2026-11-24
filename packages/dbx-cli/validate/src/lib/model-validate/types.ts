@@ -37,7 +37,7 @@ export interface Violation {
    * emission time. `undefined` when no catalog entry exists for the
    * code (the formatter renders no nested block in that case).
    */
-  readonly remediation?: RemediationHint;
+  readonly remediation?: RemediationHint | undefined;
 }
 
 export interface ValidationResult {
@@ -68,7 +68,7 @@ export interface RuleOptions {
    * Override for {@link MAX_FIELD_NAME_LENGTH}. Field names with `length`
    * exceeding this value trigger `MODEL_FIELD_NAME_TOO_LONG`.
    */
-  readonly maxFieldNameLength?: number;
+  readonly maxFieldNameLength?: number | undefined;
   /**
    * Field names that should never trigger field-level convention warnings —
    * currently `MODEL_FIELD_NAME_TOO_LONG` (regardless of the configured
@@ -76,7 +76,7 @@ export interface RuleOptions {
    * already the unabbreviated form). Globally scoped — matched by exact
    * name, no regex, no per-interface qualification.
    */
-  readonly ignoredFieldNames?: ReadonlySet<string>;
+  readonly ignoredFieldNames?: ReadonlySet<string> | undefined;
   /**
    * Parent-interface names whose `MODEL_SUBOBJECT_PARENT_NOT_TAGGED`
    * warning the validator should suppress when the parent is classified
@@ -86,7 +86,7 @@ export interface RuleOptions {
    * the catalog. Match is exact, case-sensitive, on the parent interface
    * name as written in the `extends` clause.
    */
-  readonly ignoredExternalParents?: ReadonlySet<string>;
+  readonly ignoredExternalParents?: ReadonlySet<string> | undefined;
 }
 
 /**
@@ -242,7 +242,7 @@ export interface ExtractedDataInterface {
    * `MODEL_COMPOSITE_KEY_*` findings; the tag's source line is preserved
    * so violations anchor at the tag, not the interface declaration.
    */
-  readonly dbxModelCompositeKeyTag?: ExtractedCompositeKeyTagInfo;
+  readonly dbxModelCompositeKeyTag?: ExtractedCompositeKeyTagInfo | undefined;
 }
 
 /**
@@ -348,7 +348,7 @@ export interface ExtractedDecl {
   readonly name: string;
   readonly exported: boolean;
   readonly line: number;
-  readonly typeText?: string;
+  readonly typeText?: string | undefined;
 }
 
 export interface ExtractedDocumentClass {

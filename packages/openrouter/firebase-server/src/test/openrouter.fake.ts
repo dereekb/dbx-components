@@ -12,6 +12,7 @@
 import { HTTPClient } from '@openrouter/sdk';
 import { OpenRouterCore } from '@openrouter/sdk/core';
 import { type FirebaseStorageContext, type StoragePath } from '@dereekb/firebase';
+import { type RequestOptions } from '@dereekb/openrouter';
 import { type Maybe } from '@dereekb/util';
 
 /**
@@ -36,6 +37,10 @@ export interface FakeOpenRouterDecisionReply {
   readonly answers?: Maybe<Record<string, unknown>>;
   readonly inputTokens?: Maybe<number>;
   readonly outputTokens?: Maybe<number>;
+  /**
+   * An exact 200 body to answer with, for the SDK's response-validation path. When set, every other field is ignored.
+   */
+  readonly rawBody?: Maybe<Record<string, unknown>>;
 }
 
 /**
@@ -116,18 +121,20 @@ export const FAKE_OPENROUTER_SYSTEM_ONE_PATH = '/systemone';
  * @returns The response body.
  */
 export function fakeOpenRouterDecisionResponseBody(reply: Maybe<FakeOpenRouterDecisionReply>, index: number): Record<string, unknown> {
-  return {
-    id: `gen_dec_${index}`,
-    model: 'typesafe/jev-1.13-20260917',
-    provider: 'TypeSafe',
-    answers: reply?.answers ?? {},
-    usage: {
-      input_tokens: reply?.inputTokens ?? 100,
-      output_tokens: reply?.outputTokens ?? 20,
-      // Input alone at Jev's $0.042/Mtok rate — output is reported but not billed.
-      cost: ((reply?.inputTokens ?? 100) * 0.042) / 1_000_000
+  return (
+    reply?.rawBody ?? {
+      id: `gen_dec_${index}`,
+      model: 'typesafe/jev-1.13-20260917',
+      provider: 'TypeSafe',
+      answers: reply?.answers ?? {},
+      usage: {
+        input_tokens: reply?.inputTokens ?? 100,
+        output_tokens: reply?.outputTokens ?? 20,
+        // Input alone at Jev's $0.042/Mtok rate — output is reported but not billed.
+        cost: ((reply?.inputTokens ?? 100) * 0.042) / 1_000_000
+      }
     }
-  };
+  );
 }
 
 const FAKE_MODEL = 'openai/gpt-5.1';
@@ -200,12 +207,26 @@ export function fakeOpenRouterResponseBody(reply: FakeOpenRouterReply, index: nu
 }
 
 /**
+ * Optional settings for {@link fakeOpenRouterClient}.
+ */
+export interface FakeOpenRouterClientConfig {
+  /**
+   * The client's own SDK retry policy. Defaults to `{ strategy: 'none' }`.
+   *
+   * Set a backoff to prove the run task sends no SDK retry of its own: use a fast one, so that a regression fails in
+   * milliseconds rather than retrying for the SDK's default hour.
+   */
+  readonly retryConfig?: Maybe<NonNullable<RequestOptions['retries']>>;
+}
+
+/**
  * Creates a real {@link OpenRouterCore} whose HTTP layer is answered locally.
  *
  * @param replyFactory - Decides the reply per request, or a single fixed reply.
+ * @param config - Optional client settings.
  * @returns The client and its captured requests.
  */
-export function fakeOpenRouterClient(replyFactory: FakeOpenRouterReplyFactory | FakeOpenRouterReply): FakeOpenRouterClient {
+export function fakeOpenRouterClient(replyFactory: FakeOpenRouterReplyFactory | FakeOpenRouterReply, config?: Maybe<FakeOpenRouterClientConfig>): FakeOpenRouterClient {
   const requests: Record<string, unknown>[] = [];
   const urls: string[] = [];
   const factory: FakeOpenRouterReplyFactory = typeof replyFactory === 'function' ? replyFactory : () => replyFactory;
@@ -243,7 +264,7 @@ export function fakeOpenRouterClient(replyFactory: FakeOpenRouterReplyFactory | 
     }
   });
 
-  const client = new OpenRouterCore({ apiKey: 'test-key', httpClient, retryConfig: { strategy: 'none' } });
+  const client = new OpenRouterCore({ apiKey: 'test-key', httpClient, retryConfig: config?.retryConfig ?? { strategy: 'none' } });
 
   return {
     client,

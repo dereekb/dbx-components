@@ -34,7 +34,7 @@ export type BundledTokenManifestPathsFactory = () => readonly string[];
 export interface LoadTokenRegistryInput {
   readonly cwd: string;
   readonly bundledManifestPaths?: BundledTokenManifestPathsFactory;
-  readonly readFile?: TokenManifestReadFile;
+  readonly readFile?: TokenManifestReadFile | undefined;
 }
 
 /**

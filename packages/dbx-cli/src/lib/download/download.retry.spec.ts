@@ -4,7 +4,7 @@ import { CliDownloadAbortedError, CliDownloadIncompleteError, CliDownloadStalled
 import { type CliDownloadFailure, CliDownloadTaskFailedError, composeCliDownloadFailureClassifiers, defaultCliDownloadFailureClassifier, runCliTaskWithRetry } from './download.retry';
 
 function responseError(status: number, headers?: Record<string, string>): FetchResponseError {
-  return new FetchResponseError(new Response(null, { status, headers }));
+  return new FetchResponseError(new Response(null, { status, ...(headers == null ? {} : { headers }) }));
 }
 
 function errnoError(code: string): Error {
@@ -169,6 +169,22 @@ describe('runCliTaskWithRetry()', () => {
     const error = await runCliTaskWithRetry({ task: () => Promise.reject(new CliDownloadStalledError(1)), classify, signal: controller.signal, retry: { initialDelay: 10_000, maxDelay: 10_000 } }).catch((e: unknown) => e);
 
     expect(Date.now() - started).toBeLessThan(5000);
+    expect((error as CliDownloadTaskFailedError).failure.kind).toBe('aborted');
+  });
+
+  it('returns from a backoff wait at once when the signal aborted before it', async () => {
+    const controller = new AbortController();
+    const started = Date.now();
+
+    const error = await runCliTaskWithRetry({
+      task: () => Promise.reject(new CliDownloadStalledError(1)),
+      classify,
+      signal: controller.signal,
+      retry: { initialDelay: 60_000, maxDelay: 60_000 },
+      onRetry: () => controller.abort()
+    }).catch((e: unknown) => e);
+
+    expect(Date.now() - started).toBeLessThan(1000);
     expect((error as CliDownloadTaskFailedError).failure.kind).toBe('aborted');
   });
 });

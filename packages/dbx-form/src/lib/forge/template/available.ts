@@ -53,7 +53,7 @@ export interface DbxForgeFieldValueIsAvailableValidatorConfig<T> {
  */
 interface DbxForgeAvailabilityCheckParams {
   readonly value: unknown;
-  readonly checkValueIsAvailable?: DbxForgeFieldValueIsAvailableCheckFn<unknown>;
+  readonly checkValueIsAvailable?: DbxForgeFieldValueIsAvailableCheckFn<unknown> | undefined;
 }
 
 /**

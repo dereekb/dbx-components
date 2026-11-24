@@ -6,7 +6,7 @@ import { BlobWriter, type Entry, type FileEntry } from '@zip.js/zip.js';
  */
 export type DbxZipBlobPreviewEntryNodeValue<T extends Entry = Entry> = SlashPathDirectoryTreeNodeValue<T> & {
   readonly mimeType: Maybe<MimeTypeWithoutParameters>;
-  readonly getBlob?: Getter<Promise<Blob>>;
+  readonly getBlob?: Getter<Promise<Blob>> | undefined;
 };
 
 /**

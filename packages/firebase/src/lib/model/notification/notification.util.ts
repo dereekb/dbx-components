@@ -338,7 +338,7 @@ export function notificationDeliveryMethodDecisionsToTemplateConfig(decisions: N
  */
 export interface UpdateNotificationUserNotificationSendExclusionsInput {
   readonly notificationUser: Pick<NotificationUser, 'b' | 'x' | 'bc'>;
-  readonly addExclusions?: ArrayOrValue<NotificationBoxSendExclusion>;
+  readonly addExclusions?: ArrayOrValue<NotificationBoxSendExclusion> | undefined;
   readonly removeExclusions?: ArrayOrValue<NotificationBoxSendExclusion>;
 }
 

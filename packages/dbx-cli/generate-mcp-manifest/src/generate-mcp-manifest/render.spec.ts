@@ -101,7 +101,7 @@ describe('renderMcpManifest', () => {
   });
 
   it('enriches a validator-derived inputSchema without overwriting existing descriptions', () => {
-    const validator = { toJsonSchema: () => ({ type: 'object', properties: { cursor: { type: 'string', description: 'preset' }, limit: { type: 'number' } } }) } as unknown as CliApiManifestEntry['paramsValidator'];
+    const validator = { toJsonSchema: () => ({ type: 'object', properties: { cursor: { type: 'string', description: 'preset' }, limit: { type: 'number' } } }) } as unknown as NonNullable<CliApiManifestEntry['paramsValidator']>;
 
     const result = render([
       makeEntry({
@@ -190,7 +190,7 @@ describe('renderMcpManifest', () => {
       makeEntry({
         paramsTypeName: 'QueryGuestbookParams',
         resultTypeName: 'GuestbookEntryPage',
-        paramsValidator: { toJsonSchema: () => ({ type: 'object' }) } as unknown as CliApiManifestEntry['paramsValidator']
+        paramsValidator: { toJsonSchema: () => ({ type: 'object' }) } as unknown as NonNullable<CliApiManifestEntry['paramsValidator']>
       })
     ]);
 

@@ -30,14 +30,14 @@ export interface ExtractedEntry {
   readonly definition: string;
   readonly baseType: SemanticTypeEntry['baseType'];
   readonly topics: readonly string[];
-  readonly unionValues?: readonly string[];
-  readonly typeParameters?: readonly string[];
+  readonly unionValues?: readonly string[] | undefined;
+  readonly typeParameters?: readonly string[] | undefined;
   readonly guards: readonly string[];
   readonly factories: readonly string[];
   readonly examples: readonly { readonly caption?: string; readonly code: string }[];
-  readonly notes?: string;
-  readonly deprecated?: boolean | string;
-  readonly since?: string;
+  readonly notes?: string | undefined;
+  readonly deprecated?: boolean | string | undefined;
+  readonly since?: string | undefined;
   readonly filePath: string;
   readonly line: number;
 }
@@ -128,8 +128,8 @@ interface ParsedJsDocTags {
   readonly guardNames: readonly string[];
   readonly factoryNames: readonly string[];
   readonly examples: readonly { readonly caption?: string; readonly code: string }[];
-  readonly deprecated?: boolean | string;
-  readonly since?: string;
+  readonly deprecated?: boolean | string | undefined;
+  readonly since?: string | undefined;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { type FirebaseAuthUserId } from '@dereekb/firebase';
-import { type RemoveIndex, incrementingNumberFactory, mapGetter, asGetter, type Factory, type GetterOrValue, type PromiseOrValue, type EmailAddress, type E164PhoneNumber, randomEmailFactory, randomNumberFactory, randomPhoneNumberFactory } from '@dereekb/util';
+import { type RemoveIndex, type PartialWithUndefined, filterUndefinedValues, incrementingNumberFactory, mapGetter, asGetter, type Factory, type GetterOrValue, type PromiseOrValue, type EmailAddress, type E164PhoneNumber, randomEmailFactory, randomNumberFactory, randomPhoneNumberFactory } from '@dereekb/util';
 import { AbstractChildTestContextFixture, type TestContextFixture, useTestContextFixture } from '@dereekb/util/test';
 import { type FirebaseAdminTestContext } from './firebase.admin';
 import { type CreateRequest, type UserRecord, type DecodedIdToken, type Auth } from 'firebase-admin/auth';
@@ -434,14 +434,16 @@ export function authorizedUserContextFactory<
           phoneNumber = (detailsPhoneNumber as E164PhoneNumber) ?? undefined;
         }
 
-        const userRecord = await auth.createUser({
-          uid,
-          displayName: 'Test Person',
-          ...details,
-          email,
-          phoneNumber,
-          ...inputUser
-        });
+        const userRecord = await auth.createUser(
+          filterUndefinedValues({
+            uid,
+            displayName: 'Test Person',
+            ...details,
+            email,
+            phoneNumber,
+            ...inputUser
+          })
+        );
 
         if (claims) {
           await auth.setCustomUserClaims(uid, claims);
@@ -603,7 +605,7 @@ export function decodeEncodedCreateCustomTokenResult(token: TestEncodedFirestore
  */
 export function testFirestoreClaimsFromUserRecord(userRecord: UserRecord): object {
   // Copy claims to be similar to DecodedIdToken pieces.
-  const baseClaims: Partial<RemoveIndex<DecodedIdToken>> = {
+  const baseClaims: PartialWithUndefined<RemoveIndex<DecodedIdToken>> = {
     picture: userRecord.photoURL,
     email: userRecord.email,
     email_verified: userRecord.emailVerified ?? false,

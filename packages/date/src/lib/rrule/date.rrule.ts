@@ -91,7 +91,7 @@ export interface DateRRuleInstanceOptions {
    *
    * This is not the timezone to convert values to, as this is
    */
-  timezone?: TimezoneString;
+  timezone?: TimezoneString | undefined;
   /**
    * Dates to exclude.
    *
@@ -214,8 +214,8 @@ export class DateRRuleInstance {
 
     const rruleOptions: Partial<Options> = {
       ...rrule.origOptions,
-      tzid: undefined,
-      dtstart
+      tzid: null,
+      dtstart: dtstart ?? null
     };
 
     if (!rruleOptions.dtstart) {

@@ -136,7 +136,7 @@ export function notificationLoggedEventLoader(config: NotificationLoggedEventLoa
     let cursor = 0;
 
     const performTasks = performTasksFromFactoryInParallelFunction<NotificationLoggedEventDayId>({
-      maxParallelTasks: maxParallelTasks ?? undefined,
+      ...(maxParallelTasks == null ? {} : { maxParallelTasks }),
       taskFactory: async (dayId) => {
         const items = await getItemsForDay(dayId);
         const filtered = type == null ? items : items.filter((item) => item.t === type);

@@ -482,7 +482,7 @@ export interface CliFirestoreQueryManifestEntry {
    * Absent when the identifier is not exported from {@link module}'s barrel
    * chain — the entry is listed but cannot be executed.
    */
-  readonly factory?: CliFirestoreQueryFactory;
+  readonly factory?: CliFirestoreQueryFactory | undefined;
 }
 
 /**

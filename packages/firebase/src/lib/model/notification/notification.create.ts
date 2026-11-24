@@ -6,7 +6,7 @@
  * Provides a fluent input pattern ({@link CreateNotificationTemplateInput}) that maps friendly field names
  * to the abbreviated Firestore fields, plus throttling support to avoid duplicate sends.
  */
-import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR, objectHasNoKeys, filterUndefinedValues, isThrottled } from '@dereekb/util';
+import { type Building, type Maybe, type Milliseconds, type ModelKey, MS_IN_HOUR, objectHasNoKeys, filterUndefinedValues, isThrottled, type PartialWithUndefined } from '@dereekb/util';
 import { type Notification, type NotificationDocument, type NotificationFirestoreCollections, notificationBoxIdentity, notificationIdentity, NotificationSendState, NotificationSendType } from './notification';
 import { type NotificationRecipientWithConfig } from './notification.config';
 import { DEFAULT_NOTIFICATION_TASK_NOTIFICATION_MODEL_KEY, notificationBoxIdForModel, type NotificationTaskKey, type NotificationTaskType, notificationTaskUniqueId, type NotificationTaskUniqueId, type NotificationTemplateType } from './notification.id';
@@ -30,7 +30,7 @@ export interface CreateNotificationTemplateItem extends Omit<NotificationItem, '
  *
  * Prefer using {@link CreateNotificationTemplateInput} with {@link createNotificationTemplate} for a friendlier API.
  */
-export interface CreateNotificationTemplate extends Partial<Omit<Notification, 'n' | 'a' | 'd' | 'tsr' | 'esr'>> {
+export interface CreateNotificationTemplate extends PartialWithUndefined<Omit<Notification, 'n' | 'a' | 'd' | 'tsr' | 'esr'>> {
   /**
    * Model key of the NotificationBox's target model (not the NotificationBox's key)
    */
@@ -102,11 +102,11 @@ export interface CreateNotificationTemplateInput extends Partial<Omit<CreateNoti
   /**
    * Overrides st
    */
-  readonly sendType?: NotificationSendType;
+  readonly sendType?: NotificationSendType | undefined;
   /**
    * Overrides r
    */
-  readonly recipients?: NotificationRecipientWithConfig[];
+  readonly recipients?: NotificationRecipientWithConfig[] | undefined;
   /**
    * Overrides cb
    */

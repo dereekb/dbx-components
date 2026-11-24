@@ -200,8 +200,8 @@ function readJsDocs(jsDocs: readonly JSDoc[]): RawJsDocs {
 interface ClassTags {
   readonly hasMarker: boolean;
   readonly summary: string;
-  readonly slug?: string;
-  readonly role?: string;
+  readonly slug?: string | undefined;
+  readonly role?: string | undefined;
   readonly stateInteraction: readonly string[];
   readonly producesContext: boolean;
   readonly consumesContext: boolean;

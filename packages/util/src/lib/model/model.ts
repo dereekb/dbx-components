@@ -1,6 +1,7 @@
 import { symmetricDifferenceArray } from '../set/set';
 import { type ReadKeyFunction, type ReadMultipleKeysFunction } from '../key';
 import { type Maybe } from '../value/maybe.type';
+import { type PartialWithUndefined } from '../type';
 import { type MapFunction } from '../value/map';
 import { filterUniqueValues } from '../array/array.unique';
 
@@ -46,10 +47,17 @@ export const DEFAULT_UNKNOWN_MODEL_TYPE_STRING: ModelTypeString = 'unknown';
  * A model with an identifier on the "id" key.
  */
 export interface UniqueModel {
-  id?: ModelKey;
+  id?: ModelKey | undefined;
 }
 
-export type UniqueModelWithId = Required<UniqueModel>;
+/**
+ * A {@link UniqueModel} whose "id" is always set.
+ *
+ * Declared explicitly instead of as `Required<UniqueModel>`: under `exactOptionalPropertyTypes`, `Required<>` keeps the explicit `| undefined` on `UniqueModel.id`.
+ */
+export interface UniqueModelWithId extends UniqueModel {
+  id: ModelKey;
+}
 
 export interface TypedModel<M extends ModelTypeString = ModelTypeString> {
   type: M;
@@ -92,7 +100,7 @@ export interface ModelKeyNamePair extends Pick<ModelKeyTypePair, 'key'> {
 export interface ModelKeyTypeNamePair<M extends ModelTypeString = ModelTypeString> extends ModelKeyNamePair, ModelKeyTypePair<M> {}
 
 export interface ReadModelKeyParams<T> {
-  readonly required?: boolean;
+  readonly required?: boolean | undefined;
   readonly read: ReadModelKeyFunction<T>;
 }
 
@@ -310,8 +318,8 @@ export function requireModelKey<T extends UniqueModel>(input: Maybe<ModelOrKey<T
  * @throws Error if `required` is true and no key can be extracted
  */
 export function readModelKey<T>(input: Maybe<ModelOrKey<T>>, params: ReadModelKeyParams<T>): Maybe<ModelKey>;
-export function readModelKey<T extends UniqueModel>(input: Maybe<ModelOrKey<T>>, params?: Partial<ReadModelKeyParams<T>>): Maybe<ModelKey>;
-export function readModelKey<T>(input: Maybe<ModelOrKey<T>>, { required = false, read = readUniqueModelKey as ReadModelKeyFunction<T> }: Partial<ReadModelKeyParams<T>> = {}): Maybe<ModelKey> {
+export function readModelKey<T extends UniqueModel>(input: Maybe<ModelOrKey<T>>, params?: PartialWithUndefined<ReadModelKeyParams<T>>): Maybe<ModelKey>;
+export function readModelKey<T>(input: Maybe<ModelOrKey<T>>, { required = false, read = readUniqueModelKey as ReadModelKeyFunction<T> }: PartialWithUndefined<ReadModelKeyParams<T>> = {}): Maybe<ModelKey> {
   let key: Maybe<ModelKey>;
 
   if (typeof input === 'string') {

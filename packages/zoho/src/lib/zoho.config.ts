@@ -1,3 +1,5 @@
+import { type Milliseconds, MS_IN_SECOND } from '@dereekb/util';
+
 /**
  * Lowercase identifier for a specific Zoho service (e.g. `'recruit'`, `'crm'`, `'sign'`).
  */
@@ -54,5 +56,11 @@ export interface ZohoConfig {
    * Target API URL, either as an environment key or a full URL.
    * Each service resolves this to a concrete URL via its own config utility.
    */
-  readonly apiUrl?: ZohoConfigApiUrlInput;
+  readonly apiUrl?: ZohoConfigApiUrlInput | undefined;
 }
+
+/**
+ * Default timeout for the requests the default Zoho fetches send: the wait for the response headers. Configure it
+ * per factory with `timeout`.
+ */
+export const DEFAULT_ZOHO_FETCH_TIMEOUT: Milliseconds = 20 * MS_IN_SECOND;

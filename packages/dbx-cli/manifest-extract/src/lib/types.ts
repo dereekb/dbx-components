@@ -15,12 +15,12 @@ export type CrudVerb = 'create' | 'read' | 'update' | 'delete' | 'query' | 'invo
 export interface CrudEntryDocField {
   readonly name: string;
   readonly typeText: string;
-  readonly description?: string;
+  readonly description?: string | undefined;
   /**
    * Access posture parsed from the property's `@dbxModelApiAdminOnly` JSDoc flag.
    * Omitted when the flag is absent (treated as `'public'` by consumers).
    */
-  readonly accessLevel?: 'public' | 'adminOnly';
+  readonly accessLevel?: 'public' | 'adminOnly' | undefined;
 }
 
 export interface CrudEntry {
@@ -56,44 +56,44 @@ export interface CrudEntry {
    * JSDoc summary on the property signature in `<Group>ModelCrudFunctionsConfig` (or the key
    * in `<Group>FunctionTypeMap`).
    */
-  readonly description?: string;
+  readonly description?: string | undefined;
   /**
    * JSDoc summary on the params interface itself (e.g. on `ResetProfilePasswordParams`).
    */
-  readonly paramsTypeDescription?: string;
+  readonly paramsTypeDescription?: string | undefined;
   /**
    * Per-field JSDocs read from the params interface's properties.
    */
-  readonly paramsFields?: readonly CrudEntryDocField[];
+  readonly paramsFields?: readonly CrudEntryDocField[] | undefined;
   /**
    * `true` when the resolved params interface carries the `@dbxModelApiParams` marker tag,
    * `false` when it is present but untagged. `undefined` when no params interface could be
    * resolved (e.g. bare primitive params). Used by the manifest builder to warn about
    * params types referenced from CRUD config that are missing the marker.
    */
-  readonly paramsHasApiParamsTag?: boolean;
+  readonly paramsHasApiParamsTag?: boolean | undefined;
   /**
    * JSDoc summary on the result interface itself (e.g. on `DownloadProfileArchiveResult`).
    */
-  readonly resultTypeDescription?: string;
+  readonly resultTypeDescription?: string | undefined;
   /**
    * Per-field JSDocs read from the result interface's properties.
    */
-  readonly resultFields?: readonly CrudEntryDocField[];
+  readonly resultFields?: readonly CrudEntryDocField[] | undefined;
   /**
    * Name of the MCP-mapped result interface declared via the `@dbxModelApiMcpResult <TypeName>`
    * JSDoc tag on the leaf. Present only when a handler remaps its success result for MCP; the
    * MCP manifest output schema is synthesized from this type instead of the raw result.
    */
-  readonly mcpResultTypeName?: string;
+  readonly mcpResultTypeName?: string | undefined;
   /**
    * JSDoc summary on the MCP-mapped result interface itself (resolved from `mcpResultTypeName`).
    */
-  readonly mcpResultTypeDescription?: string;
+  readonly mcpResultTypeDescription?: string | undefined;
   /**
    * Per-field JSDocs read from the MCP-mapped result interface's properties.
    */
-  readonly mcpResultFields?: readonly CrudEntryDocField[];
+  readonly mcpResultFields?: readonly CrudEntryDocField[] | undefined;
 }
 
 export interface CrudExtraction {
@@ -112,7 +112,7 @@ export interface CrudExtraction {
    * Used by the manifest build CLI to bind `<APP>_FIREBASE_FUNCTIONS_CONFIG`
    * class identifiers to source files.
    */
-  readonly functionsClassName?: string;
+  readonly functionsClassName?: string | undefined;
 }
 
 /**
@@ -172,23 +172,23 @@ export interface ModelExtractionInterface {
    * Closed-enum read posture from `@dbxModelRead <level>` (`system` / `owner` / `admin-only`
    * / `permissions`). Absent when the interface omits the tag or declares an invalid value.
    */
-  readonly dbxModelRead?: 'system' | 'owner' | 'admin-only' | 'permissions';
+  readonly dbxModelRead?: 'system' | 'owner' | 'admin-only' | 'permissions' | undefined;
   /**
    * True when the interface carries `@dbxModelServerOnly` — the model has no client read grant in
    * `firestore.rules` and must be refused on the model API too. See
    * `FirebaseModelServiceConfig.serverOnly`, the runtime half of the same declaration.
    */
-  readonly dbxModelServerOnly?: boolean;
+  readonly dbxModelServerOnly?: boolean | undefined;
   /**
    * Per-model MCP tool-name segment from `@dbxModelMcpToolNameSegment <segment>`. Replaces the model
    * type in generated tool names (e.g. the collection prefix). Absent when the tag is omitted or invalid.
    */
-  readonly mcpToolNameSegment?: string;
+  readonly mcpToolNameSegment?: string | undefined;
   /**
    * Parsed `@dbxModelCompositeKey from=<ModelA>[,<ModelB>...] encoding=<two-way|one-way>` tag. Absent
    * when the tag is omitted or malformed (no `from=`, or an encoding other than `two-way` / `one-way`).
    */
-  readonly compositeKey?: ModelExtractionCompositeKey;
+  readonly compositeKey?: ModelExtractionCompositeKey | undefined;
 }
 
 /**
@@ -223,19 +223,19 @@ export interface ModelExtractionConverterField {
    * `firestoreSubObject({ objectField: <const> })`. Resolved by the
    * orchestrator against the cross-file converter registry.
    */
-  readonly nestedConverterRef?: string;
+  readonly nestedConverterRef?: string | undefined;
   /**
    * Inline nested converter when the field's expression is
    * `firestoreObjectArray({ objectField: { fields: { … } } })` or
    * `firestoreSubObject({ objectField: { fields: { … } } })`.
    */
-  readonly nestedConverterInline?: ModelExtractionConverter;
+  readonly nestedConverterInline?: ModelExtractionConverter | undefined;
   /**
    * `true` when the wrapping factory is `firestoreObjectArray` (array element
    * shape); `false` for `firestoreSubObject`. Only meaningful when one of
    * `nestedConverterRef` or `nestedConverterInline` is set.
    */
-  readonly nestedIsArray?: boolean;
+  readonly nestedIsArray?: boolean | undefined;
 }
 
 /**

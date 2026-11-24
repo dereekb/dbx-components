@@ -138,15 +138,15 @@ export interface ExpandedNotificationRecipientBase {
   /**
    * The recipient that is registered with the NotificationBox and their configuration from that box.
    */
-  readonly boxRecipient?: ExpandedNotificationRecipientConfig;
+  readonly boxRecipient?: ExpandedNotificationRecipientConfig | undefined;
   /**
    * A recipient that is not registered with the NotificationBox but was requested by UID and their configuration from their NotificationUser, if applicable.
    */
-  readonly otherUserRecipient?: ExpandedNotificationRecipientConfig;
+  readonly otherUserRecipient?: ExpandedNotificationRecipientConfig | undefined;
   /**
    * The recipient that is not registered with the NotificationBox.
    */
-  readonly otherRecipient?: NotificationRecipientWithConfig;
+  readonly otherRecipient?: NotificationRecipientWithConfig | undefined;
 }
 
 /**
@@ -474,8 +474,8 @@ export async function expandNotificationRecipients(input: ExpandNotificationReci
     readonly emailAddress: Maybe<EmailAddress>;
     readonly phoneNumber: Maybe<E164PhoneNumber>;
     readonly name: Maybe<string>;
-    readonly boxRecipient?: ExpandedNotificationRecipientConfig;
-    readonly otherRecipient?: NotificationRecipientWithConfig;
+    readonly boxRecipient?: ExpandedNotificationRecipientConfig | undefined;
+    readonly otherRecipient?: NotificationRecipientWithConfig | undefined;
   }
 
   const resolvedUidRecipients: ResolvedUidRecipient[] = Array.from(recipientUids).map((uid) => {

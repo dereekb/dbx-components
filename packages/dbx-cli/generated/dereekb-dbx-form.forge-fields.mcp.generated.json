@@ -70,13 +70,13 @@
       "properties": [
         {
           "name": "password",
-          "type": "DbxForgeTextPasswordFieldConfig",
+          "type": "DbxForgeTextPasswordFieldConfig | undefined",
           "description": "Optional configuration for the primary password field.",
           "required": false
         },
         {
           "name": "verifyPassword",
-          "type": "DbxForgeTextPasswordFieldConfig",
+          "type": "DbxForgeTextPasswordFieldConfig | undefined",
           "description": "Optional configuration for the verify/confirm password field.",
           "required": false
         }
@@ -172,19 +172,19 @@
         },
         {
           "name": "notWebsiteUrlMessage",
-          "type": "DynamicText",
+          "type": "DynamicText | undefined",
           "description": "Optional override for the \"is not a valid website url\" error message.",
           "required": false
         },
         {
           "name": "notWebsiteUrlWithPrefixMessage",
-          "type": "DynamicText",
+          "type": "DynamicText | undefined",
           "description": "Optional override for the \"is not a valid website url with an http/https prefix\" error message.",
           "required": false
         },
         {
           "name": "notWebsiteUrlWithExpectedDomainMessage",
-          "type": "DynamicText",
+          "type": "DynamicText | undefined",
           "description": "Optional override for the \"is not a valid website url with an expected domain\" error message.",
           "required": false
         },
@@ -223,8 +223,8 @@
       "tier": "field-factory",
       "produces": "T[]",
       "arrayOutput": "yes",
-      "description": "Multi-checkbox group. Use for small static option sets where every option is visible at once.",
-      "example": "dbxForgeChecklistField<string>({ key: 'flags', props: { options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] } })",
+      "description": "Multi-checkbox group. Use for small static option sets where every option is visible at once. It has no selection cap: use `pickable-chip` with `maxPicks` to limit the picks.",
+      "example": "dbxForgeChecklistField<string>({ key: 'flags', options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] })",
       "properties": [],
       "wrapperPattern": "unwrapped",
       "ngFormType": "multi-checkbox",
@@ -561,109 +561,103 @@
       "tier": "field-factory",
       "produces": "T | T[]",
       "arrayOutput": "optional",
-      "description": "Selection field rendering selected values as Material chips. Defaults to multi-select; flip to single-select via the underlying props.",
+      "description": "Selection field rendering selected values as Material chips. Defaults to multi-select; flip to single-select via the underlying props, or cap the picks with `maxPicks`.",
       "example": "dbxForgePickableChipField<Tag>({ key: 'tags', label: 'Tags', props: { loadValues: () => loadTags$, displayForValue: displayTag } })",
       "properties": [
         {
           "name": "loadValues (props)",
           "type": "PickableValueFieldLoadValuesFunction<T, M>",
-          "description": "",
+          "description": "Loads all pickable values.",
           "required": true
         },
         {
           "name": "displayForValue (props)",
           "type": "PickableValueFieldDisplayFunction<T, M>",
-          "description": "",
+          "description": "Builds the display values for the given values.",
           "required": true
         },
         {
           "name": "hashForValue (props)",
           "type": "PickableValueFieldHashFunction<T, H>",
-          "description": "",
+          "description": "Hashes a value, used to compare values and drop repeats. The value itself is used when not set.",
           "required": false
         },
         {
           "name": "filterValues (props)",
           "type": "PickableValueFieldFilterFunction<T, M>",
-          "description": "",
+          "description": "Filters the displayed values by the filter text.",
           "required": false
         },
         {
           "name": "filterSelectedValues (props)",
           "type": "PickableValueFieldFilterSelectedValuesFunction<T>",
-          "description": "Filters/modifies the selected values at selection time (user pick, remove, select-all).\n\nLets the field enforce rules like group exclusivity internally instead of round-tripping conflicting values through external sync.",
+          "description": "Filters/modifies the selected values at selection time (user pick, remove, select-all), so the field can enforce rules like group exclusivity internally instead of round-tripping conflicting values through external sync. A refused change is not written to the field.",
           "required": false
         },
         {
           "name": "sortItems (props)",
           "type": "PickableItemFieldItemSortFn<T, M>",
-          "description": "",
+          "description": "Sorts the items before they are displayed.",
           "required": false
         },
         {
           "name": "multiSelect (props)",
           "type": "boolean",
-          "description": "",
+          "description": "Whether more than one value can be picked. Defaults to true, and is ignored when `asArrayValue` is false.",
           "required": false
         },
         {
           "name": "asArrayValue (props)",
           "type": "boolean",
-          "description": "",
+          "description": "Whether the field's value is an array. When false only one value can be picked, and the field's value is that value. Defaults to true.",
           "required": false
         },
         {
           "name": "showTextFilter (props)",
           "type": "boolean",
-          "description": "",
+          "description": "Whether to show the text filter. Defaults to true when `filterValues` is set.",
           "required": false
         },
         {
           "name": "skipFilterFnOnEmpty (props)",
           "type": "boolean",
-          "description": "",
+          "description": "Whether to show every value instead of calling `filterValues` while the filter text is empty. Defaults to true.",
           "required": false
         },
         {
           "name": "filterLabel (props)",
           "type": "string",
-          "description": "",
+          "description": "Label shown above the text filter.",
           "required": false
         },
         {
           "name": "maxPicks (props)",
-          "type": "number",
-          "description": "",
+          "type": "Maybe<number>",
+          "description": "Maximum number of values that can be picked. At the limit every unselected item is disabled until a pick is taken back; a selected item is never disabled, so a selection seeded past the limit can still be reduced. Counts every value in the field, including picks hidden by the text filter. Ignored when only one value can be picked. Limits picking only: add `maxLength` to also make a longer value invalid.",
           "required": false
         },
         {
           "name": "showSelectAllButton (props)",
           "type": "boolean",
-          "description": "",
-          "required": false
-        },
-        {
-          "name": "changeSelectionModeToViewOnDisabled (props)",
-          "type": "boolean",
-          "description": "",
+          "description": "Whether to show a toggle that selects, or deselects, every visible item that is not disabled. Not shown when only one value can be picked, or when `maxPicks` is below the number of loaded values. Defaults to false.",
           "required": false
         },
         {
           "name": "footerConfig (props)",
           "type": "DbxInjectionComponentConfig",
-          "description": "",
+          "description": "Component to show below the items.",
           "required": false
         },
         {
           "name": "refreshDisplayValues$ (props)",
           "type": "Observable<unknown>",
-          "description": "",
+          "description": "Clears the cached display values each time it emits.",
           "required": false
         },
         {
           "name": "hint (props)",
           "type": "string",
-          "description": "",
+          "description": "Hint text shown below the field.",
           "required": false
         }
       ],
@@ -684,103 +678,97 @@
         {
           "name": "loadValues (props)",
           "type": "PickableValueFieldLoadValuesFunction<T, M>",
-          "description": "",
+          "description": "Loads all pickable values.",
           "required": true
         },
         {
           "name": "displayForValue (props)",
           "type": "PickableValueFieldDisplayFunction<T, M>",
-          "description": "",
+          "description": "Builds the display values for the given values.",
           "required": true
         },
         {
           "name": "hashForValue (props)",
           "type": "PickableValueFieldHashFunction<T, H>",
-          "description": "",
+          "description": "Hashes a value, used to compare values and drop repeats. The value itself is used when not set.",
           "required": false
         },
         {
           "name": "filterValues (props)",
           "type": "PickableValueFieldFilterFunction<T, M>",
-          "description": "",
+          "description": "Filters the displayed values by the filter text.",
           "required": false
         },
         {
           "name": "filterSelectedValues (props)",
           "type": "PickableValueFieldFilterSelectedValuesFunction<T>",
-          "description": "Filters/modifies the selected values at selection time (user pick, remove, select-all).\n\nLets the field enforce rules like group exclusivity internally instead of round-tripping conflicting values through external sync.",
+          "description": "Filters/modifies the selected values at selection time (user pick, remove, select-all), so the field can enforce rules like group exclusivity internally instead of round-tripping conflicting values through external sync. A refused change is not written to the field.",
           "required": false
         },
         {
           "name": "sortItems (props)",
           "type": "PickableItemFieldItemSortFn<T, M>",
-          "description": "",
+          "description": "Sorts the items before they are displayed.",
           "required": false
         },
         {
           "name": "multiSelect (props)",
           "type": "boolean",
-          "description": "",
+          "description": "Whether more than one value can be picked. Defaults to true, and is ignored when `asArrayValue` is false.",
           "required": false
         },
         {
           "name": "asArrayValue (props)",
           "type": "boolean",
-          "description": "",
+          "description": "Whether the field's value is an array. When false only one value can be picked, and the field's value is that value. Defaults to true.",
           "required": false
         },
         {
           "name": "showTextFilter (props)",
           "type": "boolean",
-          "description": "",
+          "description": "Whether to show the text filter. Defaults to true when `filterValues` is set.",
           "required": false
         },
         {
           "name": "skipFilterFnOnEmpty (props)",
           "type": "boolean",
-          "description": "",
+          "description": "Whether to show every value instead of calling `filterValues` while the filter text is empty. Defaults to true.",
           "required": false
         },
         {
           "name": "filterLabel (props)",
           "type": "string",
-          "description": "",
+          "description": "Label shown above the text filter.",
           "required": false
         },
         {
           "name": "maxPicks (props)",
-          "type": "number",
-          "description": "",
+          "type": "Maybe<number>",
+          "description": "Maximum number of values that can be picked. At the limit every unselected item is disabled until a pick is taken back; a selected item is never disabled, so a selection seeded past the limit can still be reduced. Counts every value in the field, including picks hidden by the text filter. Ignored when only one value can be picked. Limits picking only: add `maxLength` to also make a longer value invalid.",
           "required": false
         },
         {
           "name": "showSelectAllButton (props)",
           "type": "boolean",
-          "description": "",
-          "required": false
-        },
-        {
-          "name": "changeSelectionModeToViewOnDisabled (props)",
-          "type": "boolean",
-          "description": "",
+          "description": "Whether to show a toggle that selects, or deselects, every visible item that is not disabled. Not shown when only one value can be picked, or when `maxPicks` is below the number of loaded values. Defaults to false.",
           "required": false
         },
         {
           "name": "footerConfig (props)",
           "type": "DbxInjectionComponentConfig",
-          "description": "",
+          "description": "Component to show below the items.",
           "required": false
         },
         {
           "name": "refreshDisplayValues$ (props)",
           "type": "Observable<unknown>",
-          "description": "",
+          "description": "Clears the cached display values each time it emits.",
           "required": false
         },
         {
           "name": "hint (props)",
           "type": "string",
-          "description": "",
+          "description": "Hint text shown below the field.",
           "required": false
         }
       ],
@@ -1839,25 +1827,25 @@
       "properties": [
         {
           "name": "preferredCountries",
-          "type": "string[]",
+          "type": "string[] | undefined",
           "description": "Preferred countries to show at the top of the country selector.",
           "required": false
         },
         {
           "name": "onlyCountries",
-          "type": "string[]",
+          "type": "string[] | undefined",
           "description": "ISO country codes to restrict the dropdown to.",
           "required": false
         },
         {
           "name": "enableSearch",
-          "type": "boolean",
+          "type": "boolean | undefined",
           "description": "Whether or not to enable the search feature. True by default.",
           "required": false
         },
         {
           "name": "allowExtension",
-          "type": "boolean",
+          "type": "boolean | undefined",
           "description": "Whether or not to allow adding an extension. False by default.",
           "required": false
         },

@@ -90,10 +90,10 @@ export function dbxFirebaseNotificationSettingsListGroupDelegate(headerComponent
     groupValueForItem: (item) => item.itemValue.group.key,
     dataForGroupValue: (value, items) => {
       const group = items[0].itemValue.group;
-      return { value, group, title: group.name, hint: group.description ?? undefined };
+      return { value, group, title: group.name, ...(group.description == null ? {} : { hint: group.description }) };
     },
     sortGroupsByData: (a, b) => compareNotificationTemplateTypeInfoGroups(a.group, b.group),
-    headerComponentClass: headerComponentClass ?? undefined
+    ...(headerComponentClass == null ? {} : { headerComponentClass })
   };
 }
 

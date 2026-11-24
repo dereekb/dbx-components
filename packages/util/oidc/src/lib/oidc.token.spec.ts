@@ -127,7 +127,7 @@ describe('oidcTokenManager()', () => {
 
   it('keeps the prior refresh token when the response omits one', async () => {
     const storage = inMemoryAsyncValueCache<OidcTokenState>(expiredState('rt-keep'));
-    const refresh = vi.fn(async () => validResponse({ refresh_token: undefined }));
+    const refresh = vi.fn(async (): Promise<OidcTokenResponse> => ({ access_token: 'at-1', expires_in: 3600 }));
     const manager = oidcTokenManager({ storage, refresh, now: () => now });
 
     await manager.getValidAccessToken();

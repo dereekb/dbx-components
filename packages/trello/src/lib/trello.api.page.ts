@@ -49,7 +49,7 @@ export interface TrelloPageResult<T> {
    *
    * Undefined when this page has fewer items than the requested limit.
    */
-  readonly nextBefore?: TrelloId;
+  readonly nextBefore?: TrelloId | undefined;
 }
 
 /**

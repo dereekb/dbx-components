@@ -22,13 +22,13 @@ export interface CliFirestoreCollectionForQueryInput {
   /**
    * The parent document key to narrow to, from `--parent`.
    */
-  readonly parentKey?: FirestoreModelKey;
+  readonly parentKey?: FirestoreModelKey | undefined;
   /**
    * The parent-document path templates the rules declare for this collection, from
    * `CliFirestoreQueryReachability.parentPaths` (e.g. `jl/{jobLocation}/jlj/{job}`). When supplied,
    * a `--parent` whose collection chain does not match one of them is rejected locally.
    */
-  readonly parentPaths?: readonly string[];
+  readonly parentPaths?: readonly string[] | undefined;
 }
 
 /**

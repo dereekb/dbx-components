@@ -1,4 +1,5 @@
 import type { MatSliderField, MatSliderProps } from '@ng-forge/dynamic-forms-material';
+import { type PartialWithUndefined } from '@dereekb/util';
 import { configureDbxForgeFormFieldWrapper, type DbxForgeFormFieldWrapperDef } from '../../wrapper/formfield/formfield.wrapper';
 import { type DbxForgeFieldFunctionDef, dbxForgeBuildFieldDef, dbxForgeFieldFunction, dbxForgeFieldFunctionConfigPropsWithHintBuilder } from '../../field';
 
@@ -57,7 +58,7 @@ export const dbxForgeNumberSliderField = dbxForgeFieldFunction<DbxForgeNumberSli
 
     // Create the inner slider using ng-forge built-in 'slider' type.
     // Label and hint are omitted here — the wrapper provides those.
-    const sliderProps: Partial<MatSliderProps> = {
+    const sliderProps: PartialWithUndefined<MatSliderProps> = {
       step,
       thumbLabel: inputThumbLabel ?? true,
       tickInterval

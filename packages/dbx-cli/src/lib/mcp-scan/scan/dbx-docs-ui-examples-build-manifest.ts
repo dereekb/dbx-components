@@ -26,9 +26,9 @@ export type BuildDbxDocsUiExamplesManifestGlobber = ScanGlobber;
 export interface BuildDbxDocsUiExamplesManifestInput {
   readonly projectRoot: string;
   readonly generator: string;
-  readonly now?: () => Date;
-  readonly readFile?: BuildDbxDocsUiExamplesManifestReadFile;
-  readonly globber?: BuildDbxDocsUiExamplesManifestGlobber;
+  readonly now?: (() => Date) | undefined;
+  readonly readFile?: BuildDbxDocsUiExamplesManifestReadFile | undefined;
+  readonly globber?: BuildDbxDocsUiExamplesManifestGlobber | undefined;
 }
 
 /**

@@ -9,12 +9,16 @@ side is therefore done here: prompt content and model config live in Firestore (
 MCP-editable rather than hidden in a dashboard), and asynchronous execution is an app-owned run-task
 queue drained by a sweeper the app mounts on a schedule it already runs.
 
+**Peers.** `@dereekb/llm` is a required peer, pinned to this package's own version like every `@dereekb/*` peer. The
+decision vocabulary (questions, answers, the `/systemone` body, the decision errors) is `@dereekb/llm/decision`'s: this
+package imports it, and re-exports it under its old, deprecated names. Install both at the same version.
+
 ## Entry points
 
 | Entry | Purpose |
 |---|---|
 | `@dereekb/openrouter` | Config types, request builder, `callModel` wrapper, deferred-tool helpers, embeddings, **decisions**. Pure — no I/O. |
-| `@dereekb/openrouter/decision` | The decision layer WITHOUT `@openrouter/sdk`: questions, validation, the request body, the answer reader, model ids. See [below](#loading-without-the-sdk). |
+| `@dereekb/openrouter/decision` | The OpenRouter decision layer WITHOUT `@openrouter/sdk`: the request, the `/systemone` body, usage flattening, model config and ids, plus deprecated aliases of the vocabulary that moved to `@dereekb/llm/decision`. See [below](#loading-without-the-sdk). |
 | `@dereekb/openrouter/template` | The message template core WITHOUT `@openrouter/sdk`: template types, the script validator and runner, the context builder, output checks, the review definition. See [Message templates](#message-templates). |
 | `@dereekb/openrouter/firebase` | The `OpenRouterPrompt`, `OpenRouterPromptVersion` and `OpenRouterRunTask` models. |
 | `@dereekb/openrouter/firebase-server` | Prompt service, run-task queue + sweep, Firestore `StateAccessor`, server actions. |
@@ -39,8 +43,17 @@ The raw OpenRouter client (`OpenRouterApi`) and the OTLP broadcast webhook live 
 
 Retries are classified rather than uniform: a transient failure (429, 5xx, `ECONNRESET`, a Firestore
 `UNAVAILABLE`) spends the `maxAttempts` budget, while a deterministic one (400, 401, 402, 403, 404, a
-prompt that does not resolve) reaches `FAILED` on its first attempt instead of burning three sweep ticks
-to reach the same answer. Anything unrecognized is treated as transient.
+prompt that does not resolve, a decision answer or declaration fault) reaches `FAILED` on its first attempt
+instead of burning three sweep ticks to reach the same answer. The classification is
+`classifyOpenRouterError`, built on `@dereekb/util/fetch`'s `classifyFetchError`. Anything unrecognized
+(`unknown`) is treated as transient by default; a host narrows that with the run-task service config's
+`isRetryableUnknownError` (`false` fails the task now). That function is wiring-time code: nothing about it
+is stored on the task document.
+
+Each request is one attempt. `@dereekb/openrouter` sends `retries: { strategy: 'none' }` unless the caller passes
+`retries`, so the SDK's own backoff (5xx, connection errors and timeouts, retried for up to an hour by default)
+never runs inside a run-task attempt. `requestTimeoutMs` bounds the whole call, and `maxAttempts` is the only retry.
+The raw SDK functions this package re-exports, and methods on the client itself, keep the client's own setting.
 
 There is no replay. `enqueueRunTask({ key, …, restart: true })` re-runs a key, and `continueFrom` chains
 one run onto another's history.
@@ -60,18 +73,20 @@ Three primitives, and no others:
 
 | Primitive | Asks | Answers |
 |---|---|---|
-| `openRouterChoiceQuestion(instructions, options)` | which of these options? | `choice`, guaranteed one of the declared options; `probabilities` over every option summing to 1 (a free full ranking); `confidence` |
-| `openRouterScoreQuestion(instructions, levels)` | which level on this rubric? | a `score` that may land BETWEEN two levels, the distribution, `confidence` |
-| `openRouterNoulQuestion(instructions, means?)` | is this true? | `noul` 0..1 — the probability IS the uncertainty, so there is no separate confidence |
+| `llmChoiceQuestion(instructions, options)` | which of these options? | `choice`, guaranteed one of the declared options; `probabilities` over every option summing to 1 (a free full ranking); `confidence` |
+| `llmScoreQuestion(instructions, levels)` | which level on this rubric? | a `score` that may land BETWEEN two levels, the distribution, `confidence` |
+| `llmNoulQuestion(instructions, means?)` | is this true? | `noul` 0..1 — the probability IS the uncertainty, so there is no separate confidence |
 
 ```ts
+import { llmChoiceQuestion, llmNoulQuestion } from '@dereekb/llm/decision';
+
 const questions = {
-  team: openRouterChoiceQuestion('Which team should own `ticket`?', {
+  team: llmChoiceQuestion('Which team should own `ticket`?', {
     billing: { what: 'Charges, invoices, refunds', not_for: 'Anything about signing in' },
     access: { what: 'Sign-in, passwords, permissions', not_for: 'Anything about money' },
     other: { what: 'Anything the other options do not cover' }
   }),
-  spam: openRouterNoulQuestion('`ticket` is unsolicited marketing rather than a real request.')
+  spam: llmNoulQuestion('`ticket` is unsolicited marketing rather than a real request.')
 };
 
 const result = await decideForPrompt({ client, promptService, promptKey: 'demo-support-triage', state: { ticket } });
@@ -83,10 +98,10 @@ result.answers.spam.noul;     // 0..1
 same state, so the question map is both the batching unit and the cost unit: the state is sent and billed
 once, and a speculative question the caller may discard costs only its own tokens.
 
-**Membership is the transport's guarantee.** `readOpenRouterDecisionAnswers` checks every answer against
+**Membership is the transport's guarantee.** `readLlmDecisionAnswers` checks every answer against
 the question that asked it, so no consumer re-checks: past that point a `choice` is one of the declared
 options, a `score` is inside the declared range, a `noul` is a probability. An answer that left its space
-raises `OpenRouterDecisionAnswerFaultError` — a defect in the RESPONSE, never a judgement the model made.
+raises `LlmDecisionAnswerFaultError` — a defect in the RESPONSE, never a judgement the model made.
 "None of these fits" is said through a Noul the caller declared for it, and lands as an *answer*.
 
 A Choice is only ever RELATIVE — its probabilities are normalised over the options supplied, so something
@@ -101,7 +116,7 @@ which is absolute and may be low for every option.
   is no substitute. A blank one is refused at declaration.
 - **Point at named state with backticked dot-paths** — `` `phrase` ``, `` `ticket.sender.email` ``,
   `` `messages[0].text` ``. Prefer an object state so each part has a name to point at.
-  `openRouterDecisionStatePaths` reads them back so a spec can pin that a declaration names keys its
+  `llmDecisionStatePaths` reads them back so a spec can pin that a declaration names keys its
   state has (documented and inspectable, never enforced — backticks also quote literals).
 - **Score levels are SITUATIONS, not degrees.** "Broken feature, but a workaround exists" gives the model
   something to match against; "moderately severe" does not. Every level is evaluated separately and the
@@ -123,7 +138,7 @@ strings, and reach for structure only for guidance prose would blur or for data 
 | Context | 64k tokens per request | Filter in code first. |
 | Price | $0.042 / Mtok input; output reported but **not billed** | `usage.cost` is synchronous and final. |
 
-`validateOpenRouterDecisionQuestions` fails at the DECLARATION, naming the question — not as a 4xx about
+`validateLlmDecisionQuestions` fails at the DECLARATION, naming the question — not as a 4xx about
 a request body — and runs at version create / update / seed, so a malformed question map is refused when
 it is written rather than every time it is asked.
 
@@ -148,20 +163,48 @@ rather than assuming the slug you asked for.
 
 The root entry re-exports SDK values (`callModel`, `responsesSend`, `systemOneCreate`, …), so importing
 ANY value from `@dereekb/openrouter` evaluates `@openrouter/sdk` — a real cold-start cost, and one a test
-runner that isolates each spec file pays once per file. `@dereekb/openrouter/decision` carries everything a
-decision is built from and read with, and loads nothing under `@openrouter/sdk`:
+runner that isolates each spec file pays once per file.
 
-- `openRouterChoiceQuestion` / `openRouterScoreQuestion` / `openRouterNoulQuestion`, the answer and
-  confidence helpers, and `validateOpenRouterDecisionQuestions`;
-- `openRouterDecisionRequest`, `openRouterDecisionRequestBody` (the `/systemone` body, wire mapping
-  included), `readOpenRouterDecisionAnswers` and its `OpenRouterDecisionAnswerFaultError`,
+The decision vocabulary is SDK-free by construction: it lives in `@dereekb/llm/decision` —
+`llmChoiceQuestion` / `llmScoreQuestion` / `llmNoulQuestion`, the answer and confidence helpers,
+`validateLlmDecisionQuestions`, `readLlmDecisionAnswers` and its `LlmDecisionAnswerFaultError`, and the routing
+guard `isLlmDecisionModelId`. `@dereekb/openrouter/decision` adds what is OpenRouter's, and also loads nothing
+under `@openrouter/sdk`:
+
+- `openRouterDecisionRequest`, `openRouterDecisionRequestBody` (the `/systemone` body: `@dereekb/llm/decision`'s
+  `llmDecisionRequestBody` plus OpenRouter's `provider`, `user`, session id and trace),
   `openRouterRunUsageFromDecisionsUsage`, `validateOpenRouterDecisionRequest`;
-- the model config and the model ids, `isOpenRouterSystemOneModelId` among them.
+- the model config and the model ids (`OPENROUTER_JEV_*`, `DEFAULT_OPENROUTER_SYSTEM_ONE_MODEL_ID`);
+- the deprecated aliases below.
 
 What it does NOT carry is `openRouterDecision` — the transport, and the one `systemOneCreate` caller. A
 consumer that owns its transport (its own timeout, retry policy or error shape) builds the body here, sends
-it through its own lazily-loaded client, and reads the reply here. The two entries share one built chunk,
-so a class has one identity whichever entry it was imported through.
+it through its own lazily-loaded client, and reads the reply with `requireLlmDecisionAnswers` — the throwing read
+`openRouterDecision` itself uses (`readLlmDecisionAnswers` returns the faults instead). The moved classes
+live once in `@dereekb/llm`, so a class has one identity whichever entry it was imported through.
+
+### Deprecated names
+
+The protocol-level decision names moved to `@dereekb/llm/decision` under neutral names — the pattern is
+`OpenRouterDecision…` → `LlmDecision…`, `openRouter{Choice,Score,Noul}Question` → `llm{Choice,Score,Noul}Question`,
+`OPENROUTER_DECISION_…` → `LLM_DECISION_…`, `OpenRouterSystemOneModelId` / `isOpenRouterSystemOneModelId` →
+`LlmDecisionModelId` / `isLlmDecisionModelId` (the full table is in `@dereekb/llm`'s `docs/decision.md`, "Coming from
+`@dereekb/openrouter`"). Two names break the pattern: `asOpenRouterDecisionConfidenceBand` →
+`toLlmDecisionConfidenceBand` and `isBlankOpenRouterDecisionEntry` → `isBlankLlmDecisionEntry`. The request types
+(`OpenRouterDecisionRequest`, `OpenRouterDecisionResult`, …) are not aliases.
+
+- Every old name is still exported from `@dereekb/openrouter` and `@dereekb/openrouter/decision`, marked
+  `@deprecated`, as the SAME value, class or type — so `instanceof OpenRouterDecisionAnswerFaultError` and
+  `instanceof LlmDecisionAnswerFaultError` agree.
+- Stored JSON is unchanged (`q`, `st`, `an` read the same), and so are stored run-task error codes: a decision
+  fault still records `OpenRouterDecisionAnswerFaultError` / `OpenRouterDecisionDeclarationError`.
+- The deprecated classes ARE the `@dereekb/llm` classes, so a thrown fault's `.name` reads
+  `LlmDecisionAnswerFaultError` / `LlmDecisionDeclarationError`; branch on `instanceof` (either name works) — stored
+  run-task error codes are unchanged.
+- `@dereekb/openrouter` imports the decision vocabulary from `@dereekb/llm/decision`, never the `@dereekb/llm` root,
+  so its `/decision` and `/template` entries load neither the llm dispatcher nor (for `/decision`) arktype.
+  `OpenRouterGenerationId` is the same type as `LlmGenerationId`.
+- The aliases go away in a future major release.
 
 ### Where a decision lives
 
@@ -381,6 +424,10 @@ keyed per generation rather than per conversation.
 A message template renders a message string (an SMS, an in-app notification) from a typed context, with no AI
 writing the text unless the template's type allows it. The core lives in `@dereekb/openrouter/template`.
 
+Not `@dereekb/llm`'s `LlmPromptTemplate` / `LlmResolvedPromptTemplate`: those are prompt text for llm's layout-driven
+prompt assembly, neither message templates nor stored prompts. The two packages share the word, not the concept, and
+are deliberately not converged.
+
 ### Template types
 
 A template TYPE is registered in code with `openRouterTemplateType()`. It declares:
@@ -586,7 +633,8 @@ The opt-in template-text notification type sends any template by key:
   for plain prompts (additive).
 ## Live probes
 
-Two blocks make real API calls, both skipped unless `OPENROUTER_API_KEY` is set:
+Four blocks make real (some billed) API calls. All are skipped unless `OPENROUTER_LIVE_SPECS` is `1` or `true`
+(trimmed, any case — the gate is `describeIfEnvFlag` from `@dereekb/util/test`):
 
 - `openrouter.filesearch.spike.spec.ts` — the `file_search` passthrough probes. Deliberately cheap: a
   free model by default, and the file_search probe fails at the store lookup before anything is billed.
@@ -604,10 +652,21 @@ Two blocks make real API calls, both skipped unless `OPENROUTER_API_KEY` is set:
   this repo consumes the models yet, so the same server actions the callModel MCP surfaces are called
   directly instead.
 
+- The demo app's `live` blocks in `apps/demo-api` (`storagefile.resume.scenario.spec.ts`,
+  `openrouter.scenario.mcp.spec.ts`) use the same flag.
+- The flag is separate from the key on purpose. Nx loads the workspace `.env.local` and the committed
+  `.env` (`OPENROUTER_API_KEY=placeholder`) into every test task, and its bundled `dotenv-expand` treats
+  an empty override as unset and writes the file value back. A key check would run the probes on every
+  local run, and on CI against the placeholder.
+- Keep `OPENROUTER_LIVE_SPECS` out of `.env` and `.env.local`. To force it off over a dotenv value, pass
+  `0`, not an empty value.
+- The flag is an Nx test input (`liveSpecFlags` in `nx.json`), so toggling it never replays a cached run.
+
 | Variable | Purpose |
 |---|---|
-| `OPENROUTER_API_KEY` | Enables the live probes. |
-| `OPENROUTER_TEST_MODEL_ID` | Model for the general probe and the end-to-end run. Defaults to `nvidia/nemotron-nano-9b-v2:free`. |
+| `OPENROUTER_LIVE_SPECS` | `1` / `true` runs the live probes. Off by default. |
+| `OPENROUTER_API_KEY` | The key the live probes call with. Its presence alone never runs them. |
+| `OPENROUTER_TEST_MODEL_ID` | Model for the general probe and the end-to-end run. Defaults to `nvidia/nemotron-nano-9b-v2:free` in code; the committed `.env` sets `openai/gpt-5.6-luna` and Nx loads it, so set this explicitly for a free run. |
 | `OPENROUTER_FILE_SEARCH_MODEL_ID` | Model for the file_search probe. Must be an OpenAI model. |
 | `OPENROUTER_FILE_SEARCH_VECTOR_STORE_ID` | A real `vs_…`; upgrades the probe to the full grounded assertion. |
 | `OPENROUTER_TEST_DECISION_MODEL_ID` | System One model for the decision probes. Defaults to `typesafe/jev-1.13`. Its own knob because the two arms cannot share one value. |

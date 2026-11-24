@@ -142,7 +142,7 @@ export interface PerformAsyncTaskConfig<I = unknown> {
   /**
    * Optional function to use before a retry.
    */
-  readonly beforeRetry?: (value: I, tryNumber?: number) => void | Promise<void>;
+  readonly beforeRetry?: ((value: I, tryNumber?: number) => void | Promise<void>) | undefined;
 }
 
 /**
@@ -175,9 +175,9 @@ export async function performAsyncTasks<I, O = unknown, K extends PrimativeKey =
       _performAsyncTask(value, taskFn, config).then((x) => {
         taskResults[i] = x;
       }),
-    maxParallelTasks,
-    sequential,
-    waitBetweenTasks
+    ...(maxParallelTasks === undefined ? {} : { maxParallelTasks }),
+    ...(sequential === undefined ? {} : { sequential }),
+    ...(waitBetweenTasks === undefined ? {} : { waitBetweenTasks })
   })(input);
 
   const succeded: I[] = [];

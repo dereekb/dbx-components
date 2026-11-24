@@ -75,7 +75,7 @@ describe('openRouterRunTaskUpdateForConversationState()', () => {
     const update = openRouterRunTaskUpdateForConversationState(
       state({
         status: 'awaiting_approval',
-        pendingToolCalls: [{ id: 'c1', name: 'ask_human', arguments: { q: 'ok?' } }] as ConversationState['pendingToolCalls'],
+        pendingToolCalls: [{ id: 'c1', name: 'ask_human', arguments: { q: 'ok?' } }] as NonNullable<ConversationState['pendingToolCalls']>,
         unsentToolResults: []
       })
     );

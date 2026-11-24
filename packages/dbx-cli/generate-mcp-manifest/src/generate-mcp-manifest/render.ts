@@ -43,13 +43,13 @@ export interface RenderMcpManifestInput {
    * the runtime {@link McpManifestModelEntry} shape and emits a `models` array
    * on the output JSON for the runtime's built-in catalog tools.
    */
-  readonly modelManifest?: CliModelManifest;
+  readonly modelManifest?: CliModelManifest | undefined;
   /**
    * Optional generated enum manifest, keyed by enum name. When present, emits an
    * `enums` block on the output JSON so the runtime `model-info` / `enum-info`
    * tools can decode raw enum values. Pure data — threaded through verbatim.
    */
-  readonly enumManifest?: CliEnumManifest;
+  readonly enumManifest?: CliEnumManifest | undefined;
   /**
    * Optional auth registry + primary-app slug used to project the runtime
    * `auth` section on the manifest. The renderer filters entries to the

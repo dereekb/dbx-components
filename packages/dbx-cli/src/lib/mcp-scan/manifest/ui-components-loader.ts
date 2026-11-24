@@ -36,7 +36,7 @@ export type UiComponentLoaderWarning = ManifestLoaderWarning;
  */
 export interface LoadUiComponentManifestsInput {
   readonly sources: readonly UiComponentManifestSource[];
-  readonly readFile?: UiComponentManifestReadFile;
+  readonly readFile?: UiComponentManifestReadFile | undefined;
 }
 
 /**

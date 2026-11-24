@@ -1,5 +1,6 @@
 import { valuesAreBothNullishOrEquivalent } from '../value/maybe';
 import { type MaybeNot, type Maybe } from '../value/maybe.type';
+import { type PartialWithUndefined } from '../type';
 
 /**
  * The past or future direction.
@@ -154,7 +155,7 @@ export interface TimezoneStringRef {
  * @dbxUtilTags date, timezone, compare, equal, predicate
  * @dbxUtilRelated is-considered-utc-timezone-string
  */
-export function hasSameTimezone(a: Maybe<Partial<TimezoneStringRef>>, b: Maybe<Partial<TimezoneStringRef>>): boolean {
+export function hasSameTimezone(a: Maybe<PartialWithUndefined<TimezoneStringRef>>, b: Maybe<PartialWithUndefined<TimezoneStringRef>>): boolean {
   const tzA = a?.timezone;
   const tzB = b?.timezone;
   return valuesAreBothNullishOrEquivalent(tzA, tzB);

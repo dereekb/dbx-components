@@ -1,4 +1,5 @@
 export * from './error';
+export * from './error.classify';
 export * from './fetch';
 export * from './fetch.file';
 export * from './fetch.limit';

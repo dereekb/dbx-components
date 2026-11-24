@@ -24,7 +24,7 @@ export interface ResolveLogBasePathInput {
    * `logs.basePath`. Used only when neither the per-call arg nor
    * {@link DBX_LOG_PATH_ENV_VAR} is set.
    */
-  readonly configBasePath?: string;
+  readonly configBasePath?: string | undefined;
 }
 
 /**

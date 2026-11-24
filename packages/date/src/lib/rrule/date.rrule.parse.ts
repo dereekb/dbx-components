@@ -156,7 +156,7 @@ export interface RRuleExdateAttribute {
   /**
    * Parsed timezone, if applicable.
    */
-  timezone?: string;
+  timezone?: string | undefined;
   /**
    * Dates relative to UTC.
    */

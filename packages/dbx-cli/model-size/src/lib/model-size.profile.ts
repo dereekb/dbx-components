@@ -59,7 +59,7 @@ export interface ModelSizeProfile {
    * Converter export name. When omitted, the single converter in the source
    * file is used (an error is thrown when the file exports more than one).
    */
-  readonly export?: string;
+  readonly export?: string | undefined;
   /**
    * Storage limit to compare against. Defaults to
    * {@link FIRESTORE_DOCUMENT_SIZE_LIMIT_BYTES}.
@@ -89,17 +89,17 @@ export interface ModelSizeProfile {
    * Path of an array / object-array / map field to solve for: the calculator
    * reports the largest element/key count that stays within `limitBytes`.
    */
-  readonly solveFor?: string;
+  readonly solveFor?: string | undefined;
   /**
    * A theoretical model object merged over the generated sample (provided
    * values win). May be partial — unspecified fields are auto-filled.
    */
-  readonly sample?: Readonly<Record<string, unknown>>;
+  readonly sample?: Readonly<Record<string, unknown>> | undefined;
   /**
    * Path to a JSON file whose contents are used as {@link sample}, resolved
    * the same way as {@link source}.
    */
-  readonly sampleFile?: string;
+  readonly sampleFile?: string | undefined;
 }
 
 /**

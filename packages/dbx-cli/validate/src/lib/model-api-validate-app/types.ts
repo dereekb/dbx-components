@@ -48,7 +48,7 @@ export interface HandlerEntry {
    * How the scan read the MCP read/write classification the handler declares. Set only when {@link verb} leaves it to the
    * handler (`invoke`, custom verbs).
    */
-  readonly mcpReadOnly?: HandlerMcpReadOnly;
+  readonly mcpReadOnly?: HandlerMcpReadOnly | undefined;
 }
 
 /**
@@ -110,7 +110,7 @@ export interface HandlerMcpReadOnlyUnresolved {
   /**
    * The declaration, when the scan reached it but could not read its config.
    */
-  readonly declarationSource?: string;
+  readonly declarationSource?: string | undefined;
 }
 
 export interface ReconciledEntry {

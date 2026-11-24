@@ -34,7 +34,7 @@ export interface DbxForgeFormFieldWrapperProps {
    * When set, this replaces the field's primary label inside the notched outline.
    * Has no effect when {@link showLabelAt} is `'content'` or `'none'`.
    */
-  readonly label?: DynamicText;
+  readonly label?: DynamicText | undefined;
 }
 
 /**
@@ -42,7 +42,7 @@ export interface DbxForgeFormFieldWrapperProps {
  */
 export interface DbxForgeFormFieldWrapperDef {
   readonly type: typeof DBX_FORGE_FORM_FIELD_WRAPPER_NAME;
-  readonly props?: DbxForgeFormFieldWrapperProps;
+  readonly props?: DbxForgeFormFieldWrapperProps | undefined;
 }
 
 // MARK: Configuration

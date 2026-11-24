@@ -1,4 +1,4 @@
-import { type CssClassesArray, type Maybe, type UniqueModel } from '@dereekb/util';
+import { type CssClassesArray, type Maybe, type UniqueModelWithId } from '@dereekb/util';
 import { type DbxValueListItem, type DbxValueListItemConfig } from '../list.view.value';
 import { type DbxInjectionComponentConfig } from '@dereekb/dbx-core';
 import { type Provider, type Type, forwardRef } from '@angular/core';
@@ -7,7 +7,7 @@ import { type ObservableOrValue } from '@dereekb/rxjs';
 /**
  * A group of DbxValueListItem values, grouped by common data, name, and id.
  */
-export interface DbxValueListItemGroup<G, T, I extends DbxValueListItem<T>, H = unknown, F = unknown> extends Omit<DbxValueListItem<unknown>, 'itemValue' | 'icon' | 'key'>, Readonly<Required<UniqueModel>> {
+export interface DbxValueListItemGroup<G, T, I extends DbxValueListItem<T>, H = unknown, F = unknown> extends Omit<DbxValueListItem<unknown>, 'itemValue' | 'icon' | 'key'>, Readonly<UniqueModelWithId> {
   readonly data: G;
   readonly items: DbxValueListItemConfig<T, I>[];
   /**

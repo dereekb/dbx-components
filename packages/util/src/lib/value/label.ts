@@ -41,5 +41,5 @@ export function labeledValueMap<V extends LabeledValue<T>, T extends PrimativeKe
  * Pairs a value with a human-readable label and an optional description.
  */
 export interface LabeledValueWithDescription<T> extends LabeledValue<T> {
-  description?: string;
+  description?: string | undefined;
 }

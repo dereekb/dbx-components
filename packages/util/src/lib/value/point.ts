@@ -734,7 +734,7 @@ export interface RandomLatLngFactoryConfig {
   /**
    * Precision of the LatLng to keep.
    */
-  readonly precision?: LatLngPrecision;
+  readonly precision?: LatLngPrecision | undefined;
 }
 
 /**

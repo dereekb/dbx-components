@@ -201,7 +201,7 @@ export interface StorageFileUploadFilesEvent {
    *
    * Set when the final file has been uploaded or failed.
    */
-  readonly result?: StorageFileUploadFilesFinalResult;
+  readonly result?: StorageFileUploadFilesFinalResult | undefined;
   /**
    * The number of files that are still uploading or queued for upload.
    */

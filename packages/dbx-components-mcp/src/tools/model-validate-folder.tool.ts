@@ -67,7 +67,7 @@ export interface CreateModelValidateFolderToolOptions {
    * `modelValidate` block. When omitted, the validator falls back to the
    * built-in defaults.
    */
-  readonly ruleOptions?: RuleOptions;
+  readonly ruleOptions?: RuleOptions | undefined;
 }
 
 /**

@@ -59,7 +59,7 @@ export interface McpToolResponseContentBlock {
 export interface McpToolVisibilityDispatchTarget {
   readonly call: string;
   readonly modelType: string;
-  readonly specifier?: string;
+  readonly specifier?: string | undefined;
 }
 
 /**
@@ -83,12 +83,12 @@ export interface McpVisibilityContext {
   /**
    * The authenticated caller, when present. `undefined` for anonymous callers.
    */
-  readonly auth?: FirebaseServerAuthData;
+  readonly auth?: FirebaseServerAuthData | undefined;
   /**
    * The caller's OIDC scopes, when the request was authenticated with a `scope`-bearing token.
    * `undefined` for non-OIDC callers — treated the same as the model-api scope gate's non-OIDC bypass.
    */
-  readonly scopes?: ReadonlySet<string>;
+  readonly scopes?: ReadonlySet<string> | undefined;
   /**
    * Dispatch identity of the tool being evaluated. Lets a shared predicate branch by tool.
    */
@@ -123,9 +123,9 @@ export type McpToolVisibility = boolean | McpVisibilityRule | ((context: McpVisi
 export interface McpToolDetailsBuilderInput {
   readonly dispatch: McpToolVisibilityDispatchTarget;
   readonly defaultDescription: string;
-  readonly defaultInputSchema?: object;
-  readonly auth?: FirebaseServerAuthData;
-  readonly scopes?: ReadonlySet<string>;
+  readonly defaultInputSchema?: object | undefined;
+  readonly auth?: FirebaseServerAuthData | undefined;
+  readonly scopes?: ReadonlySet<string> | undefined;
 }
 
 /**
@@ -133,8 +133,8 @@ export interface McpToolDetailsBuilderInput {
  * returning an empty object is a no-op.
  */
 export interface McpToolDetailsBuilderResult {
-  readonly description?: string;
-  readonly inputSchema?: object;
+  readonly description?: string | undefined;
+  readonly inputSchema?: object | undefined;
 }
 
 /**
@@ -374,7 +374,7 @@ export interface OnCallModelFunctionApiDetails<R = unknown, M = unknown> {
    * When it implements Standard Schema — any ArkType `Type` — the callModel dispatch checks the request data against
    * it before the handler runs. See {@link inputValidation}.
    */
-  readonly inputType?: JsonSchemaRef;
+  readonly inputType?: JsonSchemaRef | undefined;
   /**
    * How the callModel dispatch checks the request data against {@link inputType} before the handler runs.
    *
@@ -386,20 +386,20 @@ export interface OnCallModelFunctionApiDetails<R = unknown, M = unknown> {
    *
    * Undeclared keys pass through unless the type itself sets `.onUndeclaredKey('reject')` or `'delete'`.
    */
-  readonly inputValidation?: OnCallModelFunctionInputValidation;
+  readonly inputValidation?: OnCallModelFunctionInputValidation | undefined;
   /**
    * The output result type. Optional — many handlers return void or generic results.
    */
-  readonly outputType?: JsonSchemaRef;
+  readonly outputType?: JsonSchemaRef | undefined;
   /**
    * MCP-specific customization. Auto-generated if omitted.
    */
-  readonly mcp?: OnCallModelFunctionMcpDetails<R, M>;
+  readonly mcp?: OnCallModelFunctionMcpDetails<R, M> | undefined;
   /**
    * Analytics lifecycle configuration for this handler.
    * When provided, the dispatch chain will call lifecycle hooks around handler execution.
    */
-  readonly analytics?: OnCallModelFunctionAnalyticsDetails;
+  readonly analytics?: OnCallModelFunctionAnalyticsDetails | undefined;
   /**
    * Optional per-function OIDC scope TERM an OIDC-authenticated caller must additionally hold to
    * invoke this handler, on top of the per-verb `model.<call>` scope.
@@ -414,7 +414,7 @@ export interface OnCallModelFunctionApiDetails<R = unknown, M = unknown> {
    * bypass scope enforcement entirely and are unaffected. Also folded into the MCP tool-list
    * visibility filter, so a tool the caller cannot satisfy this term for is neither listed nor callable.
    */
-  readonly requiredScope?: OidcScopeTerm;
+  readonly requiredScope?: OidcScopeTerm | undefined;
 }
 
 /**
@@ -532,7 +532,7 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
    * This replaces the need to compose withApiDetails + optionalAuthContext separately,
    * which would lose _apiDetails since optionalAuthContext creates a new wrapper function.
    */
-  readonly optionalAuth?: boolean;
+  readonly optionalAuth?: boolean | undefined;
   /**
    * Optional analytics lifecycle configuration for this handler.
    * When provided, the dispatch chain will call lifecycle hooks around handler execution.
@@ -540,7 +540,7 @@ export interface WithApiDetailsConfig<F extends (...args: any[]) => any> extends
    * The request type and return type are inferred from the `fn` parameter, providing
    * full type safety in lifecycle callbacks.
    */
-  readonly analytics?: OnCallModelFunctionAnalyticsDetails<Parameters<F>[0], Awaited<ReturnType<F>>>;
+  readonly analytics?: OnCallModelFunctionAnalyticsDetails<Parameters<F>[0], Awaited<ReturnType<F>>> | undefined;
   /**
    * The handler function.
    */

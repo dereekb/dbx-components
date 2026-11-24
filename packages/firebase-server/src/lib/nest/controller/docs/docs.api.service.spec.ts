@@ -424,6 +424,10 @@ describe('DocsApiService', () => {
     it('should skip a leading frontmatter block', () => {
       expect(extractDocsMarkdownSections('---\ntitle: x\n## not a section\n---\n## Real\n')).toEqual([{ id: 'real', title: 'Real', depth: 2 }]);
     });
+
+    it('should skip a leading frontmatter block after a BOM', () => {
+      expect(extractDocsMarkdownSections(`${String.fromCodePoint(0xfeff)}---\r\ntitle: x\r\n## not a section\r\n---\r\n## Real\r\n`)).toEqual([{ id: 'real', title: 'Real', depth: 2 }]);
+    });
   });
 
   describe('slugifyDocsHeading()', () => {

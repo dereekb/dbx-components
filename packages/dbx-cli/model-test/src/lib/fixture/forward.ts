@@ -21,7 +21,7 @@ export interface RenderedForwarder {
  */
 export interface RenderForwardersInput {
   readonly entry: FixtureEntry;
-  readonly methods?: readonly string[];
+  readonly methods?: readonly string[] | undefined;
 }
 
 /**

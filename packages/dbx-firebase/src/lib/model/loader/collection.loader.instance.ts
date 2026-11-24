@@ -45,7 +45,7 @@ export type DbxFirebaseCollectionMode = 'query' | 'references';
 
 export interface DbxFirebaseCollectionLoaderInstanceInitConfig<T, D extends FirestoreDocument<T> = FirestoreDocument<T>> {
   readonly collection?: Maybe<FirestoreCollectionLike<T, D>>;
-  readonly collectionMode?: DbxFirebaseCollectionMode;
+  readonly collectionMode?: Maybe<DbxFirebaseCollectionMode>;
   readonly collectionKeys?: Maybe<FirestoreModelKey[]>;
   readonly collectionRefs?: Maybe<DocumentReference<T>[]>;
   readonly maxPages?: Maybe<number>;

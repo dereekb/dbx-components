@@ -1,6 +1,23 @@
-import { filterUndefinedValues, type Maybe, mergeObjects } from '@dereekb/util';
+import { filterUndefinedValues, type Maybe, mergeObjects, type PartialWithUndefined } from '@dereekb/util';
 import { objectHasKey } from './object';
-import { filterFromPOJO, allNonUndefinedKeys, allMaybeSoKeys, countPOJOKeys, countPOJOKeysFunction, findPOJOKeys, overrideInObject, assignValuesToPOJOFunction, filterKeysOnPOJOFunction, mergeObjectsFunction, valuesFromPOJO, valuesFromPOJOFunction, stripObject, stripObjectFunction } from './object.filter.pojo';
+import {
+  filterFromPOJO,
+  allNonUndefinedKeys,
+  allMaybeSoKeys,
+  countPOJOKeys,
+  countPOJOKeysFunction,
+  findPOJOKeys,
+  overrideInObject,
+  assignValuesToPOJOFunction,
+  filterKeysOnPOJOFunction,
+  mergeObjectsFunction,
+  valuesFromPOJO,
+  valuesFromPOJOFunction,
+  stripObject,
+  stripObjectFunction,
+  filterMaybeValues,
+  type FilteredMaybeValues
+} from './object.filter.pojo';
 import { KeyValueTypleValueFilter } from './object.filter.tuple';
 
 describe('overrideInObject', () => {
@@ -130,6 +147,42 @@ describe('mergeObjects', () => {
     expect(result[2]).toBeDefined();
     expect(result[2]).toBe(2);
   });
+
+  describe('with a complete first object', () => {
+    interface TestLimits {
+      readonly a: number;
+      readonly b: number;
+    }
+
+    const defaults: TestLimits = { a: 1, b: 2 };
+
+    it('should keep a default when an override is explicitly undefined', () => {
+      const override: PartialWithUndefined<TestLimits> = { a: undefined };
+      const result: TestLimits = mergeObjects<TestLimits>([defaults, override]);
+      expect(result).toEqual({ a: 1, b: 2 });
+    });
+
+    it('should apply overrides over the defaults', () => {
+      const result: TestLimits = mergeObjects<TestLimits>([defaults, { b: 5 }, undefined]);
+      expect(result).toEqual({ a: 1, b: 5 });
+    });
+
+    it('should drop a null override with the NULL filter', () => {
+      const result = mergeObjects<{ a: Maybe<number> }>([{ a: 1 }, { a: null }], KeyValueTypleValueFilter.NULL);
+      expect(result).toEqual({ a: 1 });
+    });
+
+    it('should keep a null override with the UNDEFINED filter', () => {
+      const result = mergeObjects<{ a: Maybe<number> }>([{ a: 1 }, { a: null }], KeyValueTypleValueFilter.UNDEFINED);
+      expect(result).toEqual({ a: null });
+    });
+
+    it('should accept a readonly input array', () => {
+      const inputs: readonly [TestLimits, Partial<TestLimits>] = [defaults, { a: 3 }];
+      const result: TestLimits = mergeObjects<TestLimits>(inputs);
+      expect(result).toEqual({ a: 3, b: 2 });
+    });
+  });
 });
 
 describe('findPOJOKeys()', () => {
@@ -246,6 +299,64 @@ describe('filterUndefinedValues', () => {
   });
 });
 
+describe('filterMaybeValues()', () => {
+  it('should drop null and undefined values', () => {
+    const result = filterMaybeValues({ a: 1, b: undefined, c: null });
+    expect(result).toEqual({ a: 1 });
+    expect(Object.keys(result)).toEqual(['a']);
+  });
+
+  it('should keep the other falsy values', () => {
+    const result = filterMaybeValues({ a: 0, b: false, c: '', d: null });
+    expect(Object.keys(result)).toEqual(['a', 'b', 'c']);
+    expect(result).toEqual({ a: 0, b: false, c: '' });
+  });
+
+  it('should keep the input key order', () => {
+    const result = filterMaybeValues({ z: 1, y: null, x: 'x', w: undefined, v: 0 });
+    expect(JSON.stringify(result)).toBe('{"z":1,"x":"x","v":0}');
+  });
+
+  it('should return a copy and leave the input untouched', () => {
+    const input = { a: 1, b: null as Maybe<number> };
+    const result = filterMaybeValues(input);
+    expect(result).not.toBe(input);
+    expect(Object.keys(input)).toEqual(['a', 'b']);
+    expect(input.b).toBeNull();
+  });
+
+  it('should filter shallowly and keep a nested null', () => {
+    const result = filterMaybeValues({ a: { b: null }, c: null });
+    expect(result).toEqual({ a: { b: null } });
+  });
+
+  it('should type a Maybe value as an optional non-nullable key', () => {
+    const wire: { readonly count: number; readonly label: Maybe<string> } = { count: 2, label: null };
+    const shaped: { readonly count: number; readonly label?: string } = filterMaybeValues(wire);
+    expect(shaped).toEqual({ count: 2 });
+
+    const withLabel: FilteredMaybeValues<{ readonly count: number; readonly label: Maybe<string> }> = filterMaybeValues({ count: 3, label: 'x' as Maybe<string> });
+    expect(withLabel.label).toBe('x');
+  });
+
+  it('should keep a non-nullable key required', () => {
+    // @ts-expect-error count is required on the result, so a value without it does not fit the type
+    const missingCount: FilteredMaybeValues<{ count: number; label: Maybe<string> }> = { label: 'x' };
+    expect(missingCount.count).toBeUndefined();
+
+    const label = undefined as Maybe<string>;
+    // @ts-expect-error count was never in the input, so the result cannot satisfy a required count
+    const fromLabelOnly: { count: number } = filterMaybeValues({ label });
+    expect(fromLabelOnly).toEqual({});
+  });
+
+  it('should reject null in the result type', () => {
+    // @ts-expect-error a nullable key loses null in the result
+    const withNull: FilteredMaybeValues<{ count: number; label: Maybe<string> }> = { count: 1, label: null };
+    expect(withNull.label).toBeNull();
+  });
+});
+
 describe('filterFromPOJO()', () => {
   it('should remove undefined values from the object by default', () => {
     const result = filterFromPOJO({ x: undefined, y: 'test' });
@@ -340,7 +451,7 @@ describe('stripObject()', () => {
   });
 
   it('should not mutate the input by default (copy)', () => {
-    const input: { a: number; b?: number } = { a: 1, b: undefined };
+    const input: { a: number; b?: number | undefined } = { a: 1, b: undefined };
     const result = stripObject(input);
     expect(result).not.toBe(input);
     expect(result).toEqual({ a: 1 });
@@ -348,7 +459,7 @@ describe('stripObject()', () => {
   });
 
   it('should mutate the input when copy=false', () => {
-    const input: { a: number; b?: number } = { a: 1, b: undefined };
+    const input: { a: number; b?: number | undefined } = { a: 1, b: undefined };
     const result = stripObject(input, false);
     expect(result).toBe(input);
     expect(objectHasKey(input, 'b')).toBe(false);
@@ -357,7 +468,7 @@ describe('stripObject()', () => {
 
 describe('stripObjectFunction()', () => {
   it('should produce a reusable function that strips undefined values', () => {
-    const strip = stripObjectFunction<{ a?: number; b?: number }>(KeyValueTypleValueFilter.UNDEFINED);
+    const strip = stripObjectFunction<{ a?: number | undefined; b?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED);
 
     expect(strip({ a: 1, b: undefined })).toEqual({ a: 1 });
     expect(strip({ a: undefined, b: undefined })).toBeUndefined();
@@ -372,8 +483,8 @@ describe('stripObjectFunction()', () => {
   });
 
   it('should default to copying the input (copy=true)', () => {
-    const strip = stripObjectFunction<{ a?: number; b?: number }>(KeyValueTypleValueFilter.UNDEFINED);
-    const input: { a?: number; b?: number } = { a: 1, b: undefined };
+    const strip = stripObjectFunction<{ a?: number | undefined; b?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED);
+    const input: { a?: number | undefined; b?: number | undefined } = { a: 1, b: undefined };
 
     const result = strip(input);
 
@@ -383,8 +494,8 @@ describe('stripObjectFunction()', () => {
   });
 
   it('should mutate when copy=false is configured', () => {
-    const strip = stripObjectFunction<{ a?: number; b?: number }>(KeyValueTypleValueFilter.UNDEFINED, false);
-    const input: { a?: number; b?: number } = { a: 1, b: undefined };
+    const strip = stripObjectFunction<{ a?: number | undefined; b?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED, false);
+    const input: { a?: number | undefined; b?: number | undefined } = { a: 1, b: undefined };
 
     const result = strip(input);
 
@@ -393,8 +504,8 @@ describe('stripObjectFunction()', () => {
   });
 
   it('should let copyOverride override the configured copy behavior per-call', () => {
-    const strip = stripObjectFunction<{ a?: number; b?: number }>(KeyValueTypleValueFilter.UNDEFINED, true);
-    const input: { a?: number; b?: number } = { a: 1, b: undefined };
+    const strip = stripObjectFunction<{ a?: number | undefined; b?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED, true);
+    const input: { a?: number | undefined; b?: number | undefined } = { a: 1, b: undefined };
 
     const result = strip(input, false);
 
@@ -403,14 +514,14 @@ describe('stripObjectFunction()', () => {
   });
 
   it('should return undefined for null/undefined input', () => {
-    const strip = stripObjectFunction<{ a?: number }>(KeyValueTypleValueFilter.UNDEFINED);
+    const strip = stripObjectFunction<{ a?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED);
 
     expect(strip(undefined)).toBeUndefined();
     expect(strip(null)).toBeUndefined();
   });
 
   it('should return undefined when filtering leaves an empty object', () => {
-    const strip = stripObjectFunction<{ a?: number; b?: number }>(KeyValueTypleValueFilter.UNDEFINED);
+    const strip = stripObjectFunction<{ a?: number | undefined; b?: number | undefined }>(KeyValueTypleValueFilter.UNDEFINED);
 
     expect(strip({})).toBeUndefined();
     expect(strip({ a: undefined })).toBeUndefined();

@@ -613,7 +613,7 @@ function reportRegistryLoaderResult(label: string, warningPrefix: string, result
 interface ResolveAuthRegistryInput {
   readonly injected: AuthRegistry | undefined;
   readonly cwd: string;
-  readonly onAuthLoaderResult?: (result: LoadAuthRegistryResult) => void;
+  readonly onAuthLoaderResult?: ((result: LoadAuthRegistryResult) => void) | undefined;
 }
 
 /**
@@ -704,7 +704,7 @@ const HINT_CLUSTER_LABEL: Record<DownstreamCluster, string> = {
 interface EmitDownstreamHintsInput {
   readonly cwd: string;
   readonly externalCounts: Partial<Record<DownstreamCluster, number>>;
-  readonly onDownstreamHints?: (hints: readonly DownstreamHint[]) => void;
+  readonly onDownstreamHints?: ((hints: readonly DownstreamHint[]) => void) | undefined;
 }
 
 /**

@@ -22,17 +22,17 @@ export interface CreateAuthMiddlewareInput {
   /**
    * Built-in env presets. Merged underneath the user's stored env when the env name matches.
    */
-  readonly defaultEnvs?: readonly CliEnvDefault[];
+  readonly defaultEnvs?: readonly CliEnvDefault[] | undefined;
   /**
    * Optional generated model manifest. When supplied, attached to the `CliContext` so commands
    * can resolve `prefix/id` keys to a `modelType` via `decodeFirestoreModelKey`.
    */
-  readonly modelManifest?: CliModelManifest;
+  readonly modelManifest?: CliModelManifest | undefined;
   /**
    * The app-supplied direct-Firestore binding. When present, the attached {@link CliContext}
    * exposes `getFirestoreModels()`.
    */
-  readonly firestore?: CliFirestoreBinding;
+  readonly firestore?: CliFirestoreBinding | undefined;
 }
 
 /**

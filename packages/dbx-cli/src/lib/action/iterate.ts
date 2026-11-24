@@ -39,7 +39,7 @@ export type IterateDbxCliCallModelPageFn<TItem, TRaw, TItemResult, TPageResult> 
   readonly items: ReadonlyArray<TItem>;
   readonly keys: ReadonlyArray<string>;
   readonly pageIndex: number;
-  readonly pageItemResults?: ReadonlyArray<TItemResult>;
+  readonly pageItemResults?: ReadonlyArray<TItemResult> | undefined;
 }) => Promise<TPageResult>;
 
 /**
@@ -100,7 +100,7 @@ export interface IterateDbxCliCallModelConfig<TParams, TItem, TRaw = OnCallQuery
   /**
    * Optional specifier passed through to `OnCallTypedModelParams`.
    */
-  readonly specifier?: string;
+  readonly specifier?: string | undefined;
   /**
    * Base request data merged into each page request. The iterator owns the
    * `cursorDocumentKey` field — anything else on the object (filters, parent
@@ -112,51 +112,51 @@ export interface IterateDbxCliCallModelConfig<TParams, TItem, TRaw = OnCallQuery
    * `params` with `cursorDocumentKey` and (when {@link limitPerPage} or the
    * remaining {@link totalItemsLimit} budget is set) `limit` injected.
    */
-  readonly buildRequestData?: (params: TParams, state: IterateDbxCliCallModelPageState, limit: Maybe<number>) => TParams;
+  readonly buildRequestData?: ((params: TParams, state: IterateDbxCliCallModelPageState, limit: Maybe<number>) => TParams) | undefined;
   /**
    * Adapter for non-{@link OnCallQueryModelResult} responses.
    */
-  readonly responseAdapter?: IterateDbxCliCallModelResponseAdapter<TRaw, TItem>;
+  readonly responseAdapter?: IterateDbxCliCallModelResponseAdapter<TRaw, TItem> | undefined;
   /**
    * Per-page request limit. Forwarded into the default {@link buildRequestData}.
    */
-  readonly limitPerPage?: number;
+  readonly limitPerPage?: number | undefined;
   /**
    * Stop once this many items have been visited across all pages.
    */
-  readonly totalItemsLimit?: number;
+  readonly totalItemsLimit?: number | undefined;
   /**
    * Stop after this many pages.
    */
-  readonly maxPages?: number;
+  readonly maxPages?: number | undefined;
   /**
    * Per-item processing callback. Parallelism controlled by {@link maxParallelPerPage}.
    */
-  readonly iterateItem?: IterateDbxCliCallModelItemFn<TItem, TItemResult>;
+  readonly iterateItem?: IterateDbxCliCallModelItemFn<TItem, TItemResult> | undefined;
   /**
    * Per-page processing callback. Runs after {@link iterateItem} when both are set.
    */
-  readonly iteratePage?: IterateDbxCliCallModelPageFn<TItem, TRaw, TItemResult, TPageResult>;
+  readonly iteratePage?: IterateDbxCliCallModelPageFn<TItem, TRaw, TItemResult, TPageResult> | undefined;
   /**
    * Concurrency knobs forwarded to `performAsyncTasks` for {@link iterateItem}.
    */
-  readonly itemPerformTasksConfig?: Partial<PerformAsyncTasksConfig<TItem>>;
+  readonly itemPerformTasksConfig?: Partial<PerformAsyncTasksConfig<TItem>> | undefined;
   /**
    * Shorthand for `itemPerformTasksConfig.maxParallelTasks`.
    */
-  readonly maxParallelPerPage?: number;
+  readonly maxParallelPerPage?: number | undefined;
   /**
    * Collect items into the result array. Defaults to true.
    */
-  readonly collectItems?: boolean;
+  readonly collectItems?: boolean | undefined;
   /**
    * Collect per-item results into the result array. Defaults to true when {@link iterateItem} is set.
    */
-  readonly collectItemResults?: boolean;
+  readonly collectItemResults?: boolean | undefined;
   /**
    * Collect per-page results into the result array. Defaults to true when {@link iteratePage} is set.
    */
-  readonly collectPageResults?: boolean;
+  readonly collectPageResults?: boolean | undefined;
 }
 
 /**
@@ -216,8 +216,8 @@ function _defaultBuildRequestData<TParams>(params: TParams, state: IterateDbxCli
 
 interface PageProcessingResult<TItem, TItemResult, TPageResult> {
   readonly items: ReadonlyArray<TItem>;
-  readonly itemResults?: ReadonlyArray<TItemResult>;
-  readonly pageResult?: TPageResult;
+  readonly itemResults?: ReadonlyArray<TItemResult> | undefined;
+  readonly pageResult?: TPageResult | undefined;
   readonly nextCursorDocumentKey: Maybe<string>;
   readonly hasMore: boolean;
 }
@@ -239,11 +239,12 @@ async function _runItemTasks<TItem, TItemResult>(input: {
 
   const { context, items, keys, pageIndex, iterateItem, itemPerformTasksConfig, maxParallelPerPage } = input;
   const indexed: IndexedItem[] = items.map((item, itemIndex) => ({ item, key: keys[itemIndex] ?? '', itemIndex }));
+  const maxParallelTasks = maxParallelPerPage ?? itemPerformTasksConfig?.maxParallelTasks;
   const taskConfig: PerformAsyncTasksConfig<IndexedItem> = {
     sequential: true,
     throwError: true,
     ...(itemPerformTasksConfig as Partial<PerformAsyncTasksConfig<IndexedItem>>),
-    maxParallelTasks: maxParallelPerPage ?? itemPerformTasksConfig?.maxParallelTasks
+    ...(maxParallelTasks == null ? {} : { maxParallelTasks })
   };
   const performResult = await performAsyncTasks<IndexedItem, TItemResult>(indexed, ({ item, key, itemIndex }) => iterateItem({ context, item, key, pageIndex, itemIndex }), taskConfig);
 

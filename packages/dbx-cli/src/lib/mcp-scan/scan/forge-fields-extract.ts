@@ -199,21 +199,21 @@ function findTaggedDocs(decl: NodeWithJsDocs): readonly JSDoc[] {
 // MARK: JSDoc parsing
 interface ParsedFormTags {
   readonly summary: string;
-  readonly slug?: string;
-  readonly tier?: string;
-  readonly produces?: string;
-  readonly arrayOutput?: string;
-  readonly wrapperPattern?: string;
-  readonly ngFormType?: string;
-  readonly suffix?: string;
+  readonly slug?: string | undefined;
+  readonly tier?: string | undefined;
+  readonly produces?: string | undefined;
+  readonly arrayOutput?: string | undefined;
+  readonly wrapperPattern?: string | undefined;
+  readonly ngFormType?: string | undefined;
+  readonly suffix?: string | undefined;
   readonly composesFromSlugs: readonly string[];
-  readonly returns?: string;
-  readonly configInterface?: string;
-  readonly propsInterface?: string;
-  readonly generic?: string;
+  readonly returns?: string | undefined;
+  readonly configInterface?: string | undefined;
+  readonly propsInterface?: string | undefined;
+  readonly generic?: string | undefined;
   readonly examples: readonly string[];
-  readonly deprecated?: boolean | string;
-  readonly since?: string;
+  readonly deprecated?: boolean | string | undefined;
+  readonly since?: string | undefined;
 }
 
 interface MutableTagState {
@@ -497,10 +497,10 @@ type ReadTierSpecificResult =
 interface TierEvaluation {
   readonly failed: boolean;
   readonly warnings: readonly ForgeExtractWarning[];
-  readonly wrapperPattern?: ForgeFieldEntry['wrapperPattern'];
-  readonly ngFormType?: string;
-  readonly suffix?: ForgeFieldEntry['suffix'];
-  readonly returns?: string;
+  readonly wrapperPattern?: ForgeFieldEntry['wrapperPattern'] | undefined;
+  readonly ngFormType?: string | undefined;
+  readonly suffix?: ForgeFieldEntry['suffix'] | undefined;
+  readonly returns?: string | undefined;
 }
 
 function readTierSpecificTags(input: ReadTierSpecificInput): ReadTierSpecificResult {

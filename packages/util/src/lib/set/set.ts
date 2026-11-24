@@ -1,7 +1,6 @@
 import { type Maybe } from '../value/maybe.type';
 import { flattenArray } from '../array/array';
 import { asIterable, type IterableOrValue, iterableToArray, useIterableOrValue } from '../iterable/iterable';
-import { symmetricDifference } from 'extra-set';
 import { type PrimativeKey, type ReadKeyFunction, readKeysSetFrom } from '../key';
 import { type SetIncludesMode } from './set.mode';
 import { type DecisionFunction } from '../value/decision';
@@ -170,7 +169,7 @@ export function symmetricDifferenceArray<T>(a: Maybe<Iterable<T>>, b: Maybe<Iter
  * @returns The values present in only one of the sets.
  */
 export function symmetricDifferenceArrayBetweenSets<T>(a: Set<Maybe<T>>, b: Set<Maybe<T>>): Maybe<T>[] {
-  return Array.from(symmetricDifference(a, b));
+  return [...excludeValuesFromSet(Array.from(a), b), ...excludeValuesFromSet(Array.from(b), a)];
 }
 
 /**
@@ -390,7 +389,7 @@ export interface FindValuesFromInput<T, K extends PrimativeKey = PrimativeKey> {
    *
    * For values that do not have keys, this will be used as the result. I.E. if exclude is true, and a value has no key, it will be returned in the results.
    */
-  readonly exclude?: boolean;
+  readonly exclude?: boolean | undefined;
 }
 
 /**

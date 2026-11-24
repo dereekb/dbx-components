@@ -1,4 +1,4 @@
-import { type Maybe, type OidcClientAuthMethod } from '@dereekb/util';
+import { type DefinedValues, type Maybe, type OidcClientAuthMethod } from '@dereekb/util';
 import { DEFAULT_FIREBASE_CLIENT_EMULATOR_HOST, type FirebaseClientConfig, type FirebaseClientEmulatorsConfig, firebaseClientEmulatorsInUse, isFirebaseClientConfigComplete } from '@dereekb/oauth-resource/firebase';
 import { type CliTokenEntry } from './token.cache';
 
@@ -101,7 +101,7 @@ export interface CliEnvDefault {
  */
 export interface FindCliEnvDefaultInput {
   readonly name: string;
-  readonly defaults?: readonly CliEnvDefault[];
+  readonly defaults?: readonly CliEnvDefault[] | undefined;
 }
 
 /**
@@ -281,17 +281,17 @@ export interface CliEnvConfig {
    * Useful in local development where the API runs on a separate port from the frontend
    * dev server. In production, leave this unset when the API and frontend share an origin.
    */
-  readonly appClientUrl?: string;
+  readonly appClientUrl?: string | undefined;
   /**
    * The OAuth client ID registered with the target app.
    */
-  readonly clientId?: string;
+  readonly clientId?: string | undefined;
   /**
    * The OAuth client secret registered with the target app.
    *
    * Absent for a public client — see {@link tokenEndpointAuthMethod}.
    */
-  readonly clientSecret?: string;
+  readonly clientSecret?: string | undefined;
   /**
    * How the client authenticates at the token endpoint, mirroring the OAuth client's registered
    * `token_endpoint_auth_method`.
@@ -303,7 +303,7 @@ export interface CliEnvConfig {
    *
    * Omit to leave it unknown, which keeps the existing prompt-and-accept-empty behaviour.
    */
-  readonly tokenEndpointAuthMethod?: OidcCliTokenEndpointAuthMethod;
+  readonly tokenEndpointAuthMethod?: OidcCliTokenEndpointAuthMethod | undefined;
   /**
    * The redirect URI registered with the OAuth client.
    *
@@ -315,17 +315,17 @@ export interface CliEnvConfig {
    *
    * Defaults to {@link DEFAULT_CLI_REDIRECT_URI}.
    */
-  readonly redirectUri?: string;
+  readonly redirectUri?: string | undefined;
   /**
    * Space-separated OAuth scopes to request. Defaults to {@link DEFAULT_CLI_OIDC_SCOPES}.
    */
-  readonly scopes?: string;
+  readonly scopes?: string | undefined;
   /**
    * Optional Firebase client config enabling the direct-Firestore session
    * (`CliContext.getFirestoreContext()`). Optional by design — a CLI that only calls the model API
    * never needs it, and requiring it would break every existing consumer.
    */
-  readonly firebase?: CliFirebaseConfig;
+  readonly firebase?: CliFirebaseConfig | undefined;
   /**
    * Static, non-secret values a consuming CLI needs alongside an external connection's access token,
    * keyed by provider type (e.g. `{ zoho_admin: { recruitOrgId: '...' } }`).
@@ -384,9 +384,9 @@ export function mergeCliExternalConnectionHints(env: Maybe<CliExternalConnection
  *   3. The `activeEnv` field in the persisted config
  */
 export interface ResolveActiveEnvInput {
-  readonly flagEnv?: string;
+  readonly flagEnv?: string | undefined;
   readonly envVarName: string;
-  readonly defaultEnv?: string;
+  readonly defaultEnv?: string | undefined;
 }
 
 /**
@@ -512,7 +512,7 @@ function parsePort(value: Maybe<string>): number | undefined {
  * @param env - The env config to check.
  * @returns `true` when `apiBaseUrl`, `oidcIssuer`, `clientId`, and `redirectUri` are all present and non-empty.
  */
-export function isCliEnvConfigComplete(env: Maybe<CliEnvConfig>): env is Required<Pick<CliEnvConfig, 'apiBaseUrl' | 'oidcIssuer' | 'clientId' | 'redirectUri'>> & CliEnvConfig {
+export function isCliEnvConfigComplete(env: Maybe<CliEnvConfig>): env is DefinedValues<Required<Pick<CliEnvConfig, 'apiBaseUrl' | 'oidcIssuer' | 'clientId' | 'redirectUri'>>> & CliEnvConfig {
   return Boolean(env?.apiBaseUrl && env?.oidcIssuer && env?.clientId && env?.redirectUri);
 }
 

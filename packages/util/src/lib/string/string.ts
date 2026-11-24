@@ -1,4 +1,4 @@
-import { type ArrayOrValue, asArray } from '../array/array';
+import { type ArrayOrValue, type ReadonlyArrayOrValue } from '../array/array';
 import { type Configurable } from '../type';
 import { type MapFunction } from '../value/map';
 import { type MaybeNot, type Maybe } from '../value/maybe.type';
@@ -62,19 +62,39 @@ export const SPACE_JOINER = ' ';
  * @returns joined string, or null/undefined if the input is null/undefined
  */
 export function joinStrings(input: MaybeNot, joiner?: string, trim?: boolean): MaybeNot;
-export function joinStrings(input: ArrayOrValue<Maybe<string>>, joiner?: string, trim?: boolean): string;
-export function joinStrings(input: Maybe<ArrayOrValue<Maybe<string>>>, joiner: string = COMMA_JOINER, trim: boolean = false): Maybe<string> {
+export function joinStrings(input: ReadonlyArrayOrValue<Maybe<string>>, joiner?: string, trim?: boolean): string;
+export function joinStrings(input: Maybe<ReadonlyArrayOrValue<Maybe<string>>>, joiner: string = COMMA_JOINER, trim: boolean = false): Maybe<string> {
   if (input == null) {
     return input;
   }
 
-  let array: Maybe<string>[] = asArray(input);
+  const array: ReadonlyArray<Maybe<string>> = typeof input === 'string' ? [input] : input;
+  return (trim ? array.map((x) => x?.trim()) : array).filter(Boolean).join(joiner);
+}
 
-  if (trim) {
-    array = array.map((x) => x?.trim());
-  }
-
-  return array.filter(Boolean).join(joiner);
+/**
+ * Joins `[key, value]` pairs into one `key: value; …` row, in order. A pair whose value is `null`, `undefined` or `''`
+ * is dropped (a `0` is kept), so a conditional pair stays one entry in the list.
+ *
+ * @param pairs - The `[key, value]` pairs, in print order.
+ * @returns The row, or `''` when every pair is dropped.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilKind function
+ * @dbxUtilTags string, join, key-value, row, format
+ * @dbxUtilRelated join-strings
+ *
+ * @example
+ * ```ts
+ * joinKeyValuePairs([['size', 'large'], ['count', 0], ['color', undefined]]); // 'size: large; count: 0'
+ * ```
+ */
+export function joinKeyValuePairs(pairs: ReadonlyArray<readonly [string, Maybe<string | number>]>): string {
+  return pairs
+    .filter((pair): pair is readonly [string, string | number] => pair[1] != null && pair[1] !== '')
+    .map(([key, value]) => `${key}: ${value}`)
+    .join('; ');
 }
 
 /**
@@ -304,6 +324,32 @@ export function caseInsensitiveString(input: Maybe<string>): Maybe<string> {
 }
 
 /**
+ * Converts a value to its `String()` form while keeping an absent value absent: `null` and `undefined` both become
+ * `undefined`. For reading a loosely typed field as an optional string: a CLI argument, a provider code that arrives as
+ * a number, or a persisted row key that is a number on one build and a string on another.
+ *
+ * @dbxUtil
+ * @dbxUtilCategory string
+ * @dbxUtilTags string, convert, coerce, maybe, nullish, optional, stringify
+ * @dbxUtilRelated is-not-null-or-empty-string
+ *
+ * @param value - The value to convert.
+ * @returns `String(value)`, or `undefined` when the value is `null` or `undefined`.
+ *
+ * @example
+ * ```ts
+ * toMaybeString(429); // '429'
+ * toMaybeString(null); // undefined
+ * ```
+ */
+export function toMaybeString(value: MaybeNot): undefined;
+export function toMaybeString(value: NonNullable<unknown>): string;
+export function toMaybeString(value: unknown): string | undefined;
+export function toMaybeString(value: unknown): string | undefined {
+  return value == null ? undefined : String(value);
+}
+
+/**
  * Adds a plus prefix to the input value and converts it to a string. If the value is negative or 0, no prefix is added.
  *
  * Undefined is returned if a null/undefined value is input.
@@ -525,7 +571,7 @@ export interface CutStringFunctionConfig {
   /**
    * The end text to add to the cut string.
    *
-   * Defaults to "...".
+   * Defaults to "..." when undefined. Pass null to add no end text.
    */
   readonly endText?: Maybe<string>;
 }
@@ -555,7 +601,7 @@ export type CutStringFunction = ((input: string) => string) & ((input: Maybe<str
  */
 export function cutStringFunction(config: CutStringFunctionConfig): CutStringFunction {
   const { maxLength: inputMaxLength, maxLengthIncludesEndText, endText: inputEndText } = config;
-  const endText = inputEndText === undefined ? DEFAULT_CUT_STRING_END_TEXT : '';
+  const endText = inputEndText === undefined ? DEFAULT_CUT_STRING_END_TEXT : (inputEndText ?? '');
   const maxLength = maxLengthIncludesEndText === false ? inputMaxLength : inputMaxLength - endText.length;
 
   return ((input: Maybe<string>) => {
@@ -580,7 +626,7 @@ export function cutStringFunction(config: CutStringFunctionConfig): CutStringFun
  *
  * @param input - The string to truncate, or null/undefined.
  * @param maxLength - Maximum allowed length for the output string.
- * @param endText - Text to append when truncated; defaults to "...".
+ * @param endText - Text to append when truncated; defaults to "..." when undefined. Pass null to append nothing.
  * @returns The truncated string, or null/undefined if the input is null/undefined.
  *
  * @dbxUtil

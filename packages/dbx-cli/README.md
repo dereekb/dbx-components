@@ -1052,6 +1052,9 @@ audience: [admin]
 ## Before you start
 ```
 
+The frontmatter is read by `@dereekb/util` `parseMarkdownFrontmatter` with `typedScalars: false`, so every value stays a
+string. Lists are `[a, b]` or indented `- item` rows, and a ` #` starts a comment.
+
 Sections are the H2/H3 headings (outside code fences), with slugged ids a client can read one at a time.
 
 ### Flags and exit codes

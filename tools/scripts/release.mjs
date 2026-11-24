@@ -227,7 +227,9 @@ const releaseTag = `v${nextVersion}`;
 if (!dryRun) {
   console.log('Staging and committing release changes...\n');
   execSync('git add -A', { stdio: 'inherit' });
-  execFileSync('git', ['commit', '--no-verify', '-m', commitMessage], { stdio: 'inherit' });
+  // Pipe the message through stdin: it carries every commit body since the last tag, and a single argv
+  // string over Linux's MAX_ARG_STRLEN (128 KiB) fails the spawn with E2BIG.
+  execFileSync('git', ['commit', '--no-verify', '-F', '-'], { input: commitMessage, stdio: ['pipe', 'inherit', 'inherit'] });
 
   console.log(`\nTagging ${releaseTag}...\n`);
   execFileSync('git', ['tag', '-a', releaseTag, '-m', releaseTag], { stdio: 'inherit' });
