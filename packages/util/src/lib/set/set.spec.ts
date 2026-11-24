@@ -1,6 +1,6 @@
 import { setIncludes, type ReadKeyFunction, setsAreEquivalent, isEvenNumber, separateValuesToSets } from '@dereekb/util';
 import { firstValueFromIterable } from '../iterable';
-import { asSet, containsAnyValue, containsAnyValueFromSet, containsNoValueFromSet, containsNoneOfValue, filterValuesToSet, findValuesFrom, hasDifferentValues, setContainsAllValues, setContainsAnyValue, keepFromSetCopy } from './set';
+import { asSet, containsAnyValue, containsAnyValueFromSet, containsNoValueFromSet, containsNoneOfValue, filterValuesToSet, findValuesFrom, hasDifferentValues, setContainsAllValues, setContainsAnyValue, keepFromSetCopy, symmetricDifferenceArray, symmetricDifferenceArrayBetweenSets } from './set';
 
 describe('asSet()', () => {
   it('should turn a single string value into a set with that string', () => {
@@ -432,5 +432,29 @@ describe('setsAreEquivalent()', () => {
     const values = [0, 1, 2];
     const result = setsAreEquivalent(new Set(values), new Set([0, 1]));
     expect(result).toBe(false);
+  });
+});
+
+describe('symmetricDifferenceArray()', () => {
+  it('should return the values present in only one input, first-input values first', () => {
+    const result = symmetricDifferenceArray([1, 2, 3], [3, 4, 2, 5]);
+    expect(result).toEqual([1, 4, 5]);
+  });
+
+  it('should return an empty array when the inputs hold the same values', () => {
+    const result = symmetricDifferenceArray([1, 2, 2], [2, 1]);
+    expect(result).toEqual([]);
+  });
+
+  it('should treat a null or undefined input as empty', () => {
+    expect(symmetricDifferenceArray([1, 2], undefined)).toEqual([1, 2]);
+    expect(symmetricDifferenceArray(null, [3])).toEqual([3]);
+  });
+});
+
+describe('symmetricDifferenceArrayBetweenSets()', () => {
+  it('should return the values present in only one set', () => {
+    const result = symmetricDifferenceArrayBetweenSets(new Set(['a', 'b']), new Set(['b', 'c']));
+    expect(result).toEqual(['a', 'c']);
   });
 });

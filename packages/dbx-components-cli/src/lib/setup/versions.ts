@@ -169,7 +169,7 @@ export interface ResolvedSetupVersions {
  * directory, which npm installs as a symlink. npm does not read the peerDependencies of a symlinked
  * local package, and every `@dereekb/*` package declares its whole runtime surface as peers with no
  * `dependencies` of its own — so without this the scaffolded project ends up missing `date-fns`,
- * `extra-set`, `@angular/material`, `@ngrx/*` and the rest, and fails to build on unresolved
+ * `make-error`, `@angular/material`, `@ngrx/*` and the rest, and fails to build on unresolved
  * imports. `--install-links` makes npm copy those directories in as ordinary packages instead, so
  * their peers resolve and auto-install like any registry dependency.
  *
