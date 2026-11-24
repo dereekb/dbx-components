@@ -1,3 +1,32 @@
+# [14.31.0](https://github.com/dereekb/dbx-components/compare/v14.30.0-dev...v14.31.0) (2026-11-24)
+
+### ai
+
+- **dbx-claude:** self-serve demo-api-mcp, health-check restarts ([f7ec5778](https://github.com/dereekb/dbx-components/commit/f7ec577814490093cbfff329c5cc72bcc5f90466))
+
+### Bug Fixes
+
+- **dbx-cli:** support exactOptionalPropertyTypes in cli, form ([e070a2ad](https://github.com/dereekb/dbx-components/commit/e070a2ad80b4285bf7716f23caabf1ea30cfdd42))
+- **dbx-components-cli:** stop caching the api template build-watch ([6327db95](https://github.com/dereekb/dbx-components/commit/6327db958dd6f36e7175e3977af9b3822cef4ff1))
+- **dbx-firebase:** support exactOptionalPropertyTypes in firebase ui ([2866b517](https://github.com/dereekb/dbx-components/commit/2866b517ec3db86745c2c16f177af409f72c2445))
+- **dbx-form:** enforce maxPicks on pickable fields ([9b7f8bff](https://github.com/dereekb/dbx-components/commit/9b7f8bffb09d3bde7ad641fc3cd3c09252610d23))
+- **demo:** support exactOptionalPropertyTypes in demo apps ([f2f9f931](https://github.com/dereekb/dbx-components/commit/f2f9f931459e1fe8ab9529eadc6a9f3029817eda))
+- **firebase-server:** support exactOptionalPropertyTypes ([ef2da443](https://github.com/dereekb/dbx-components/commit/ef2da443a6943ed61b98f3c0a755ab2af3985bd7))
+- **firebase:** support exactOptionalPropertyTypes in firebase, web ([dc8ce125](https://github.com/dereekb/dbx-components/commit/dc8ce125605a6523b80df9fbb91f72fa6cbad6cd))
+- **llm,microsoft:** repair release-prep lint autofix type errors ([a226890d](https://github.com/dereekb/dbx-components/commit/a226890d22788bc7a75c89d584e65bcf747e1808))
+- **release:** pipe the release commit message through stdin ([66716152](https://github.com/dereekb/dbx-components/commit/66716152e1f37dd9541cd43f1764ddf42c95fb8b)), closes [#62](https://github.com/dereekb/dbx-components/issues/62)
+- **util:** drop the extra-set peer dependency ([8fcd4eeb](https://github.com/dereekb/dbx-components/commit/8fcd4eeb918d18a79250b3e7cd3d8006889aabdb))
+- **util:** support exactOptionalPropertyTypes in util, date, rxjs ([ef686a7e](https://github.com/dereekb/dbx-components/commit/ef686a7e69f4ac565df562a40c092e61e587eb58))
+
+### Build System
+
+- enable exactOptionalPropertyTypes workspace-wide ([27cafd18](https://github.com/dereekb/dbx-components/commit/27cafd18f9564610fea4e691d9e29ac3b28a964c))
+- lint fix + mcp regeneration + firestore indexes + peer dep sync ([997bf4a3](https://github.com/dereekb/dbx-components/commit/997bf4a35773da03fdb5a67bbecb00a3815c0c13))
+
+### Features
+
+- added llm package ([#62](https://github.com/dereekb/dbx-components/issues/62)) ([918aa407](https://github.com/dereekb/dbx-components/commit/918aa40708413db9e4e5c758fb7566b6666f9e0a)), closes [#62](https://github.com/dereekb/dbx-components/issues/62) [#11](https://github.com/dereekb/dbx-components/issues/11)
+
 # [14.30.0](https://github.com/dereekb/dbx-components/compare/v14.29.0-dev...v14.30.0) (2026-11-20)
 
 ### Bug Fixes
