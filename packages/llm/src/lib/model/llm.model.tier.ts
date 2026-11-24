@@ -76,7 +76,9 @@ export type LlmOffValue = (typeof LLM_OFF_VALUES)[number];
  */
 export function isLlmOffValue(value: Maybe<string>): boolean {
   const normalized = value?.trim().toLowerCase();
-  return normalized != null && LLM_OFF_VALUES.includes(normalized);
+  // widen the literal tuple so includes() accepts an arbitrary string
+  const offValues: readonly string[] = LLM_OFF_VALUES;
+  return normalized != null && offValues.includes(normalized);
 }
 
 /**
